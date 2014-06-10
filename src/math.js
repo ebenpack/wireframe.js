@@ -22,7 +22,7 @@ Matrix.prototype.equals = function(matrix){
     return true;
 };
 /**
- * Add matric to self.
+ * Add matrix to self.
  * @method
  * @param {Matrix} matrix
  * @return {Matrix}
@@ -125,6 +125,7 @@ Matrix.prototype.transpose = function(){
     new_matrix.m[15] = this.m[15];
     return new_matrix;
 };
+
 /**
  * Constructs a rotation matrix, rotating by theta around the x-axis
  * @method
@@ -227,6 +228,22 @@ Matrix.rotation = function(pitch, yaw, roll){
     return Matrix.rotationX(roll).multiply(Matrix.rotationZ(yaw)).multiply(Matrix.rotationY(pitch));
 };
 /**
+ * Constructs a scaling matrix from x, y, and z scalars
+ * @method
+ * @static
+ * @param {number} xscale
+ * @param {number} yscale
+ * @param {number} zscale
+ * @return {Matrix}
+ */
+Matrix.translation = function(xscale, yscale, zscale){
+    var translation_matrix = Matrix.identity();
+    translation_matrix.m[0] = xscale;
+    translation_matrix.m[5] = yscale;
+    translation_matrix.m[1] = zscale;
+    return translation_matrix;
+};
+/**
  * Constructs a translation matrix from x, y, and z distances
  * @method
  * @static
@@ -251,7 +268,7 @@ Matrix.translation = function(xtrans, ytrans, ztrans){
  * @param {number} ztrans
  * @return {Matrix}
  */
-Matrix.scaling = function(xscale, yscale, zscale){
+Matrix.scale = function(xscale, yscale, zscale){
     var scaling_matrix = new Matrix();
     scaling_matrix.m[0] = xscale;
     scaling_matrix.m[5] = yscale;
@@ -272,6 +289,15 @@ Matrix.identity = function(){
     identity.m[10] = 1;
     identity.m[15] = 1;
     return identity;
+};
+/**
+ * Constructs a zero matrix
+ * @method
+ * @static
+ * @return {Matrix}
+ */
+Matrix.zero = function(){
+    return new Matrix();
 };
 /**
  * Constructs a new matrix from an array
@@ -539,6 +565,7 @@ function Mesh(name, vertices, edges){
     this.edges = edges;
     this.position = new Vector(0, 0, 0);
     this.rotation = {'yaw': 0, 'pitch': 0, 'roll': 0};
+    this.scale = {'x': 1, 'y': 1, 'z': 1};
 }
 
 var math = {

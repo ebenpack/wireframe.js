@@ -11,9 +11,16 @@
             <canvas id="audiocanvas" style="background-color:black; position:relative; border: 2px solid green;" width='600' height='400'></canvas>
             <p>Click on the canvas to give it focus. QWEASD controls pitch/yaw/roll of cube. HJKL moves cube left/right, up/down.</p>
         </div>
-        <script src="build/wireframe.min.js"></script>
+        <div id="controls">
+            <input id="fov" type="number" value="90">
+        </div>
+        <div id="debug">
+            
+        </div>
+        <script src="build/wireframe.js"></script>
         <script>
             (function () {
+                var dbg = document.getElementById('debug');
                 var Vector = wireframe.math.Vector;
                 var Vertex = wireframe.math.Vertex;
                 var Mesh = wireframe.math.Mesh;
@@ -54,7 +61,7 @@
                         new Vertex(new Vector(80, 0, 0), 'blue')
                     ],
                     [
-                        {edge: [0,1], color: 'green'}
+                        {edge: [0,1], color: 'yellow'}
                     ]
                     );
                 var yaxis = new Mesh('yaxis',
@@ -72,22 +79,28 @@
                         new Vertex(new Vector(0, 0, 80), 'blue')
                     ],
                     [
-                        {edge: [0,1], color: 'green'}
+                        {edge: [0,1], color: 'blue'}
                     ]
                     );
 
                 function onUpdate(){
                     if (scene.isKeyDown('h')) {
-                        scene.meshes[0].position.x -= 1;
+                        scene.camera.moveRight(1);
                     }
                     if (scene.isKeyDown('j')) {
-                        scene.meshes[0].position.y += 1;
+                        scene.camera.moveUp(1);
                     }
                     if (scene.isKeyDown('k')) {
-                        scene.meshes[0].position.y -= 1;
+                        scene.camera.moveDown(1);
                     }
                     if (scene.isKeyDown('l')) {
-                        scene.meshes[0].position.x += 1;
+                        scene.camera.moveLeft(1);
+                    }
+                    if (scene.isKeyDown('u')) {
+                        scene.camera.zoomIn(1);
+                    }
+                    if (scene.isKeyDown('i')) {
+                        scene.camera.zoomOut(1);
                     }
                     if (scene.isKeyDown('w')) {
                         scene.meshes[0].rotation.yaw -= 0.03;
@@ -107,19 +120,28 @@
                     if (scene.isKeyDown('e')) {
                         scene.meshes[0].rotation.roll -= 0.03;
                     }
+                    // DEBUG
+                    dbg.innerHTML = "CameraX: " + scene.camera.position.x + "<br>" +
+                    "CameraY: " + scene.camera.position.y + "<br>" +
+                    "CameraZ: " + scene.camera.position.z + "<br>";
+                    scene._needs_update = true;
                 }
 
-                var scene = new Scene({
-                                canvas_id: 'audiocanvas',
-                                axes: false
-                            });
+                var scene = new Scene({canvas_id: 'audiocanvas'});
 
                 scene.onUpdate = onUpdate;
+                scene.camera.moveTo(0, 0, 200);
                 scene.addMesh(cube);
                 scene.addMesh(xaxis);
                 scene.addMesh(yaxis);
                 scene.addMesh(zaxis);
                 scene.renderScene();
+
+                //DEBUG
+                var fov = document.getElementById('fov');
+                fov.addEventListener('input', function(e){
+                    scene.camera.fov = parseInt(this.value, 10);
+                })
             })();
         </script>
     </body>

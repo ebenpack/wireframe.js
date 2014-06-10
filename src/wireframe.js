@@ -21,6 +21,8 @@ function Scene(options){
     this.keys = {}; // Keys currently pressed
     /** @type {?number} */
     this._anim_id = null;
+    /** @type {boolean} */
+    this._needs_update = true;
     this.init();
 }
 /** @method */
@@ -58,41 +60,27 @@ Scene.prototype.onKeyUp = function(e){
     var pressed = e.keyCode || e.which;
     delete this.keys[pressed];
 };
-// Scene.prototype.fireEvents = function(){
-//     for (var evt in this.events){
-//         this.events[evt]();
-//     }
-// }
-/** @method */
-Scene.prototype.worldProjection = function(vector, rotation, position){
-    // Translate mesh vector to world vector. Rotate, then translate
-    var world_vector = vector.rotatePitchYawRoll(rotation.pitch, rotation.roll, rotation.yaw);
-    return world_vector.add(position);
-};
-/** @method */
-Scene.prototype.renderMesh = function(shape){
-    var points = [];
-    for (var i = 0, len = shape.vertices.length; i < len; i++) {
-        // For now, render each vertex, and a line between them
-        var vector = shape.vertices[i];
-        points.push(this.worldProjection(vector));
-    }
-    this.ctx.beginPath();
-    this.ctx.moveTo(points[0].x,points[0].y);
-    for (var j = 1, leng = points.length; j < leng; j++){
-        this.ctx.lineTo(points[j].x, points[j].y);
-    }
-    this.ctx.strokeStyle = 'red';
-    this.ctx.stroke();
-    this.ctx.closePath();
-};
-/** @method */
-Scene.prototype.drawVector = function(vector, color){
-    this.ctx.beginPath();
-    this.ctx.arc(vector.x + this._x_offset, vector.y + this._y_offset, 2, 0, Math.PI*2, true);
-    this.ctx.fillStyle = color;
-    this.ctx.fill();
-    this.ctx.closePath();
+/**
+ * Builds a perspective projection matrix based on a field of view.
+ * @method
+ * @return {Matrix}
+ */
+Scene.prototype.perspectiveFov = function() {
+    var fov = this.camera.fov * (Math.PI / 180); // convert to radians
+    var aspect = this.canvas.width / this.canvas.height;
+    var near = this.camera.near;
+    var far = this.camera.far;
+    var matrix = Matrix.zero();
+    var height = (1/Math.tan(fov/2)) * this.canvas.height;
+    var width = height * aspect;
+
+    matrix.m[0] = width;
+    matrix.m[5] = height;
+    matrix.m[10] = far/(near-far) ;
+    matrix.m[11] = -1;
+    matrix.m[14] = near*far/(near-far);
+
+    return matrix;
 };
 /** @method */
 Scene.prototype.drawEdge = function(vector1, vector2, color){
@@ -100,42 +88,35 @@ Scene.prototype.drawEdge = function(vector1, vector2, color){
     this.ctx.moveTo(vector1.x + this._x_offset, vector1.y + this._y_offset);
     this.ctx.lineTo(vector2.x + this._x_offset, vector2.y + this._y_offset);
     this.ctx.lineWidth = 2;
-    // this.ctx.shadowBlur = 10;
-    // this.ctx.shadowColor = color;
     this.ctx.strokeStyle = color;
     this.ctx.stroke();
-
     this.ctx.closePath();
 };
 /** @method */
 Scene.prototype.renderScene = function(){
+    // TODO: DRAW FROM BACK TO FRONT (IE CLOSER EDGES OVERLAP/OBSCURE FARTHER)
+    // TODO: ONLY DRAW EDGES IN CAMERA'S FRUSTRUM
     this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
-
-    var view_matrix;
-    var projection_matrix;
-
+    var cam_pos = this.camera.position;
+    var cam_rot = this.camera.rotation;
+    var camera_transform = this.camera.view_matrix;
+    var projection_transform = this.perspectiveFov();
     for (var i = 0, len = this.meshes.length; i < len; i++){
         var mesh = this.meshes[i];
+        var scale = mesh.scale;
         var rotation = mesh.rotation;
         var position = mesh.position;
-        //var world_transform = Matrix.rotation(rotation.pitch, rotation.yaw, rotation.roll).multiply(Matrix.translation(position.x, position.y, position.z));
-
-        var step1 = Matrix.rotation(rotation.pitch, rotation.yaw, rotation.roll);
-        var step2 = Matrix.translation(position.x, position.y, position.z);
-        var world_transform = step1.multiply(step2);
-
-        // TODO: Do this
-        var view_tranform = 0;
-        var projection_transform = 0;
-        // TODO: Do this
-
+        var world_transform = Matrix.scale(scale.x, scale.y, scale.z).multiply(
+            Matrix.rotation(rotation.pitch, rotation.yaw, rotation.roll).multiply(
+                Matrix.translation(position.x, position.y, position.z)));
+        var final_transform = world_transform.multiply(camera_transform).multiply(projection_transform);
         for (var k = 0; k < mesh.edges.length; k++){
             var edge = mesh.edges[k].edge;
             var color = mesh.edges[k].color;
             var v1 = mesh.vertices[edge[0]].vector;
             var v2 = mesh.vertices[edge[1]].vector;
-            var wv1 = v1.transform(world_transform);
-            var wv2 = v2.transform(world_transform);
+            var wv1 = v1.transform(final_transform);
+            var wv2 = v2.transform(final_transform);
             this.drawEdge(wv1, wv2, color);
         }
     }
@@ -152,7 +133,10 @@ Scene.prototype.removeMesh = function(mesh){
 Scene.prototype.update = function(){
     //this.fireEvents()
     this.onUpdate();
-    this.renderScene();
+    if (this._needs_update) {
+        this.renderScene();
+        this._needs_update = false;
+    }
     this._anim_id = window.requestAnimationFrame(this.update.bind(this));
 };
 
@@ -162,46 +146,88 @@ Scene.prototype.update = function(){
  * @param {Vector} position Camera position.
  * @param {Vector} target   Camera
  */
+// TODO: Camera should store view matrix. Instead of computing every render, it will be
+// re-computed only when position, orientation, etc. changes
 function Camera(position, target){
-    this.position = position || new Vector(0,0,0);
+    this.position = position || new Vector(1,1,20);
     this.target = target || new Vector(0,0,0);
     this.up = new Vector(0, 1, 0);
+    this.view_matrix = this.lookAt();
+    this.near = 0.1;
+    this.far = 1000;
+    this.fov = 90;
 }
 /** @method */
-Camera.prototype.eyeDistance = function(){
-    
+Camera.prototype.lookAt = function(){
+    var eye = this.position;
+    var target = this.target;
+    var up = this.up;
+    var zaxis = eye.subtract(target).normalize();
+    var xaxis = up.cross(zaxis).normalize();
+    var yaxis = zaxis.cross(xaxis);
+    var view_matrix = Matrix.fromArray([
+        xaxis.x, yaxis.x, zaxis.x, 0,
+        xaxis.y, yaxis.y, zaxis.y, 0,
+        xaxis.z, yaxis.z, zaxis.z, 0,
+        -(xaxis.dot(eye)), -(yaxis.dot(eye)), -(zaxis.dot(eye)), 1
+        ]);
+    return view_matrix;
+};
+// Vector3 dirVector = Vector3(0.0, 0.0, -1.0);
+// dirVector = scene->getDefaultCamera()->getConcatenatedMatrix().rotateVector(dirVector);
+// Vector3 newPosition = scene->getDefaultCamera()->getPosition() + (dirVector * moveSpeed * elapsed);
+/** @method */
+Camera.prototype.moveTo = function(x, y, z){
+    this.position.x = x;
+    this.position.y = y;
+    this.position.z = z;
+    this.view_matrix = this.lookAt();
 };
 /** @method */
-Camera.prototype.moveTo = function(args){
-
+Camera.prototype.moveRight = function(amount){
+    // TODO: WRONG!!!
+    this.position.x += amount;
+    //this.target.x += amount;
+    this.view_matrix = this.lookAt();
 };
 /** @method */
-Camera.prototype.moveRight = function(){
-    
+Camera.prototype.moveLeft = function(amount){
+    // TODO: WRONG!!!
+    this.position.x -= amount;
+    //this.target.x -= amount;
+    this.view_matrix = this.lookAt();
 };
 /** @method */
-Camera.prototype.moveLeft = function(){
-    
+Camera.prototype.moveUp = function(amount){
+    // TODO: WRONG!!!
+    this.position.y -= amount;
+    //this.target.y -= amount;
+    this.view_matrix = this.lookAt();
 };
 /** @method */
-Camera.prototype.moveUp = function(){
-    
-};
-/** @method */
-Camera.prototype.moveDown = function(){
-    
+Camera.prototype.moveDown = function(amount){
+    // TODO: WRONG!!!
+    this.position.y += amount;
+    //this.target.y += amount;
+    this.view_matrix = this.lookAt();
 };
 /** @method */
 Camera.prototype.orbitTo = function(){
 
 };
 /** @method */
-Camera.prototype.zoomIn = function(){
-
+Camera.prototype.zoomIn = function(amount){
+    // TODO: WRONG!!!
+    this.position.z += amount;
+    //this.target.z += amount;
+    this.view_matrix = this.lookAt();
 };
 /** @method */
-Camera.prototype.zoomOut = function(){
-
+Camera.prototype.zoomOut = function(amount){
+    // TODO: WRONG!!!
+    this.position.z -= amount;
+    //this.target.z += amount;
+    this.view_matrix = this.lookAt();
 };
 /** @method */
 Camera.prototype.orbitLeft = function(){
