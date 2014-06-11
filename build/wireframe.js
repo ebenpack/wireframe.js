@@ -88,7 +88,7 @@ Scene.prototype.drawEdge = function(vector1, vector2, color){
     this.ctx.beginPath();
     this.ctx.moveTo(vector1.x + this._x_offset, vector1.y + this._y_offset);
     this.ctx.lineTo(vector2.x + this._x_offset, vector2.y + this._y_offset);
-    this.ctx.lineWidth = 2;
+    this.ctx.lineWidth = 1;
     this.ctx.strokeStyle = color;
     this.ctx.stroke();
     this.ctx.closePath();
@@ -111,14 +111,18 @@ Scene.prototype.renderScene = function(){
             Matrix.rotation(rotation.pitch, rotation.yaw, rotation.roll).multiply(
                 Matrix.translation(position.x, position.y, position.z)));
         var final_transform = world_transform.multiply(camera_transform).multiply(projection_transform);
-        for (var k = 0; k < mesh.edges.length; k++){
-            var edge = mesh.edges[k].edge;
-            var color = mesh.edges[k].color;
-            var v1 = mesh.vertices[edge[0]].vector;
-            var v2 = mesh.vertices[edge[1]].vector;
+        for (var k = 0; k < mesh.faces.length; k++){
+            var face = mesh.faces[k].face;
+            var color = mesh.faces[k].color;
+            var v1 = mesh.vertices[face[0]].vector;
+            var v2 = mesh.vertices[face[1]].vector;
+            var v3 = mesh.vertices[face[2]].vector;
             var wv1 = v1.transform(final_transform);
             var wv2 = v2.transform(final_transform);
+            var wv3 = v3.transform(final_transform);
             this.drawEdge(wv1, wv2, color);
+            this.drawEdge(wv2, wv3, color);
+            this.drawEdge(wv3, wv1, color);
         }
     }
 };
@@ -914,10 +918,10 @@ function Vertex(vector, color){
  * @param {Array.<Vertex>} vertices
  * @param {Array.<{edge: Array.<number>, color: string}>} edges
  */
-function Mesh(name, vertices, edges){
+function Mesh(name, vertices, faces){
     this.name = name;
     this.vertices = vertices;
-    this.edges = edges;
+    this.faces = faces;
     this.position = new Vector(0, 0, 0);
     this.rotation = {'yaw': 0, 'pitch': 0, 'roll': 0};
     this.scale = {'x': 1, 'y': 1, 'z': 1};

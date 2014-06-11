@@ -12,7 +12,10 @@
             <p>Click on the canvas to give it focus. QWEASD controls pitch/yaw/roll of cube. HJKL moves cube left/right, up/down.</p>
         </div>
         <div id="controls">
-            <input id="fov" type="number" value="90">
+            <label><input id="fov" type="number" value="90">FOV</label><br>
+            <label><input id="camx" type="number" value="0">Cam Target X</label><br>
+            <label><input id="camy" type="number" value="0">Cam Target Y</label><br>
+            <label><input id="camz" type="number" value="0">Cam Target Z</label>
         </div>
         <div id="debug">
             
@@ -40,20 +43,19 @@
                         new Vertex(new Vector( 40,  40,  40), 'red')
                     ],
                     [
-                        {edge: [0, 1], color: 'red'},
-                        {edge: [1, 3], color: 'red'},
-                        {edge: [3, 2], color: 'red'},
-                        {edge: [2, 0], color: 'red'},
-                        {edge: [4, 5], color: 'red'},
-                        {edge: [5, 7], color: 'red'},
-                        {edge: [7, 6], color: 'red'},
-                        {edge: [6, 4], color: 'red'},
-                        {edge: [0, 4], color: 'red'},
-                        {edge: [1, 5], color: 'red'},
-                        {edge: [2, 6], color: 'red'},
-                        {edge: [3, 7], color: 'red'}
-                    ]
-                    );
+                        {face: [0, 1, 2], color: 'red'},
+                        {face: [1, 2, 3], color: 'red'},
+                        {face: [0, 1, 4], color: 'red'},
+                        {face: [1, 4, 5], color: 'red'},
+                        {face: [5, 1, 7], color: 'red'},
+                        {face: [1, 7, 3], color: 'red'},
+                        {face: [2, 3, 6], color: 'red'},
+                        {face: [3, 6, 7], color: 'red'},
+                        {face: [0, 2, 4], color: 'red'},
+                        {face: [2, 4, 6], color: 'red'},
+                        {face: [4, 5, 6], color: 'red'},
+                        {face: [5, 6, 7], color: 'red'},
+                    ]);
 
                 var xaxis = new Mesh('xaxis',
                     [
@@ -61,7 +63,7 @@
                         new Vertex(new Vector(80, 0, 0), 'blue')
                     ],
                     [
-                        {edge: [0,1], color: 'yellow'}
+                        {face: [0, 0, 1], color: 'yellow'}
                     ]
                     );
                 var yaxis = new Mesh('yaxis',
@@ -70,7 +72,7 @@
                         new Vertex(new Vector(0, 80, 0), 'blue')
                     ],
                     [
-                        {edge: [0,1], color: 'green'}
+                        {face: [0, 0, 1], color: 'green'}
                     ]
                     );
                 var zaxis = new Mesh('zaxis',
@@ -79,7 +81,7 @@
                         new Vertex(new Vector(0, 0, 80), 'blue')
                     ],
                     [
-                        {edge: [0,1], color: 'blue'}
+                        {face: [0, 0, 1], color: 'blue'}
                     ]
                     );
 
@@ -102,19 +104,19 @@
                     if (scene.isKeyDown('i')) {
                         scene.camera.zoomOut(1);
                     }
-                    if (scene.isKeyDown('w')) {
+                    if (scene.isKeyDown('a')) {
                         scene.meshes[0].rotation.yaw -= 0.03;
                     }
-                    if (scene.isKeyDown('a')) {
+                    if (scene.isKeyDown('s')) {
                         scene.meshes[0].rotation.pitch -= 0.03;
                     }
-                    if (scene.isKeyDown('s')) {
+                    if (scene.isKeyDown('f')) {
                         scene.meshes[0].rotation.yaw += 0.03;
                     }
                     if (scene.isKeyDown('d')) {
                         scene.meshes[0].rotation.pitch += 0.03;
                     }
-                    if (scene.isKeyDown('q')) {
+                    if (scene.isKeyDown('w')) {
                         scene.meshes[0].rotation.roll += 0.03;
                     }
                     if (scene.isKeyDown('e')) {
@@ -141,6 +143,21 @@
                 var fov = document.getElementById('fov');
                 fov.addEventListener('input', function(e){
                     scene.camera.fov = parseInt(this.value, 10);
+                })
+                var camx = document.getElementById('camx');
+                camx.addEventListener('input', function(e){
+                    scene.camera.target.x = parseInt(this.value, 10);
+                    scene.camera.view_matrix = scene.camera.lookAt();
+                })
+                var camy = document.getElementById('camy');
+                camy.addEventListener('input', function(e){
+                    scene.camera.target.y = parseInt(this.value, 10);
+                    scene.camera.view_matrix = scene.camera.lookAt();
+                })
+                var camz = document.getElementById('camz');
+                camz.addEventListener('input', function(e){
+                    scene.camera.target.z = parseInt(this.value, 10);
+                    scene.camera.view_matrix = scene.camera.lookAt();
                 })
             })();
         </script>
