@@ -1,20 +1,37 @@
 !function(e){if("object"==typeof exports)module.exports=e();else if("function"==typeof define&&define.amd)define(e);else{var f;"undefined"!=typeof window?f=window:"undefined"!=typeof global?f=global:"undefined"!=typeof self&&(f=self),f.wireframe=e()}}(function(){var define,module,exports;return (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);throw new Error("Cannot find module '"+o+"'")}var f=n[o]={exports:{}};t[o][0].call(f.exports,function(e){var n=t[o][1][e];return s(n?n:e)},f,f.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(_dereq_,module,exports){
-var math = _dereq_('./math.js');
+var math = _dereq_('./math/math.js');
 var KEYCODES = _dereq_('./keycodes.js');
 
 var Vector = math.Vector;
-var Vertex = math.Vertex;
 var Matrix = math.Matrix;
 var Mesh = math.Mesh;
+
+
+//TODO: need draw buffer?? back buffer??
+// Need depth buffer. Must draw every pixel to screen,
+// test z value of pixel being drawn against depth buffer
+// if it is lower, we override the previous pixel
+// if it is higher, we discard it
+// need put pixel function
 
 /**
  * @constructor
  * @this {Scene}
- * @param {{canvas_id: string}} options
+ * @param {{canvas_id: string, width: number, height: number}} options
  */
 function Scene(options){
+    /** @type {number} */
+    this.width = options.width;
+    /** @type {number} */
+    this.height = options.height;
     this.canvas = document.getElementById(options.canvas_id);
     this.ctx = this.canvas.getContext('2d');
+    this._back_buffer = document.createElement('canvas');
+    this._back_buffer.width = this.width;
+    this._back_buffer.height = this.height;
+    this._back_buffer_ctx = this._back_buffer.getContext('2d');
+    this._back_buffer_image = null;
+    this._depth_buffer = [];
     this.camera = new Camera();
     /** @type {Array.<Mesh>} */
     this.meshes = [];
@@ -29,8 +46,10 @@ function Scene(options){
 /** @method */
 Scene.prototype.init = function(){
     this.canvas.tabIndex = 1; // Set tab index to allow canvas to have focus to receive key events
-    this._x_offset = Math.round(this.canvas.width / 2);
-    this._y_offset = Math.round(this.canvas.height / 2);
+    this._x_offset = Math.round(this.width / 2);
+    this._y_offset = Math.round(this.height / 2);
+    this.initializeDepthBuffer();
+    this._back_buffer_image = this._back_buffer_ctx.createImageData(this.width, this.height);
     this.update();
     this.canvas.addEventListener('keydown', this.onKeyDown.bind(this), false);
     this.canvas.addEventListener('keyup', this.onKeyUp.bind(this), false);
@@ -61,6 +80,11 @@ Scene.prototype.onKeyUp = function(e){
     var pressed = e.keyCode || e.which;
     delete this.keys[pressed];
 };
+Scene.prototype.initializeDepthBuffer = function(){
+    for (var x = 0, len = this.width * this.height; x < len; x++){
+        this._depth_buffer[x] = 9999999;
+    }
+};
 /**
  * Builds a perspective projection matrix based on a field of view.
  * @method
@@ -84,20 +108,121 @@ Scene.prototype.perspectiveFov = function() {
     return matrix;
 };
 /** @method */
+Scene.prototype.drawPixel = function(x, y, z, color){
+    x = Math.round(x);
+    y = Math.round(y);
+    if (x >= 0 && x < this.width && y >= 0 && y < this.height) {
+        var index = x + (y * this.width);
+        if (z < this._depth_buffer[index]) {
+            var image_data = this._back_buffer_image.data;
+            var i = (y * this._back_buffer_image.width + x) * 4;
+            image_data[i] = color.r;
+            image_data[i+1] = color.g;
+            image_data[i+2] = color.b;
+            image_data[i+3] = 255;
+            this._depth_buffer[index] = z;
+        }
+    }
+};
+/** @method */
+// Based on Bresenham's line algorithm
 Scene.prototype.drawEdge = function(vector1, vector2, color){
+    // TODO: SIMPLIFY!!
+    var x1 = vector1.x + this._x_offset;
+    var y1 = vector1.y + this._y_offset;
+    var z1 = vector1.z;
+    var x2 = vector2.x + this._x_offset;
+    var y2 = vector2.y + this._y_offset;
+    var z2 = vector2.z;
+    var i, dx, dy, dz, l, m, n, x_inc, y_inc, z_inc, err_1, err_2, dx2, dy2, dz2;
+    var pixel = [];
+
+    pixel[0] = x1;
+    pixel[1] = y1;
+    pixel[2] = z1;
+    dx = x2 - x1;
+    dy = y2 - y1;
+    dz = z2 - z1;
+    x_inc = (dx < 0) ? -1 : 1;
+    l = Math.abs(dx);
+    y_inc = (dy < 0) ? -1 : 1;
+    m = Math.abs(dy);
+    z_inc = (dz < 0) ? -1 : 1;
+    n = Math.abs(dz);
+    dx2 = l << 1;
+    dy2 = m << 1;
+    dz2 = n << 1;
+
+    if ((l >= m) && (l >= n)) {
+        err_1 = dy2 - l;
+        err_2 = dz2 - l;
+        for (i = 0; i < l; i++) {
+            this.drawPixel(pixel[0], pixel[1], pixel[2], color);
+            if (err_1 > 0) {
+                pixel[1] += y_inc;
+                err_1 -= dx2;
+            }
+            if (err_2 > 0) {
+                pixel[2] += z_inc;
+                err_2 -= dx2;
+            }
+            err_1 += dy2;
+            err_2 += dz2;
+            pixel[0] += x_inc;
+        }
+    } else if ((m >= l) && (m >= n)) {
+        err_1 = dx2 - m;
+        err_2 = dz2 - m;
+        for (i = 0; i < m; i++) {
+            this.drawPixel(pixel[0], pixel[1], pixel[2], color);
+            if (err_1 > 0) {
+                pixel[0] += x_inc;
+                err_1 -= dy2;
+            }
+            if (err_2 > 0) {
+                pixel[2] += z_inc;
+                err_2 -= dy2;
+            }
+            err_1 += dx2;
+            err_2 += dz2;
+            pixel[1] += y_inc;
+        }
+    } else {
+        err_1 = dy2 - n;
+        err_2 = dx2 - n;
+        for (i = 0; i < n; i++) {
+            this.drawPixel(pixel[0], pixel[1], pixel[2], color);
+            if (err_1 > 0) {
+                pixel[1] += y_inc;
+                err_1 -= dz2;
+            }
+            if (err_2 > 0) {
+                pixel[0] += x_inc;
+                err_2 -= dz2;
+            }
+            err_1 += dy2;
+            err_2 += dx2;
+            pixel[2] += z_inc;
+        }
+    }
+    this.drawPixel(pixel[0], pixel[1], pixel[2], color);
+};
+/** @method */
+Scene.prototype.drawFace = function(vector1, vector2, vector3, color){
     this.ctx.beginPath();
     this.ctx.moveTo(vector1.x + this._x_offset, vector1.y + this._y_offset);
     this.ctx.lineTo(vector2.x + this._x_offset, vector2.y + this._y_offset);
-    this.ctx.lineWidth = 1;
-    this.ctx.strokeStyle = color;
-    this.ctx.stroke();
+    this.ctx.lineTo(vector3.x + this._x_offset, vector3.y + this._y_offset);
+    this.ctx.fillStyle = color;
+    this.ctx.fill();
     this.ctx.closePath();
 };
 /** @method */
 Scene.prototype.renderScene = function(){
     // TODO: DRAW FROM BACK TO FRONT (IE CLOSER EDGES OVERLAP/OBSCURE FARTHER)
     // TODO: ONLY DRAW EDGES IN CAMERA'S FRUSTRUM
-    this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+    this._back_buffer_image = this._back_buffer_ctx.createImageData(this.width, this.height);
+    this.initializeDepthBuffer();
     var cam_pos = this.camera.position;
     var cam_rot = this.camera.rotation;
     var camera_transform = this.camera.view_matrix;
@@ -123,8 +248,12 @@ Scene.prototype.renderScene = function(){
             this.drawEdge(wv1, wv2, color);
             this.drawEdge(wv2, wv3, color);
             this.drawEdge(wv3, wv1, color);
+            //this.drawFace(wv1, wv2, wv3, color);
         }
     }
+    this._back_buffer_ctx.putImageData(this._back_buffer_image, 0, 0);
+    this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+    this.ctx.drawImage(this._back_buffer, 0, 0, this.canvas.width, this.canvas.height);
 };
 /** @method */
 Scene.prototype.addMesh = function(mesh){
@@ -249,7 +378,7 @@ var engine = {
 };
 
 module.exports = {engine: engine, math: math};
-},{"./keycodes.js":2,"./math.js":3}],2:[function(_dereq_,module,exports){
+},{"./keycodes.js":2,"./math/math.js":3}],2:[function(_dereq_,module,exports){
 /** 
  * @constant
  * @type {Object.<string, number>} 
@@ -357,6 +486,20 @@ var KEYCODES = {
 
 module.exports = KEYCODES;
 },{}],3:[function(_dereq_,module,exports){
+var Vector = _dereq_('./vector.js');
+var Vertex = _dereq_('./vertex.js');
+var Mesh = _dereq_('./mesh.js');
+var Matrix = _dereq_('./matrix.js');
+
+var math = Object.create(null);
+
+math['Vector'] = Vector;
+math['Vertex'] = Vertex;
+math['Mesh'] = Mesh;
+math['Matrix'] = Matrix;
+
+module.exports = math;
+},{"./matrix.js":4,"./mesh.js":5,"./vector.js":6,"./vertex.js":7}],4:[function(_dereq_,module,exports){
 /** 
  * 4x4 matrix.
  * @constructor
@@ -672,6 +815,28 @@ Matrix.fromArray = function(arr){
     return new_matrix;
 };
 
+module.exports = Matrix;
+},{}],5:[function(_dereq_,module,exports){
+var Vector = _dereq_('./vector.js');
+
+/**
+ * @constructor
+ * @this {Mesh}
+ * @param {string} name
+ * @param {Array.<Vertex>} vertices
+ * @param {Array.<{edge: Array.<number>, color: string}>} edges
+ */
+function Mesh(name, vertices, faces){
+    this.name = name;
+    this.vertices = vertices;
+    this.faces = faces;
+    this.position = new Vector(0, 0, 0);
+    this.rotation = {'yaw': 0, 'pitch': 0, 'roll': 0};
+    this.scale = {'x': 1, 'y': 1, 'z': 1};
+}
+
+module.exports = Mesh;
+},{"./vector.js":6}],6:[function(_dereq_,module,exports){
 /**
  * @constructor
  * @this {Vector}
@@ -900,6 +1065,8 @@ Vector.prototype.rotatePitchYawRoll = function(pitch_amnt, yaw_amnt, roll_amnt) 
     return this.rotateX(roll_amnt).rotateY(pitch_amnt).rotateZ(yaw_amnt);
 };
 
+module.exports = Vector;
+},{}],7:[function(_dereq_,module,exports){
 /**
  * @constructor
  * @this {Vertex}
@@ -911,30 +1078,7 @@ function Vertex(vector, color){
     this.color = color;
 }
 
-/**
- * @constructor
- * @this {Mesh}
- * @param {string} name
- * @param {Array.<Vertex>} vertices
- * @param {Array.<{edge: Array.<number>, color: string}>} edges
- */
-function Mesh(name, vertices, faces){
-    this.name = name;
-    this.vertices = vertices;
-    this.faces = faces;
-    this.position = new Vector(0, 0, 0);
-    this.rotation = {'yaw': 0, 'pitch': 0, 'roll': 0};
-    this.scale = {'x': 1, 'y': 1, 'z': 1};
-}
-
-var math = {
-    Vector: Vector,
-    Vertex: Vertex,
-    Mesh: Mesh,
-    Matrix: Matrix
-};
-
-module.exports = math;
+module.exports = Vertex;
 },{}]},{},[1])
 (1)
 });
