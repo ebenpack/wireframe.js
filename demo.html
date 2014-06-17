@@ -27,10 +27,12 @@
                 var Vector = wireframe.math.Vector;
                 var Vertex = wireframe.math.Vertex;
                 var Mesh = wireframe.math.Mesh;
+                var Face = wireframe.math.Face;
 
                 var Scene = wireframe.engine.Scene;
                 var Camera = wireframe.engine.Camera;
 
+                var face = new Face(5, 4, 0, 'red');
                 var cube = new Mesh('cube',
                     [
                         new Vertex(new Vector(-40, -40, -40), 'red'),
@@ -43,18 +45,18 @@
                         new Vertex(new Vector( 40,  40,  40), 'red')
                     ],
                     [
-                        {face: [3, 1, 0], color: {'r':255, 'g':0, 'b':0}},
-                        {face: [3, 2, 0], color: {'r':255, 'g':0, 'b':0}},
-                        {face: [1, 5, 0], color: {'r':255, 'g':0, 'b':0}},
-                        {face: [5, 4, 0], color: {'r':255, 'g':0, 'b':0}},
-                        {face: [2, 6, 4], color: {'r':255, 'g':0, 'b':0}},
-                        {face: [2, 4, 0], color: {'r':255, 'g':0, 'b':0}},
-                        {face: [3, 7, 1], color: {'r':255, 'g':0, 'b':0}},
-                        {face: [7, 1, 5], color: {'r':255, 'g':0, 'b':0}},
-                        {face: [3, 7, 2], color: {'r':255, 'g':0, 'b':0}},
-                        {face: [7, 2, 6], color: {'r':255, 'g':0, 'b':0}},
-                        {face: [7, 5, 4], color: {'r':255, 'g':0, 'b':0}},
-                        {face: [7, 6, 4], color: {'r':255, 'g':0, 'b':0}},
+                        new Face(3, 1, 0, 'red'),
+                        new Face(3, 2, 0, 'red'),
+                        new Face(1, 5, 0, 'red'),
+                        new Face(5, 4, 0, 'red'),
+                        new Face(2, 6, 4, 'red'),
+                        new Face(2, 4, 0, 'red'),
+                        new Face(3, 7, 1, 'red'),
+                        new Face(7, 1, 5, 'red'),
+                        new Face(3, 7, 2, 'red'),
+                        new Face(7, 2, 6, 'red'),
+                        new Face(7, 5, 4, 'red'),
+                        new Face(7, 6, 4, 'red')
                     ]);
 
                 var xaxis = new Mesh('xaxis',
@@ -63,7 +65,7 @@
                         new Vertex(new Vector(80, 0, 0), 'blue')
                     ],
                     [
-                        {face: [0, 0, 1], color: {'r':0, 'g':255, 'b':0}}
+                        new Face(0, 0, 1, 'green')
                     ]
                     );
                 var yaxis = new Mesh('yaxis',
@@ -72,7 +74,7 @@
                         new Vertex(new Vector(0, 80, 0), 'blue')
                     ],
                     [
-                        {face: [0, 0, 1], color: {'r':0, 'g':0, 'b':255}}
+                        new Face(0, 0, 1, 'blue')
                     ]
                     );
                 var zaxis = new Mesh('zaxis',
@@ -81,7 +83,7 @@
                         new Vertex(new Vector(0, 0, 80), 'blue')
                     ],
                     [
-                        {face: [0, 0, 1], color: {'r':255, 'g':255, 'b':0}}
+                        new Face(0, 0, 1, 'yellow')
                     ]
                     );
 

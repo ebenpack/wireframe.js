@@ -1,18 +1,125 @@
 !function(e){if("object"==typeof exports)module.exports=e();else if("function"==typeof define&&define.amd)define(e);else{var f;"undefined"!=typeof window?f=window:"undefined"!=typeof global?f=global:"undefined"!=typeof self&&(f=self),f.wireframe=e()}}(function(){var define,module,exports;return (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);throw new Error("Cannot find module '"+o+"'")}var f=n[o]={exports:{}};t[o][0].call(f.exports,function(e){var n=t[o][1][e];return s(n?n:e)},f,f.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(_dereq_,module,exports){
-var math = _dereq_('./math/math.js');
-var KEYCODES = _dereq_('./keycodes.js');
+var math = _dereq_('../math/math.js');
+var Vector = math.Vector;
+var Matrix = math.Matrix;
+
+/** 
+ * @constructor
+ * @this {Camera}
+ * @param {Vector} position Camera position.
+ * @param {Vector} target   Camera
+ */
+// TODO: Camera should store view matrix. Instead of computing every render, it will be
+// re-computed only when position, orientation, etc. changes
+function Camera(position, target){
+    this.position = position || new Vector(1,1,20);
+    this.target = target || new Vector(0,0,0);
+    this.up = new Vector(0, 1, 0);
+    this.view_matrix = this.lookAt();
+    this.near = 0.1;
+    this.far = 1000;
+    this.fov = 90;
+}
+/** @method */
+Camera.prototype.lookAt = function(){
+    var eye = this.position;
+    var target = this.target;
+    var up = this.up;
+    var zaxis = eye.subtract(target).normalize();
+    var xaxis = up.cross(zaxis).normalize();
+    var yaxis = zaxis.cross(xaxis);
+    var view_matrix = Matrix.fromArray([
+        xaxis.x, yaxis.x, zaxis.x, 0,
+        xaxis.y, yaxis.y, zaxis.y, 0,
+        xaxis.z, yaxis.z, zaxis.z, 0,
+        -(xaxis.dot(eye)), -(yaxis.dot(eye)), -(zaxis.dot(eye)), 1
+        ]);
+    return view_matrix;
+};
+// Vector3 dirVector = Vector3(0.0, 0.0, -1.0);
+// dirVector = scene->getDefaultCamera()->getConcatenatedMatrix().rotateVector(dirVector);
+// Vector3 newPosition = scene->getDefaultCamera()->getPosition() + (dirVector * moveSpeed * elapsed);
+/** @method */
+Camera.prototype.moveTo = function(x, y, z){
+    this.position.x = x;
+    this.position.y = y;
+    this.position.z = z;
+    this.view_matrix = this.lookAt();
+};
+/** @method */
+Camera.prototype.moveRight = function(amount){
+    // TODO: WRONG!!!
+    this.position.x += amount;
+    //this.target.x += amount;
+    this.view_matrix = this.lookAt();
+};
+/** @method */
+Camera.prototype.moveLeft = function(amount){
+    // TODO: WRONG!!!
+    this.position.x -= amount;
+    //this.target.x -= amount;
+    this.view_matrix = this.lookAt();
+};
+/** @method */
+Camera.prototype.moveUp = function(amount){
+    // TODO: WRONG!!!
+    this.position.y -= amount;
+    //this.target.y -= amount;
+    this.view_matrix = this.lookAt();
+};
+/** @method */
+Camera.prototype.moveDown = function(amount){
+    // TODO: WRONG!!!
+    this.position.y += amount;
+    //this.target.y += amount;
+    this.view_matrix = this.lookAt();
+};
+/** @method */
+Camera.prototype.orbitTo = function(){
+
+};
+/** @method */
+Camera.prototype.zoomIn = function(amount){
+    // TODO: WRONG!!!
+    this.position.z += amount;
+    //this.target.z += amount;
+    this.view_matrix = this.lookAt();
+};
+/** @method */
+Camera.prototype.zoomOut = function(amount){
+    // TODO: WRONG!!!
+    this.position.z -= amount;
+    //this.target.z += amount;
+    this.view_matrix = this.lookAt();
+};
+/** @method */
+Camera.prototype.orbitLeft = function(){
+
+};
+/** @method */
+Camera.prototype.orbitRight = function(){
+
+};
+
+module.exports = Camera;
+},{"../math/math.js":6}],2:[function(_dereq_,module,exports){
+var Scene = _dereq_('./scene.js');
+var Camera = _dereq_('./camera.js');
+
+var engine = Object.create(null);
+
+engine.Scene = Scene;
+engine.Camera = Camera;
+
+module.exports = engine;
+},{"./camera.js":1,"./scene.js":3}],3:[function(_dereq_,module,exports){
+var math = _dereq_('../math/math.js');
+var Camera = _dereq_('./camera.js')
+var KEYCODES = _dereq_('../utility/keycodes.js');
 
 var Vector = math.Vector;
 var Matrix = math.Matrix;
 var Mesh = math.Mesh;
-
-
-//TODO: need draw buffer?? back buffer??
-// Need depth buffer. Must draw every pixel to screen,
-// test z value of pixel being drawn against depth buffer
-// if it is lower, we override the previous pixel
-// if it is higher, we discard it
-// need put pixel function
 
 /**
  * @constructor
@@ -41,6 +148,7 @@ function Scene(options){
     this._anim_id = null;
     /** @type {boolean} */
     this._needs_update = true;
+    this._draw_mode = 'wireframe';
     this.init();
 }
 /** @method */
@@ -50,10 +158,10 @@ Scene.prototype.init = function(){
     this._y_offset = Math.round(this.height / 2);
     this.initializeDepthBuffer();
     this._back_buffer_image = this._back_buffer_ctx.createImageData(this.width, this.height);
-    this.update();
     this.canvas.addEventListener('keydown', this.onKeyDown.bind(this), false);
     this.canvas.addEventListener('keyup', this.onKeyUp.bind(this), false);
     this.canvas.addEventListener('blur', this.emptyKeys.bind(this), false);
+    this.update();
 };
 /** @method */
 Scene.prototype.onUpdate = function(){
@@ -274,232 +382,60 @@ Scene.prototype.update = function(){
     this._anim_id = window.requestAnimationFrame(this.update.bind(this));
 };
 
-/** 
- * @constructor
- * @this {Camera}
- * @param {Vector} position Camera position.
- * @param {Vector} target   Camera
+
+
+module.exports = Scene;
+},{"../math/math.js":6,"../utility/keycodes.js":12,"./camera.js":1}],4:[function(_dereq_,module,exports){
+var math = _dereq_('./math/math.js');
+var engine = _dereq_('./engine/engine.js');
+
+var wireframe = Object.create(null);
+
+wireframe.math = math;
+wireframe.engine = engine;
+
+module.exports = wireframe;
+},{"./engine/engine.js":2,"./math/math.js":6}],5:[function(_dereq_,module,exports){
+var Color = _dereq_('../utility/color.js');
+var Vector = _dereq_('./vector.js');
+
+/**
+ * A 3D triangle
+ * @param {number} a     [description]
+ * @param {number} b     [description]
+ * @param {number} c     [description]
+ * @param {string} color [description]
  */
-// TODO: Camera should store view matrix. Instead of computing every render, it will be
-// re-computed only when position, orientation, etc. changes
-function Camera(position, target){
-    this.position = position || new Vector(1,1,20);
-    this.target = target || new Vector(0,0,0);
-    this.up = new Vector(0, 1, 0);
-    this.view_matrix = this.lookAt();
-    this.near = 0.1;
-    this.far = 1000;
-    this.fov = 90;
+function Face(a, b, c, color){
+    this.face = [a, b, c];
+    this.color = new Color(color);
 }
-/** @method */
-Camera.prototype.lookAt = function(){
-    var eye = this.position;
-    var target = this.target;
-    var up = this.up;
-    var zaxis = eye.subtract(target).normalize();
-    var xaxis = up.cross(zaxis).normalize();
-    var yaxis = zaxis.cross(xaxis);
-    var view_matrix = Matrix.fromArray([
-        xaxis.x, yaxis.x, zaxis.x, 0,
-        xaxis.y, yaxis.y, zaxis.y, 0,
-        xaxis.z, yaxis.z, zaxis.z, 0,
-        -(xaxis.dot(eye)), -(yaxis.dot(eye)), -(zaxis.dot(eye)), 1
-        ]);
-    return view_matrix;
-};
-// Vector3 dirVector = Vector3(0.0, 0.0, -1.0);
-// dirVector = scene->getDefaultCamera()->getConcatenatedMatrix().rotateVector(dirVector);
-// Vector3 newPosition = scene->getDefaultCamera()->getPosition() + (dirVector * moveSpeed * elapsed);
-/** @method */
-Camera.prototype.moveTo = function(x, y, z){
-    this.position.x = x;
-    this.position.y = y;
-    this.position.z = z;
-    this.view_matrix = this.lookAt();
-};
-/** @method */
-Camera.prototype.moveRight = function(amount){
-    // TODO: WRONG!!!
-    this.position.x += amount;
-    //this.target.x += amount;
-    this.view_matrix = this.lookAt();
-};
-/** @method */
-Camera.prototype.moveLeft = function(amount){
-    // TODO: WRONG!!!
-    this.position.x -= amount;
-    //this.target.x -= amount;
-    this.view_matrix = this.lookAt();
-};
-/** @method */
-Camera.prototype.moveUp = function(amount){
-    // TODO: WRONG!!!
-    this.position.y -= amount;
-    //this.target.y -= amount;
-    this.view_matrix = this.lookAt();
-};
-/** @method */
-Camera.prototype.moveDown = function(amount){
-    // TODO: WRONG!!!
-    this.position.y += amount;
-    //this.target.y += amount;
-    this.view_matrix = this.lookAt();
-};
-/** @method */
-Camera.prototype.orbitTo = function(){
-
-};
-/** @method */
-Camera.prototype.zoomIn = function(amount){
-    // TODO: WRONG!!!
-    this.position.z += amount;
-    //this.target.z += amount;
-    this.view_matrix = this.lookAt();
-};
-/** @method */
-Camera.prototype.zoomOut = function(amount){
-    // TODO: WRONG!!!
-    this.position.z -= amount;
-    //this.target.z += amount;
-    this.view_matrix = this.lookAt();
-};
-/** @method */
-Camera.prototype.orbitLeft = function(){
-
-};
-/** @method */
-Camera.prototype.orbitRight = function(){
-
-};
-
-var engine = {
-    Scene: Scene,
-    Camera: Camera
-};
-
-module.exports = {engine: engine, math: math};
-},{"./keycodes.js":2,"./math/math.js":3}],2:[function(_dereq_,module,exports){
-/** 
- * @constant
- * @type {Object.<string, number>} 
+/**
+ * [normalVector description]
+ * @return {Vector} [description]
  */
-var KEYCODES = {
-    'backspace' : 8,
-    'tab' : 9,
-    'enter' : 13,
-    'shift' : 16,
-    'ctrl' : 17,
-    'alt' : 18,
-    'pause_break' : 19,
-    'caps_lock' : 20,
-    'escape' : 27,
-    'page_up' : 33,
-    'page down' : 34,
-    'end' : 35,
-    'home' : 36,
-    'left_arrow' : 37,
-    'up_arrow' : 38,
-    'right_arrow' : 39,
-    'down_arrow' : 40,
-    'insert' : 45,
-    'delete' : 46,
-    '0' : 48,
-    '1' : 49,
-    '2' : 50,
-    '3' : 51,
-    '4' : 52,
-    '5' : 53,
-    '6' : 54,
-    '7' : 55,
-    '8' : 56,
-    '9' : 57,
-    'a' : 65,
-    'b' : 66,
-    'c' : 67,
-    'd' : 68,
-    'e' : 69,
-    'f' : 70,
-    'g' : 71,
-    'h' : 72,
-    'i' : 73,
-    'j' : 74,
-    'k' : 75,
-    'l' : 76,
-    'm' : 77,
-    'n' : 78,
-    'o' : 79,
-    'p' : 80,
-    'q' : 81,
-    'r' : 82,
-    's' : 83,
-    't' : 84,
-    'u' : 85,
-    'v' : 86,
-    'w' : 87,
-    'x' : 88,
-    'y' : 89,
-    'z' : 90,
-    'left_window key' : 91,
-    'right_window key' : 92,
-    'select_key' : 93,
-    'numpad 0' : 96,
-    'numpad 1' : 97,
-    'numpad 2' : 98,
-    'numpad 3' : 99,
-    'numpad 4' : 100,
-    'numpad 5' : 101,
-    'numpad 6' : 102,
-    'numpad 7' : 103,
-    'numpad 8' : 104,
-    'numpad 9' : 105,
-    'multiply' : 106,
-    'add' : 107,
-    'subtract' : 109,
-    'decimal point' : 110,
-    'divide' : 111,
-    'f1' : 112,
-    'f2' : 113,
-    'f3' : 114,
-    'f4' : 115,
-    'f5' : 116,
-    'f6' : 117,
-    'f7' : 118,
-    'f8' : 119,
-    'f9' : 120,
-    'f10' : 121,
-    'f11' : 122,
-    'f12' : 123,
-    'num_lock' : 144,
-    'scroll_lock' : 145,
-    'semi_colon' : 186,
-    'equal_sign' : 187,
-    'comma' : 188,
-    'dash' : 189,
-    'period' : 190,
-    'forward_slash' : 191,
-    'grave_accent' : 192,
-    'open_bracket' : 219,
-    'backslash' : 220,
-    'closebracket' : 221,
-    'single_quote' : 222
+Face.prototype.normalVector = function(){
+    //return Vector(0,0,0);
 };
 
-module.exports = KEYCODES;
-},{}],3:[function(_dereq_,module,exports){
+module.exports = Face;
+},{"../utility/color.js":11,"./vector.js":9}],6:[function(_dereq_,module,exports){
 var Vector = _dereq_('./vector.js');
 var Vertex = _dereq_('./vertex.js');
 var Mesh = _dereq_('./mesh.js');
 var Matrix = _dereq_('./matrix.js');
+var Face = _dereq_('./face.js');
 
 var math = Object.create(null);
 
-math['Vector'] = Vector;
-math['Vertex'] = Vertex;
-math['Mesh'] = Mesh;
-math['Matrix'] = Matrix;
+math.Vector = Vector;
+math.Vertex = Vertex;
+math.Mesh = Mesh;
+math.Matrix = Matrix;
+math.Face = Face;
 
 module.exports = math;
-},{"./matrix.js":4,"./mesh.js":5,"./vector.js":6,"./vertex.js":7}],4:[function(_dereq_,module,exports){
+},{"./face.js":5,"./matrix.js":7,"./mesh.js":8,"./vector.js":9,"./vertex.js":10}],7:[function(_dereq_,module,exports){
 /** 
  * 4x4 matrix.
  * @constructor
@@ -816,7 +752,7 @@ Matrix.fromArray = function(arr){
 };
 
 module.exports = Matrix;
-},{}],5:[function(_dereq_,module,exports){
+},{}],8:[function(_dereq_,module,exports){
 var Vector = _dereq_('./vector.js');
 
 /**
@@ -836,7 +772,7 @@ function Mesh(name, vertices, faces){
 }
 
 module.exports = Mesh;
-},{"./vector.js":6}],6:[function(_dereq_,module,exports){
+},{"./vector.js":9}],9:[function(_dereq_,module,exports){
 /**
  * @constructor
  * @this {Vector}
@@ -1066,7 +1002,7 @@ Vector.prototype.rotatePitchYawRoll = function(pitch_amnt, yaw_amnt, roll_amnt) 
 };
 
 module.exports = Vector;
-},{}],7:[function(_dereq_,module,exports){
+},{}],10:[function(_dereq_,module,exports){
 /**
  * @constructor
  * @this {Vertex}
@@ -1079,6 +1015,297 @@ function Vertex(vector, color){
 }
 
 module.exports = Vertex;
-},{}]},{},[1])
-(1)
+},{}],11:[function(_dereq_,module,exports){
+/**
+ * Return a standardized color object given any legal CSS color value.
+ * @constructor
+ * @param {string} color Any legal CSS color value (hex, color keyword, rgb(a), hsl(a))
+ */
+function Color(color){
+    var parsed_color = parseColor(color);
+    this.r = parsed_color.r;
+    this.g = parsed_color.g;
+    this.b = parsed_color.b;
+    var alpha = parsed_color.a || 1;
+    this.a = Math.floor(alpha * 255);
+}
+
+function parseColor(color){
+    // Make a temporary HTML element with the given color string
+    // then extract and parse the computed rgb(a) value.
+    if (color in named_colors) {
+        color = named_colors[color];
+    }
+    var div = document.createElement('div');
+    div.style.backgroundColor = color;
+    var rgba = div.style.backgroundColor;
+    rgba = rgba.slice(rgba.indexOf('(')+1).slice(0,-1).replace(/\s/g, '').split(',');
+    var return_color = {};
+    var color_values = ['r', 'g', 'b', 'a'];
+    var value;
+    for (var i = 0; i < rgba.length; i++){
+        value = parseFloat(rgba[i]);
+        if (isNaN(value)){
+            throw "Color error: " + color + " is not a legal CSS color value";
+        }
+        else {
+            return_color[color_values[i]] = value;
+        }
+    }
+    return return_color;
+}
+
+var named_colors = {
+    "aliceblue": "#f0f8ff",
+    "antiquewhite": "#faebd7",
+    "aqua": "#00ffff",
+    "aquamarine": "#7fffd4",
+    "azure": "#f0ffff",
+    "beige": "#f5f5dc",
+    "bisque": "#ffe4c4",
+    "black": "#000000",
+    "blanchedalmond": "#ffebcd",
+    "blue": "#0000ff",
+    "blueviolet": "#8a2be2",
+    "brown": "#a52a2a",
+    "burlywood": "#deb887",
+    "cadetblue": "#5f9ea0",
+    "chartreuse": "#7fff00",
+    "chocolate": "#d2691e",
+    "coral": "#ff7f50",
+    "cornflowerblue": "#6495ed",
+    "cornsilk": "#fff8dc",
+    "crimson": "#dc143c",
+    "cyan": "#00ffff",
+    "darkblue": "#00008b",
+    "darkcyan": "#008b8b",
+    "darkgoldenrod": "#b8860b",
+    "darkgray": "#a9a9a9",
+    "darkgreen": "#006400",
+    "darkkhaki": "#bdb76b",
+    "darkmagenta": "#8b008b",
+    "darkolivegreen": "#556b2f",
+    "darkorange": "#ff8c00",
+    "darkorchid": "#9932cc",
+    "darkred": "#8b0000",
+    "darksalmon": "#e9967a",
+    "darkseagreen": "#8fbc8f",
+    "darkslateblue": "#483d8b",
+    "darkslategray": "#2f4f4f",
+    "darkturquoise": "#00ced1",
+    "darkviolet": "#9400d3",
+    "deeppink": "#ff1493",
+    "deepskyblue": "#00bfff",
+    "dimgray": "#696969",
+    "dodgerblue": "#1e90ff",
+    "firebrick": "#b22222",
+    "floralwhite": "#fffaf0",
+    "forestgreen": "#228b22",
+    "fuchsia": "#ff00ff",
+    "gainsboro": "#dcdcdc",
+    "ghostwhite": "#f8f8ff",
+    "gold": "#ffd700",
+    "goldenrod": "#daa520",
+    "gray": "#808080",
+    "green": "#008000",
+    "greenyellow": "#adff2f",
+    "honeydew": "#f0fff0",
+    "hotpink": "#ff69b4",
+    "indianred ": "#cd5c5c",
+    "indigo": "#4b0082",
+    "ivory": "#fffff0",
+    "khaki": "#f0e68c",
+    "lavender": "#e6e6fa",
+    "lavenderblush": "#fff0f5",
+    "lawngreen": "#7cfc00",
+    "lemonchiffon": "#fffacd",
+    "lightblue": "#add8e6",
+    "lightcoral": "#f08080",
+    "lightcyan": "#e0ffff",
+    "lightgoldenrodyellow": "#fafad2",
+    "lightgrey": "#d3d3d3",
+    "lightgreen": "#90ee90",
+    "lightpink": "#ffb6c1",
+    "lightsalmon": "#ffa07a",
+    "lightseagreen": "#20b2aa",
+    "lightskyblue": "#87cefa",
+    "lightslategray": "#778899",
+    "lightsteelblue": "#b0c4de",
+    "lightyellow": "#ffffe0",
+    "lime": "#00ff00",
+    "limegreen": "#32cd32",
+    "linen": "#faf0e6",
+    "magenta": "#ff00ff",
+    "maroon": "#800000",
+    "mediumaquamarine": "#66cdaa",
+    "mediumblue": "#0000cd",
+    "mediumorchid": "#ba55d3",
+    "mediumpurple": "#9370d8",
+    "mediumseagreen": "#3cb371",
+    "mediumslateblue": "#7b68ee",
+    "mediumspringgreen": "#00fa9a",
+    "mediumturquoise": "#48d1cc",
+    "mediumvioletred": "#c71585",
+    "midnightblue": "#191970",
+    "mintcream": "#f5fffa",
+    "mistyrose": "#ffe4e1",
+    "moccasin": "#ffe4b5",
+    "navajowhite": "#ffdead",
+    "navy": "#000080",
+    "oldlace": "#fdf5e6",
+    "olive": "#808000",
+    "olivedrab": "#6b8e23",
+    "orange": "#ffa500",
+    "orangered": "#ff4500",
+    "orchid": "#da70d6",
+    "palegoldenrod": "#eee8aa",
+    "palegreen": "#98fb98",
+    "paleturquoise": "#afeeee",
+    "palevioletred": "#d87093",
+    "papayawhip": "#ffefd5",
+    "peachpuff": "#ffdab9",
+    "peru": "#cd853f",
+    "pink": "#ffc0cb",
+    "plum": "#dda0dd",
+    "powderblue": "#b0e0e6",
+    "purple": "#800080",
+    "red": "#ff0000",
+    "rosybrown": "#bc8f8f",
+    "royalblue": "#4169e1",
+    "saddlebrown": "#8b4513",
+    "salmon": "#fa8072",
+    "sandybrown": "#f4a460",
+    "seagreen": "#2e8b57",
+    "seashell": "#fff5ee",
+    "sienna": "#a0522d",
+    "silver": "#c0c0c0",
+    "skyblue": "#87ceeb",
+    "slateblue": "#6a5acd",
+    "slategray": "#708090",
+    "snow": "#fffafa",
+    "springgreen": "#00ff7f",
+    "steelblue": "#4682b4",
+    "tan": "#d2b48c",
+    "teal": "#008080",
+    "thistle": "#d8bfd8",
+    "tomato": "#ff6347",
+    "turquoise": "#40e0d0",
+    "violet": "#ee82ee",
+    "wheat": "#f5deb3",
+    "white": "#ffffff",
+    "whitesmoke": "#f5f5f5",
+    "yellow": "#ffff00",
+    "yellowgreen": "#9acd32"
+};
+
+module.exports = Color;
+},{}],12:[function(_dereq_,module,exports){
+/** 
+ * @constant
+ * @type {Object.<string, number>} 
+ */
+var KEYCODES = {
+    'backspace' : 8,
+    'tab' : 9,
+    'enter' : 13,
+    'shift' : 16,
+    'ctrl' : 17,
+    'alt' : 18,
+    'pause_break' : 19,
+    'caps_lock' : 20,
+    'escape' : 27,
+    'page_up' : 33,
+    'page down' : 34,
+    'end' : 35,
+    'home' : 36,
+    'left_arrow' : 37,
+    'up_arrow' : 38,
+    'right_arrow' : 39,
+    'down_arrow' : 40,
+    'insert' : 45,
+    'delete' : 46,
+    '0' : 48,
+    '1' : 49,
+    '2' : 50,
+    '3' : 51,
+    '4' : 52,
+    '5' : 53,
+    '6' : 54,
+    '7' : 55,
+    '8' : 56,
+    '9' : 57,
+    'a' : 65,
+    'b' : 66,
+    'c' : 67,
+    'd' : 68,
+    'e' : 69,
+    'f' : 70,
+    'g' : 71,
+    'h' : 72,
+    'i' : 73,
+    'j' : 74,
+    'k' : 75,
+    'l' : 76,
+    'm' : 77,
+    'n' : 78,
+    'o' : 79,
+    'p' : 80,
+    'q' : 81,
+    'r' : 82,
+    's' : 83,
+    't' : 84,
+    'u' : 85,
+    'v' : 86,
+    'w' : 87,
+    'x' : 88,
+    'y' : 89,
+    'z' : 90,
+    'left_window key' : 91,
+    'right_window key' : 92,
+    'select_key' : 93,
+    'numpad 0' : 96,
+    'numpad 1' : 97,
+    'numpad 2' : 98,
+    'numpad 3' : 99,
+    'numpad 4' : 100,
+    'numpad 5' : 101,
+    'numpad 6' : 102,
+    'numpad 7' : 103,
+    'numpad 8' : 104,
+    'numpad 9' : 105,
+    'multiply' : 106,
+    'add' : 107,
+    'subtract' : 109,
+    'decimal point' : 110,
+    'divide' : 111,
+    'f1' : 112,
+    'f2' : 113,
+    'f3' : 114,
+    'f4' : 115,
+    'f5' : 116,
+    'f6' : 117,
+    'f7' : 118,
+    'f8' : 119,
+    'f9' : 120,
+    'f10' : 121,
+    'f11' : 122,
+    'f12' : 123,
+    'num_lock' : 144,
+    'scroll_lock' : 145,
+    'semi_colon' : 186,
+    'equal_sign' : 187,
+    'comma' : 188,
+    'dash' : 189,
+    'period' : 190,
+    'forward_slash' : 191,
+    'grave_accent' : 192,
+    'open_bracket' : 219,
+    'backslash' : 220,
+    'closebracket' : 221,
+    'single_quote' : 222
+};
+
+module.exports = KEYCODES;
+},{}]},{},[4])
+(4)
 });
