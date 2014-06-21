@@ -32,7 +32,6 @@
                 var Scene = wireframe.engine.Scene;
                 var Camera = wireframe.engine.Camera;
 
-                var face = new Face(5, 4, 0, 'red');
                 var cube = new Mesh('cube',
                     [
                         new Vertex(new Vector(-40, -40, -40), 'red'),
@@ -45,24 +44,36 @@
                         new Vertex(new Vector( 40,  40,  40), 'red')
                     ],
                     [
-                        new Face(3, 1, 0, 'red'),
+                        new Face(1, 3, 0, 'red'),
                         new Face(3, 2, 0, 'red'),
-                        new Face(1, 5, 0, 'red'),
-                        new Face(5, 4, 0, 'red'),
+                        new Face(5, 1, 0, 'red'),
+                        new Face(4, 5, 0, 'red'),
                         new Face(2, 6, 4, 'red'),
                         new Face(2, 4, 0, 'red'),
-                        new Face(3, 7, 1, 'red'),
+                        new Face(7, 3, 1, 'red'),
                         new Face(7, 1, 5, 'red'),
                         new Face(3, 7, 2, 'red'),
-                        new Face(7, 2, 6, 'red'),
+                        new Face(2, 7, 6, 'red'),
                         new Face(7, 5, 4, 'red'),
-                        new Face(7, 6, 4, 'red')
+                        new Face(6, 7, 4, 'red')
                     ]);
+                // var cube = new Mesh('cube',
+                //     [
+                //         new Vertex(new Vector(10, 0, 0), 'red'),
+                //         new Vertex(new Vector(-50, 87,  0), 'red'),
+                //         new Vertex(new Vector(-50,  -87, 0), 'red')
+                //     ],
+                //     [
+                //         new Face(0, 1, 2, 'red')
+                //     ]);
+                // cube.position.x = 20;
+                // cube.position.y = 20;
+                // cube.position.z = 20;
 
                 var xaxis = new Mesh('xaxis',
                     [
-                        new Vertex(new Vector(-80, 0, 0), 'blue'),
-                        new Vertex(new Vector(80, 0, 0), 'blue')
+                        new Vertex(new Vector(-80, 0, 0), 'green'),
+                        new Vertex(new Vector(80, 0, 0), 'green')
                     ],
                     [
                         new Face(0, 0, 1, 'green')
@@ -79,8 +90,8 @@
                     );
                 var zaxis = new Mesh('zaxis',
                     [
-                        new Vertex(new Vector(0, 0, -80), 'blue'),
-                        new Vertex(new Vector(0, 0, 80), 'blue')
+                        new Vertex(new Vector(0, 0, -80), 'yellow'),
+                        new Vertex(new Vector(0, 0, 80), 'yellow')
                     ],
                     [
                         new Face(0, 0, 1, 'yellow')
@@ -131,7 +142,7 @@
                     scene._needs_update = true;
                 }
 
-                var scene = new Scene({canvas_id: 'audiocanvas', width:300, height:200});
+                var scene = new Scene({canvas_id: 'audiocanvas', width:600, height:400});
 
                 scene.onUpdate = onUpdate;
                 scene.camera.moveTo(0, 0, 400);
