@@ -24,7 +24,9 @@ function Scene(options){
     this._back_buffer_ctx = this._back_buffer.getContext('2d');
     this._back_buffer_image = null;
     this._depth_buffer = [];
+    this.drawing_mode = 1;
     this.camera = new Camera();
+    this.illumination = new Vector(100,100,100);
     /** @type {Array.<Mesh>} */
     this.meshes = [];
     /** @type {Object.<number, boolean>} */
@@ -102,13 +104,13 @@ Scene.prototype.perspectiveFov = function() {
 };
 /** @method */
 Scene.prototype.drawPixel = function(x, y, z, color){
-    x = Math.round(x);
-    y = Math.round(y);
+    x = Math.round(x + this._x_offset);
+    y = Math.round(y + this._y_offset);
     if (x >= 0 && x < this.width && y >= 0 && y < this.height) {
         var index = x + (y * this.width);
         if (z < this._depth_buffer[index]) {
             var image_data = this._back_buffer_image.data;
-            var i = (y * this._back_buffer_image.width + x) * 4;
+            var i = index * 4;
             image_data[i] = color.r;
             image_data[i+1] = color.g;
             image_data[i+2] = color.b;
@@ -117,131 +119,104 @@ Scene.prototype.drawPixel = function(x, y, z, color){
         }
     }
 };
-/** @method */
-// Based on Bresenham's line algorithm
+/** @method  */
 Scene.prototype.drawEdge = function(vector1, vector2, color){
-    // TODO: SIMPLIFY!!
-    var x1 = vector1.x + this._x_offset;
-    var y1 = vector1.y + this._y_offset;
-    var z1 = vector1.z;
-    var x2 = vector2.x + this._x_offset;
-    var y2 = vector2.y + this._y_offset;
-    var z2 = vector2.z;
-    var i, dx, dy, dz, l, m, n, x_inc, y_inc, z_inc, err_1, err_2, dx2, dy2, dz2;
-    var pixel = [];
-
-    pixel[0] = x1;
-    pixel[1] = y1;
-    pixel[2] = z1;
-    dx = x2 - x1;
-    dy = y2 - y1;
-    dz = z2 - z1;
-    x_inc = (dx < 0) ? -1 : 1;
-    l = Math.abs(dx);
-    y_inc = (dy < 0) ? -1 : 1;
-    m = Math.abs(dy);
-    z_inc = (dz < 0) ? -1 : 1;
-    n = Math.abs(dz);
-    dx2 = l << 1;
-    dy2 = m << 1;
-    dz2 = n << 1;
-
-    if ((l >= m) && (l >= n)) {
-        err_1 = dy2 - l;
-        err_2 = dz2 - l;
-        for (i = 0; i < l; i++) {
-            this.drawPixel(pixel[0], pixel[1], pixel[2], color);
-            if (err_1 > 0) {
-                pixel[1] += y_inc;
-                err_1 -= dx2;
-            }
-            if (err_2 > 0) {
-                pixel[2] += z_inc;
-                err_2 -= dx2;
-            }
-            err_1 += dy2;
-            err_2 += dz2;
-            pixel[0] += x_inc;
-        }
-    } else if ((m >= l) && (m >= n)) {
-        err_1 = dx2 - m;
-        err_2 = dz2 - m;
-        for (i = 0; i < m; i++) {
-            this.drawPixel(pixel[0], pixel[1], pixel[2], color);
-            if (err_1 > 0) {
-                pixel[0] += x_inc;
-                err_1 -= dy2;
-            }
-            if (err_2 > 0) {
-                pixel[2] += z_inc;
-                err_2 -= dy2;
-            }
-            err_1 += dx2;
-            err_2 += dz2;
-            pixel[1] += y_inc;
-        }
-    } else {
-        err_1 = dy2 - n;
-        err_2 = dx2 - n;
-        for (i = 0; i < n; i++) {
-            this.drawPixel(pixel[0], pixel[1], pixel[2], color);
-            if (err_1 > 0) {
-                pixel[1] += y_inc;
-                err_1 -= dz2;
-            }
-            if (err_2 > 0) {
-                pixel[0] += x_inc;
-                err_2 -= dz2;
-            }
-            err_1 += dy2;
-            err_2 += dx2;
-            pixel[2] += z_inc;
-        }
+    var abs = Math.abs;
+    var current_x = vector1.x;
+    var current_y = vector1.y;
+    var current_z = vector1.z;
+    var longest_dist = Math.max(abs(vector2.x - vector1.x), abs(vector2.y - vector1.y), abs(vector2.z - vector1.z))
+    var step_x = (vector2.x - vector1.x) / longest_dist;
+    var step_y = (vector2.y - vector1.y) / longest_dist;
+    var step_z = (vector2.z - vector1.z) / longest_dist;
+    for (var i = 0; i < longest_dist; i++){
+        current_x += step_x;
+        current_y += step_y;
+        current_z += step_z;
+        this.drawPixel(current_x, current_y, current_z, color);
     }
-    this.drawPixel(pixel[0], pixel[1], pixel[2], color);
 };
 /** @method */
-Scene.prototype.drawFace = function(vector1, vector2, vector3, color){
-    this.ctx.beginPath();
-    this.ctx.moveTo(vector1.x + this._x_offset, vector1.y + this._y_offset);
-    this.ctx.lineTo(vector2.x + this._x_offset, vector2.y + this._y_offset);
-    this.ctx.lineTo(vector3.x + this._x_offset, vector3.y + this._y_offset);
-    this.ctx.fillStyle = color;
-    this.ctx.fill();
-    this.ctx.closePath();
+Scene.prototype.drawTriangle = function(vector1, vector2, vector3, color){
+    this.drawEdge(vector1, vector2, color);
+    this.drawEdge(vector2, vector3, color);
+    this.drawEdge(vector3, vector1, color);
+};
+/** @method */
+Scene.prototype.fillFlattopTriangle = function(v1, v2, v3, color){
+    // TODO: Write this
+    return;
+};
+/** @method */
+Scene.prototype.fillFlatbottomTriangle = function(v1, v2, v3, color){
+    // TODO: Write this
+    return;
+};
+/** @method */
+Scene.prototype.fillTriangle = function(v1, v2, v3, color){
+    // TODO: Finish this
+    // Sort vertices by y value
+    if(v1.y > v2.y) {
+        var temp = v2;
+        v2 = v1;
+        v1 = temp;
+    }
+    if(v2.y > v3.y) {
+        var temp = v2;
+        v2 = v3;
+        v3 = temp;
+    }
+    if(v1.y > v2.y) {
+        var temp = v2;
+        v2 = v1;
+        v1 = temp;
+    }
+    // Do we have a flattop triangle
+    if (v1.y === v2.y){
+        this.fillFlattopTriangle(v1, v2, v3, color);
+    }
+    // Do we have a flatbottom triangle
+    else if (v2.y === v3.y){
+        this.fillFlatbottomTriangle(v1, v2, v3, color);
+    }
+    // Decompose into flattop and flatbottom triangles
+    else {
+        // TODO: Find x and z slopes, find point v4
+        this.fillFlattopTriangle(v1, v2, v4, color);
+        this.fillFlatbottomTriangle(v4, v2, v3, color);
+    }
 };
 /** @method */
 Scene.prototype.renderScene = function(){
-    // TODO: DRAW FROM BACK TO FRONT (IE CLOSER EDGES OVERLAP/OBSCURE FARTHER)
-    // TODO: ONLY DRAW EDGES IN CAMERA'S FRUSTRUM
+    // TODO: Clarify this function.
     this._back_buffer_image = this._back_buffer_ctx.createImageData(this.width, this.height);
     this.initializeDepthBuffer();
-    var cam_pos = this.camera.position;
-    var cam_rot = this.camera.rotation;
-    var camera_transform = this.camera.view_matrix;
-    var projection_transform = this.perspectiveFov();
+    var camera_matrix = this.camera.view_matrix;
+    var projection_matrix = this.perspectiveFov();
     for (var i = 0, len = this.meshes.length; i < len; i++){
         var mesh = this.meshes[i];
         var scale = mesh.scale;
         var rotation = mesh.rotation;
         var position = mesh.position;
-        var world_transform = Matrix.scale(scale.x, scale.y, scale.z).multiply(
+        var world_matrix = Matrix.scale(scale.x, scale.y, scale.z).multiply(
             Matrix.rotation(rotation.pitch, rotation.yaw, rotation.roll).multiply(
                 Matrix.translation(position.x, position.y, position.z)));
-        var final_transform = world_transform.multiply(camera_transform).multiply(projection_transform);
+        var wvp_matrix = world_matrix.multiply(camera_matrix).multiply(projection_matrix);
         for (var k = 0; k < mesh.faces.length; k++){
             var face = mesh.faces[k].face;
             var color = mesh.faces[k].color;
             var v1 = mesh.vertices[face[0]].vector;
             var v2 = mesh.vertices[face[1]].vector;
             var v3 = mesh.vertices[face[2]].vector;
-            var wv1 = v1.transform(final_transform);
-            var wv2 = v2.transform(final_transform);
-            var wv3 = v3.transform(final_transform);
-            this.drawEdge(wv1, wv2, color);
-            this.drawEdge(wv2, wv3, color);
-            this.drawEdge(wv3, wv1, color);
-            //this.drawFace(wv1, wv2, wv3, color);
+            var wv1 = v1.transform(wvp_matrix);
+            var wv2 = v2.transform(wvp_matrix);
+            var wv3 = v3.transform(wvp_matrix);
+            var face_translation = Matrix.translation(wv1.x, wv1.y, wv1.z);
+            var normal = mesh.normal(k).transform(world_matrix).scale(20).transform(face_translation);
+            // var illumination_angle = normal.angle(this.illumination);
+            // TODO: Backface culling, if not in wireframe mode
+            // color = color.darken(illumination_angle);
+            this.drawTriangle(wv1, wv2, wv3, color);
         }
     }
     this._back_buffer_ctx.putImageData(this._back_buffer_image, 0, 0);
@@ -254,11 +229,11 @@ Scene.prototype.addMesh = function(mesh){
 };
 /** @method */
 Scene.prototype.removeMesh = function(mesh){
-    // How to do this? Maybe give shapes IDs, in which case users will need to keep track of these
+    // TODO: Write this
 };
 /** @method */
 Scene.prototype.update = function(){
-    //this.fireEvents()
+    // TODO: Make it easier to register events (i.e. don't use this onUpdate method)
     this.onUpdate();
     if (this._needs_update) {
         this.renderScene();
