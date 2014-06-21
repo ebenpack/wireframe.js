@@ -15,7 +15,7 @@ function Color(color){
     this.g = parsed_color.g;
     this.b = parsed_color.b;
     var alpha = parsed_color.a || 1;
-    this.a = Math.floot(alpha * 255);
+    this.a = Math.floor(alpha * 255);
 }
 Color.prototype.toHSLA = function(){
     // TODO: Write this
