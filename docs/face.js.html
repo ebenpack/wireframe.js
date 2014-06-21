@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="utf-8">
-    <title>JSDoc: Index</title>
+    <title>JSDoc: Source: math/face.js</title>
 
     <script src="scripts/prettify/prettify.js"> </script>
     <script src="scripts/prettify/lang-css.js"> </script>
@@ -17,30 +17,32 @@
 
 <div id="main">
 
-    <h1 class="page-title">Index</h1>
+    <h1 class="page-title">Source: math/face.js</h1>
 
     
 
 
     
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>var Color = require('../utility/color.js');
+var Vector = require('./vector.js');
 
+/**
+ * A 3D triangle
+ * @param {number} a     [description]
+ * @param {number} b     [description]
+ * @param {number} c     [description]
+ * @param {string} color [description]
+ */
+function Face(a, b, c, color){
+    this.face = [a, b, c];
+    this.color = new Color(color);
+}
 
-    <h3> </h3>
-
-
-
-
-
-
-
-
-
-    
-
-
-
-
-
+module.exports = Face;</code></pre>
+        </article>
+    </section>
 
 
 
