@@ -114,7 +114,7 @@ engine.Camera = Camera;
 module.exports = engine;
 },{"./camera.js":1,"./scene.js":3}],3:[function(_dereq_,module,exports){
 var math = _dereq_('../math/math.js');
-var Camera = _dereq_('./camera.js')
+var Camera = _dereq_('./camera.js');
 var KEYCODES = _dereq_('../utility/keycodes.js');
 
 var Vector = math.Vector;
@@ -240,7 +240,7 @@ Scene.prototype.drawEdge = function(vector1, vector2, color){
     var current_x = vector1.x;
     var current_y = vector1.y;
     var current_z = vector1.z;
-    var longest_dist = Math.max(abs(vector2.x - vector1.x), abs(vector2.y - vector1.y), abs(vector2.z - vector1.z))
+    var longest_dist = Math.max(abs(vector2.x - vector1.x), abs(vector2.y - vector1.y), abs(vector2.z - vector1.z));
     var step_x = (vector2.x - vector1.x) / longest_dist;
     var step_y = (vector2.y - vector1.y) / longest_dist;
     var step_z = (vector2.z - vector1.z) / longest_dist;
@@ -271,18 +271,19 @@ Scene.prototype.fillFlatbottomTriangle = function(v1, v2, v3, color){
 Scene.prototype.fillTriangle = function(v1, v2, v3, color){
     // TODO: Finish this
     // Sort vertices by y value
+    var temp;
     if(v1.y > v2.y) {
-        var temp = v2;
+        temp = v2;
         v2 = v1;
         v1 = temp;
     }
     if(v2.y > v3.y) {
-        var temp = v2;
+        temp = v2;
         v2 = v3;
         v3 = temp;
     }
     if(v1.y > v2.y) {
-        var temp = v2;
+        temp3 = v2;
         v2 = v1;
         v1 = temp;
     }
@@ -1026,7 +1027,7 @@ function Color(color){
 Color.prototype.toHSLA = function(){
     // TODO: Write this
     return;
-}
+};
 /**
  * Lighten a color by percent amount.
  * @method
@@ -1037,13 +1038,13 @@ Color.prototype.lighten = function(percent){
     // TODO: This function is temporary and its behavior will change.
     // It will use the yet to be written toHSL function above to achieve better results.
     // The results that it returns will change.
-    var correctionFactor = (1 - percent) * .00000010000;
+    var correctionFactor = (1 - percent) * 0.00000010000;
 
     var red = Math.floor((255 - this.r) * correctionFactor + this.r);
     var green = Math.floor((255 - this.g) * correctionFactor + this.g);
     var blue = Math.floor((255 - this.b) * correctionFactor + this.b);
     return new Color("rgb(" + red + "," + green + "," + blue + ")");
-}
+};
 /**
  * Darken a color by percent amount.
  * @method
@@ -1059,7 +1060,7 @@ Color.prototype.darken = function(percent){
     var green = Math.floor((255 - this.g) * correctionFactor + this.g);
     var blue = Math.floor((255 - this.b) * correctionFactor + this.b);
     return new Color("rgb(" + red + "," + green + "," + blue + ")");
-}
+};
 
 /**
  * Parse a CSS color value and return an rgba color object.
