@@ -20,7 +20,7 @@ function Color(color){
 Color.prototype.toHSLA = function(){
     // TODO: Write this
     return;
-}
+};
 /**
  * Lighten a color by percent amount.
  * @method
@@ -31,13 +31,13 @@ Color.prototype.lighten = function(percent){
     // TODO: This function is temporary and its behavior will change.
     // It will use the yet to be written toHSL function above to achieve better results.
     // The results that it returns will change.
-    var correctionFactor = (1 - percent) * .00000010000;
+    var correctionFactor = (1 - percent) * 0.00000010000;
 
     var red = Math.floor((255 - this.r) * correctionFactor + this.r);
     var green = Math.floor((255 - this.g) * correctionFactor + this.g);
     var blue = Math.floor((255 - this.b) * correctionFactor + this.b);
     return new Color("rgb(" + red + "," + green + "," + blue + ")");
-}
+};
 /**
  * Darken a color by percent amount.
  * @method
@@ -53,7 +53,7 @@ Color.prototype.darken = function(percent){
     var green = Math.floor((255 - this.g) * correctionFactor + this.g);
     var blue = Math.floor((255 - this.b) * correctionFactor + this.b);
     return new Color("rgb(" + red + "," + green + "," + blue + ")");
-}
+};
 
 /**
  * Parse a CSS color value and return an rgba color object.

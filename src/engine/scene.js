@@ -1,5 +1,5 @@
 var math = require('../math/math.js');
-var Camera = require('./camera.js')
+var Camera = require('./camera.js');
 var KEYCODES = require('../utility/keycodes.js');
 
 var Vector = math.Vector;
@@ -125,7 +125,7 @@ Scene.prototype.drawEdge = function(vector1, vector2, color){
     var current_x = vector1.x;
     var current_y = vector1.y;
     var current_z = vector1.z;
-    var longest_dist = Math.max(abs(vector2.x - vector1.x), abs(vector2.y - vector1.y), abs(vector2.z - vector1.z))
+    var longest_dist = Math.max(abs(vector2.x - vector1.x), abs(vector2.y - vector1.y), abs(vector2.z - vector1.z));
     var step_x = (vector2.x - vector1.x) / longest_dist;
     var step_y = (vector2.y - vector1.y) / longest_dist;
     var step_z = (vector2.z - vector1.z) / longest_dist;
@@ -156,18 +156,19 @@ Scene.prototype.fillFlatbottomTriangle = function(v1, v2, v3, color){
 Scene.prototype.fillTriangle = function(v1, v2, v3, color){
     // TODO: Finish this
     // Sort vertices by y value
+    var temp;
     if(v1.y > v2.y) {
-        var temp = v2;
+        temp = v2;
         v2 = v1;
         v1 = temp;
     }
     if(v2.y > v3.y) {
-        var temp = v2;
+        temp = v2;
         v2 = v3;
         v3 = temp;
     }
     if(v1.y > v2.y) {
-        var temp = v2;
+        temp3 = v2;
         v2 = v1;
         v1 = temp;
     }
