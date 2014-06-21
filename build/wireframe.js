@@ -219,7 +219,7 @@ Scene.prototype.perspectiveFov = function() {
 };
 /** @method */
 Scene.prototype.drawPixel = function(x, y, z, color){
-    x = Math.round(x + this._x_offset); // Round
+    x = Math.round(x + this._x_offset);
     y = Math.round(y + this._y_offset);
     if (x >= 0 && x < this.width && y >= 0 && y < this.height) {
         var index = x + (y * this.width);
@@ -348,7 +348,7 @@ Scene.prototype.removeMesh = function(mesh){
 };
 /** @method */
 Scene.prototype.update = function(){
-    // TODO: Could 
+    // TODO: Make it easier to register events (i.e. don't use this onUpdate method)
     this.onUpdate();
     if (this._needs_update) {
         this.renderScene();
@@ -1021,7 +1021,7 @@ function Color(color){
     this.g = parsed_color.g;
     this.b = parsed_color.b;
     var alpha = parsed_color.a || 1;
-    this.a = Math.floot(alpha * 255);
+    this.a = Math.floor(alpha * 255);
 }
 Color.prototype.toHSLA = function(){
     // TODO: Write this
