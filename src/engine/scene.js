@@ -220,11 +220,11 @@ Scene.prototype.renderScene = function(){
             var wv2 = v2.transform(wvp_matrix);
             var wv3 = v3.transform(wvp_matrix);
             var face_translation = Matrix.translation(wv1.x, wv1.y, wv1.z);
-            var normal = mesh.normal(k).transform(world_matrix).scale(20).transform(face_translation);
-            // var illumination_angle = normal.angle(this.illumination);
+            var normal = mesh.normal(k).transform(world_matrix).transform(face_translation);
+            var illumination_angle = Math.abs(normal.cosAngle(this.illumination));
             // TODO: Backface culling, if not in wireframe mode
-            // color = color.darken(illumination_angle);
-            this.drawTriangle(wv1, wv2, wv3, color);
+            color = color.lighten(illumination_angle*0.25);
+            this.drawTriangle(wv1, wv2, wv3, color.rgb);
         }
     }
     this._back_buffer_ctx.putImageData(this._back_buffer_image, 0, 0);
