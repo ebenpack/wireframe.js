@@ -240,6 +240,7 @@ Scene.prototype.isKeyDown = function(key){
 Scene.prototype.onKeyDown = function(e){
     var pressed = e.keyCode || e.which;
     this.keys[pressed] = true;
+    this.fire('keydown');
 };
 /** @method */
 Scene.prototype.onKeyUp = function(e){
@@ -415,7 +416,7 @@ Scene.prototype.update = function(){
 
 
 module.exports = Scene;
-},{"../math/math.js":7,"../utility/keycodes.js":13,"./camera.js":1,"./events.js":3}],5:[function(_dereq_,module,exports){
+},{"../math/math.js":7,"../utility/keycodes.js":12,"./camera.js":1,"./events.js":3}],5:[function(_dereq_,module,exports){
 var math = _dereq_('./math/math.js');
 var engine = _dereq_('./engine/engine.js');
 
@@ -442,9 +443,8 @@ function Face(a, b, c, color){
 }
 
 module.exports = Face;
-},{"../utility/color.js":12,"./vector.js":10}],7:[function(_dereq_,module,exports){
+},{"../utility/color.js":11,"./vector.js":10}],7:[function(_dereq_,module,exports){
 var Vector = _dereq_('./vector.js');
-var Vertex = _dereq_('./vertex.js');
 var Mesh = _dereq_('./mesh.js');
 var Matrix = _dereq_('./matrix.js');
 var Face = _dereq_('./face.js');
@@ -452,13 +452,12 @@ var Face = _dereq_('./face.js');
 var math = Object.create(null);
 
 math.Vector = Vector;
-math.Vertex = Vertex;
 math.Mesh = Mesh;
 math.Matrix = Matrix;
 math.Face = Face;
 
 module.exports = math;
-},{"./face.js":6,"./matrix.js":8,"./mesh.js":9,"./vector.js":10,"./vertex.js":11}],8:[function(_dereq_,module,exports){
+},{"./face.js":6,"./matrix.js":8,"./mesh.js":9,"./vector.js":10}],8:[function(_dereq_,module,exports){
 /** 
  * 4x4 matrix.
  * @constructor
@@ -1046,21 +1045,6 @@ Vector.prototype.rotatePitchYawRoll = function(pitch_amnt, yaw_amnt, roll_amnt) 
 
 module.exports = Vector;
 },{}],11:[function(_dereq_,module,exports){
-var Vector = _dereq_('./vector.js');
-
-/**
- * @constructor
- * @this {Vertex}
- * @param {Vector} vector
- * @param {string} color
- */
-function Vertex(x, y, z, color){
-    this.vector = new Vector(x, y, z);
-    this.color = color;
-}
-
-module.exports = Vertex;
-},{"./vector.js":10}],12:[function(_dereq_,module,exports){
 /**
  * An rgba color.
  * @constructor
@@ -1298,7 +1282,7 @@ var cache = {
 };
 
 module.exports = Color;
-},{}],13:[function(_dereq_,module,exports){
+},{}],12:[function(_dereq_,module,exports){
 /** 
  * @constant
  * @type {Object.<string, number>} 
