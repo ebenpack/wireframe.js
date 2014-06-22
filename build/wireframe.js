@@ -203,7 +203,8 @@ function Scene(options){
     /** @type {Array.<Mesh>} */
     this.meshes = [];
     /** @type {Object.<number, boolean>} */
-    this.keys = {}; // Keys currently pressed
+    this._keys = {}; // Keys currently pressed
+    this._key_count = 0; // Number of keys being pressed... this feels kludgy
     /** @type {?number} */
     this._anim_id = null;
     /** @type {boolean} */
@@ -230,22 +231,28 @@ Scene.prototype.init = function(){
  * @method
  */
 Scene.prototype.emptyKeys = function(){
-    this.keys = {};
+    this._key_count = 0;
+    this._keys = {};
 };
 /** @method */
 Scene.prototype.isKeyDown = function(key){
-    return (KEYCODES[key] in this.keys);
+    return (KEYCODES[key] in this._keys);
 };
 /** @method */
 Scene.prototype.onKeyDown = function(e){
     var pressed = e.keyCode || e.which;
-    this.keys[pressed] = true;
-    this.fire('keydown');
+    if (!this.isKeyDown(pressed)){
+        this._key_count += 1;
+        this._keys[pressed] = true;
+    }
 };
 /** @method */
 Scene.prototype.onKeyUp = function(e){
     var pressed = e.keyCode || e.which;
-    delete this.keys[pressed];
+    if (pressed in this._keys){
+        this._key_count -= 1;
+        delete this._keys[pressed];
+    }
 };
 Scene.prototype.initializeDepthBuffer = function(){
     for (var x = 0, len = this.width * this.height; x < len; x++){
@@ -406,6 +413,9 @@ Scene.prototype.removeMesh = function(mesh){
 };
 /** @method */
 Scene.prototype.update = function(){
+    if (this._key_count > 0){
+        this.fire('keydown');
+    }
     if (this._needs_update) {
         this.renderScene();
         this._needs_update = false;

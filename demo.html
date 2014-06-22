@@ -104,11 +104,6 @@
                     if (scene.isKeyDown('e')) {
                         scene.meshes[0].rotation.roll -= 0.03;
                     }
-                    // DEBUG
-                    dbg.innerHTML = "CameraX: " + scene.camera.position.x + "<br>" +
-                    "CameraY: " + scene.camera.position.y + "<br>" +
-                    "CameraZ: " + scene.camera.position.z + "<br>";
-                    scene._needs_update = true;
                 }
                 function moveCamera(){
                     if (scene.isKeyDown('h')) {
@@ -129,6 +124,11 @@
                     if (scene.isKeyDown('i')) {
                         scene.camera.zoomOut(1);
                     }
+                    // DEBUG
+                    dbg.innerHTML = "CameraX: " + scene.camera.position.x + "<br>" +
+                    "CameraY: " + scene.camera.position.y + "<br>" +
+                    "CameraZ: " + scene.camera.position.z + "<br>";
+                    scene._needs_update = true;
                 }
 
                 var scene = new Scene({canvas_id: 'audiocanvas', width:600, height:400});
