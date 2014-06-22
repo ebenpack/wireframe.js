@@ -1,5 +1,6 @@
 var math = require('../math/math.js');
 var Camera = require('./camera.js');
+var EventTarget = require('./events.js');
 var KEYCODES = require('../utility/keycodes.js');
 
 var Vector = math.Vector;
@@ -38,6 +39,7 @@ function Scene(options){
     this._draw_mode = 'wireframe';
     this.init();
 }
+Scene.prototype = new EventTarget();
 /** @method */
 Scene.prototype.init = function(){
     this.canvas.tabIndex = 1; // Set tab index to allow canvas to have focus to receive key events
@@ -48,11 +50,8 @@ Scene.prototype.init = function(){
     this.canvas.addEventListener('keydown', this.onKeyDown.bind(this), false);
     this.canvas.addEventListener('keyup', this.onKeyUp.bind(this), false);
     this.canvas.addEventListener('blur', this.emptyKeys.bind(this), false);
+    EventTarget.call(this);
     this.update();
-};
-/** @method */
-Scene.prototype.onUpdate = function(){
-    return;
 };
 /**
  * Dump all pressed keys on blur.
@@ -206,9 +205,9 @@ Scene.prototype.renderScene = function(){
         for (var k = 0; k < mesh.faces.length; k++){
             var face = mesh.faces[k].face;
             var color = mesh.faces[k].color;
-            var v1 = mesh.vertices[face[0]].vector;
-            var v2 = mesh.vertices[face[1]].vector;
-            var v3 = mesh.vertices[face[2]].vector;
+            var v1 = mesh.vertices[face[0]];
+            var v2 = mesh.vertices[face[1]];
+            var v3 = mesh.vertices[face[2]];
             var wv1 = v1.transform(wvp_matrix);
             var wv2 = v2.transform(wvp_matrix);
             var wv3 = v3.transform(wvp_matrix);
@@ -234,8 +233,6 @@ Scene.prototype.removeMesh = function(mesh){
 };
 /** @method */
 Scene.prototype.update = function(){
-    // TODO: Make it easier to register events (i.e. don't use this onUpdate method)
-    this.onUpdate();
     if (this._needs_update) {
         this.renderScene();
         this._needs_update = false;
