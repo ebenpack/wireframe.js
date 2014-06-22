@@ -25,7 +25,6 @@
             (function () {
                 var dbg = document.getElementById('debug');
                 var Vector = wireframe.math.Vector;
-                var Vertex = wireframe.math.Vertex;
                 var Mesh = wireframe.math.Mesh;
                 var Face = wireframe.math.Face;
 
@@ -34,14 +33,14 @@
 
                 var cube = new Mesh('cube',
                     [
-                        new Vertex(new Vector(-40, -40, -40), 'red'),
-                        new Vertex(new Vector(-40, -40,  40), 'red'),
-                        new Vertex(new Vector(-40,  40, -40), 'red'),
-                        new Vertex(new Vector(-40,  40,  40), 'red'),
-                        new Vertex(new Vector( 40, -40, -40), 'red'),
-                        new Vertex(new Vector( 40, -40,  40), 'red'),
-                        new Vertex(new Vector( 40,  40, -40), 'red'),
-                        new Vertex(new Vector( 40,  40,  40), 'red')
+                        new Vector(-40, -40, -40),
+                        new Vector(-40, -40,  40),
+                        new Vector(-40,  40, -40),
+                        new Vector(-40,  40,  40),
+                        new Vector( 40, -40, -40),
+                        new Vector( 40, -40,  40),
+                        new Vector( 40,  40, -40),
+                        new Vector( 40,  40,  40)
                     ],
                     [
                         new Face(1, 3, 0, 'red'),
@@ -57,23 +56,11 @@
                         new Face(7, 5, 4, 'red'),
                         new Face(6, 7, 4, 'red')
                     ]);
-                // var cube = new Mesh('cube',
-                //     [
-                //         new Vertex(new Vector(10, 0, 0), 'red'),
-                //         new Vertex(new Vector(-50, 87,  0), 'red'),
-                //         new Vertex(new Vector(-50,  -87, 0), 'red')
-                //     ],
-                //     [
-                //         new Face(0, 1, 2, 'red')
-                //     ]);
-                // cube.position.x = 20;
-                // cube.position.y = 20;
-                // cube.position.z = 20;
 
                 var xaxis = new Mesh('xaxis',
                     [
-                        new Vertex(new Vector(-80, 0, 0), 'green'),
-                        new Vertex(new Vector(80, 0, 0), 'green')
+                        new Vector(-80, 0, 0),
+                        new Vector( 80, 0, 0)
                     ],
                     [
                         new Face(0, 0, 1, 'green')
@@ -81,8 +68,8 @@
                     );
                 var yaxis = new Mesh('yaxis',
                     [
-                        new Vertex(new Vector(0, -80, 0), 'blue'),
-                        new Vertex(new Vector(0, 80, 0), 'blue')
+                        new Vector(0, -80, 0),
+                        new Vector(0,  80, 0)
                     ],
                     [
                         new Face(0, 0, 1, 'blue')
@@ -90,33 +77,15 @@
                     );
                 var zaxis = new Mesh('zaxis',
                     [
-                        new Vertex(new Vector(0, 0, -80), 'yellow'),
-                        new Vertex(new Vector(0, 0, 80), 'yellow')
+                        new Vector(0, 0, -80),
+                        new Vector(0, 0,  80)
                     ],
                     [
                         new Face(0, 0, 1, 'yellow')
                     ]
                     );
 
-                function onUpdate(){
-                    if (scene.isKeyDown('h')) {
-                        scene.camera.moveRight(1);
-                    }
-                    if (scene.isKeyDown('j')) {
-                        scene.camera.moveUp(1);
-                    }
-                    if (scene.isKeyDown('k')) {
-                        scene.camera.moveDown(1);
-                    }
-                    if (scene.isKeyDown('l')) {
-                        scene.camera.moveLeft(1);
-                    }
-                    if (scene.isKeyDown('u')) {
-                        scene.camera.zoomIn(1);
-                    }
-                    if (scene.isKeyDown('i')) {
-                        scene.camera.zoomOut(1);
-                    }
+                function rotateCube(){
                     if (scene.isKeyDown('a')) {
                         scene.meshes[0].rotation.yaw -= 0.03;
                     }
@@ -141,10 +110,31 @@
                     "CameraZ: " + scene.camera.position.z + "<br>";
                     scene._needs_update = true;
                 }
+                function moveCamera(){
+                    if (scene.isKeyDown('h')) {
+                        scene.camera.moveRight(1);
+                    }
+                    if (scene.isKeyDown('j')) {
+                        scene.camera.moveUp(1);
+                    }
+                    if (scene.isKeyDown('k')) {
+                        scene.camera.moveDown(1);
+                    }
+                    if (scene.isKeyDown('l')) {
+                        scene.camera.moveLeft(1);
+                    }
+                    if (scene.isKeyDown('u')) {
+                        scene.camera.zoomIn(1);
+                    }
+                    if (scene.isKeyDown('i')) {
+                        scene.camera.zoomOut(1);
+                    }
+                }
 
                 var scene = new Scene({canvas_id: 'audiocanvas', width:600, height:400});
+                scene.addListener('keydown', rotateCube);
+                scene.addListener('keydown', moveCamera);
 
-                scene.onUpdate = onUpdate;
                 scene.camera.moveTo(0, 0, 400);
                 scene.addMesh(cube);
                 scene.addMesh(xaxis);

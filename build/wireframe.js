@@ -102,7 +102,7 @@ Camera.prototype.orbitRight = function(){
 };
 
 module.exports = Camera;
-},{"../math/math.js":6}],2:[function(_dereq_,module,exports){
+},{"../math/math.js":7}],2:[function(_dereq_,module,exports){
 var Scene = _dereq_('./scene.js');
 var Camera = _dereq_('./camera.js');
 
@@ -112,9 +112,67 @@ engine.Scene = Scene;
 engine.Camera = Camera;
 
 module.exports = engine;
-},{"./camera.js":1,"./scene.js":3}],3:[function(_dereq_,module,exports){
+},{"./camera.js":1,"./scene.js":4}],3:[function(_dereq_,module,exports){
+/**
+ * @license
+ * Copyright (c) 2010 Nicholas C. Zakas. All rights reserved.
+ * MIT License
+ */
+
+function EventTarget(){
+    this._listeners = {};
+}
+
+EventTarget.prototype = {
+
+    constructor: EventTarget,
+
+    addListener: function(type, listener){
+        if (typeof this._listeners[type] == "undefined"){
+            this._listeners[type] = [];
+        }
+
+        this._listeners[type].push(listener);
+    },
+
+    fire: function(event){
+        if (typeof event == "string"){
+            event = { type: event };
+        }
+        if (!event.target){
+            event.target = this;
+        }
+
+        if (!event.type){  //falsy
+            throw new Error("Event object missing 'type' property.");
+        }
+
+        if (this._listeners[event.type] instanceof Array){
+            var listeners = this._listeners[event.type];
+            for (var i=0, len=listeners.length; i < len; i++){
+                listeners[i].call(this, event);
+            }
+        }
+    },
+
+    removeListener: function(type, listener){
+        if (this._listeners[type] instanceof Array){
+            var listeners = this._listeners[type];
+            for (var i=0, len=listeners.length; i < len; i++){
+                if (listeners[i] === listener){
+                    listeners.splice(i, 1);
+                    break;
+                }
+            }
+        }
+    }
+};
+
+module.exports = EventTarget;
+},{}],4:[function(_dereq_,module,exports){
 var math = _dereq_('../math/math.js');
 var Camera = _dereq_('./camera.js');
+var EventTarget = _dereq_('./events.js');
 var KEYCODES = _dereq_('../utility/keycodes.js');
 
 var Vector = math.Vector;
@@ -153,6 +211,7 @@ function Scene(options){
     this._draw_mode = 'wireframe';
     this.init();
 }
+Scene.prototype = new EventTarget();
 /** @method */
 Scene.prototype.init = function(){
     this.canvas.tabIndex = 1; // Set tab index to allow canvas to have focus to receive key events
@@ -163,11 +222,8 @@ Scene.prototype.init = function(){
     this.canvas.addEventListener('keydown', this.onKeyDown.bind(this), false);
     this.canvas.addEventListener('keyup', this.onKeyUp.bind(this), false);
     this.canvas.addEventListener('blur', this.emptyKeys.bind(this), false);
+    EventTarget.call(this);
     this.update();
-};
-/** @method */
-Scene.prototype.onUpdate = function(){
-    return;
 };
 /**
  * Dump all pressed keys on blur.
@@ -321,9 +377,9 @@ Scene.prototype.renderScene = function(){
         for (var k = 0; k < mesh.faces.length; k++){
             var face = mesh.faces[k].face;
             var color = mesh.faces[k].color;
-            var v1 = mesh.vertices[face[0]].vector;
-            var v2 = mesh.vertices[face[1]].vector;
-            var v3 = mesh.vertices[face[2]].vector;
+            var v1 = mesh.vertices[face[0]];
+            var v2 = mesh.vertices[face[1]];
+            var v3 = mesh.vertices[face[2]];
             var wv1 = v1.transform(wvp_matrix);
             var wv2 = v2.transform(wvp_matrix);
             var wv3 = v3.transform(wvp_matrix);
@@ -349,8 +405,6 @@ Scene.prototype.removeMesh = function(mesh){
 };
 /** @method */
 Scene.prototype.update = function(){
-    // TODO: Make it easier to register events (i.e. don't use this onUpdate method)
-    this.onUpdate();
     if (this._needs_update) {
         this.renderScene();
         this._needs_update = false;
@@ -361,7 +415,7 @@ Scene.prototype.update = function(){
 
 
 module.exports = Scene;
-},{"../math/math.js":6,"../utility/keycodes.js":12,"./camera.js":1}],4:[function(_dereq_,module,exports){
+},{"../math/math.js":7,"../utility/keycodes.js":13,"./camera.js":1,"./events.js":3}],5:[function(_dereq_,module,exports){
 var math = _dereq_('./math/math.js');
 var engine = _dereq_('./engine/engine.js');
 
@@ -371,7 +425,7 @@ wireframe.math = math;
 wireframe.engine = engine;
 
 module.exports = wireframe;
-},{"./engine/engine.js":2,"./math/math.js":6}],5:[function(_dereq_,module,exports){
+},{"./engine/engine.js":2,"./math/math.js":7}],6:[function(_dereq_,module,exports){
 var Color = _dereq_('../utility/color.js');
 var Vector = _dereq_('./vector.js');
 
@@ -388,7 +442,7 @@ function Face(a, b, c, color){
 }
 
 module.exports = Face;
-},{"../utility/color.js":11,"./vector.js":9}],6:[function(_dereq_,module,exports){
+},{"../utility/color.js":12,"./vector.js":10}],7:[function(_dereq_,module,exports){
 var Vector = _dereq_('./vector.js');
 var Vertex = _dereq_('./vertex.js');
 var Mesh = _dereq_('./mesh.js');
@@ -404,7 +458,7 @@ math.Matrix = Matrix;
 math.Face = Face;
 
 module.exports = math;
-},{"./face.js":5,"./matrix.js":7,"./mesh.js":8,"./vector.js":9,"./vertex.js":10}],7:[function(_dereq_,module,exports){
+},{"./face.js":6,"./matrix.js":8,"./mesh.js":9,"./vector.js":10,"./vertex.js":11}],8:[function(_dereq_,module,exports){
 /** 
  * 4x4 matrix.
  * @constructor
@@ -705,7 +759,7 @@ Matrix.fromArray = function(arr){
 };
 
 module.exports = Matrix;
-},{}],8:[function(_dereq_,module,exports){
+},{}],9:[function(_dereq_,module,exports){
 var Vector = _dereq_('./vector.js');
 
 /**
@@ -730,9 +784,9 @@ function Mesh(name, vertices, faces){
  */
 Mesh.prototype.normal = function(index){
     var face = this.faces[index].face;
-    var a = this.vertices[face[0]].vector;
-    var b = this.vertices[face[1]].vector;
-    var c = this.vertices[face[2]].vector;
+    var a = this.vertices[face[0]];
+    var b = this.vertices[face[1]];
+    var c = this.vertices[face[2]];
     var side1 = b.subtract(a);
     var side2 = c.subtract(a);
     var norm = side1.cross(side2);
@@ -749,14 +803,14 @@ Mesh.prototype.normal = function(index){
  */
 Mesh.prototype.centroid = function(index){
     var face = this.faces[index].face;
-    var a = this.vertices[face[0]].vector;
-    var b = this.vertices[face[1]].vector;
-    var c = this.vertices[face[2]].vector;
+    var a = this.vertices[face[0]];
+    var b = this.vertices[face[1]];
+    var c = this.vertices[face[2]];
     return new Vector((a.x + b.x + c.x) / 3, (a.y + b.y + c.y) / 3, (a.z + b.z + c.z) / 3);
 };
 
 module.exports = Mesh;
-},{"./vector.js":9}],9:[function(_dereq_,module,exports){
+},{"./vector.js":10}],10:[function(_dereq_,module,exports){
 /**
  * @constructor
  * @this {Vector}
@@ -991,20 +1045,22 @@ Vector.prototype.rotatePitchYawRoll = function(pitch_amnt, yaw_amnt, roll_amnt) 
 };
 
 module.exports = Vector;
-},{}],10:[function(_dereq_,module,exports){
+},{}],11:[function(_dereq_,module,exports){
+var Vector = _dereq_('./vector.js');
+
 /**
  * @constructor
  * @this {Vertex}
  * @param {Vector} vector
  * @param {string} color
  */
-function Vertex(vector, color){
-    this.vector = vector;
+function Vertex(x, y, z, color){
+    this.vector = new Vector(x, y, z);
     this.color = color;
 }
 
 module.exports = Vertex;
-},{}],11:[function(_dereq_,module,exports){
+},{"./vector.js":10}],12:[function(_dereq_,module,exports){
 /**
  * An rgba color.
  * @constructor
@@ -1242,7 +1298,7 @@ var cache = {
 };
 
 module.exports = Color;
-},{}],12:[function(_dereq_,module,exports){
+},{}],13:[function(_dereq_,module,exports){
 /** 
  * @constant
  * @type {Object.<string, number>} 
@@ -1349,6 +1405,6 @@ var KEYCODES = {
 };
 
 module.exports = KEYCODES;
-},{}]},{},[4])
-(4)
+},{}]},{},[5])
+(5)
 });
