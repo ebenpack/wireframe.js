@@ -1,3 +1,4 @@
+var parseColor, cache;
 /**
  * A color with both rgb and hsl representations.
  * @constructor
@@ -83,7 +84,7 @@ Color.rgbToHsl = function(r, g, b){
     var minc = Math.min(r, g, b);
     var l = (minc+maxc)/2;
     var h, s;
-    if (minc == maxc){
+    if (minc === maxc){
         return {'h': 0, 's': 0, 'l': l};
     }
     if (l <= 0.5){
@@ -95,10 +96,10 @@ Color.rgbToHsl = function(r, g, b){
     var rc = (maxc-r) / (maxc-minc);
     var gc = (maxc-g) / (maxc-minc);
     var bc = (maxc-b) / (maxc-minc);
-    if (r == maxc){
+    if (r === maxc){
         h = bc-gc;
     }
-    else if (g == maxc){
+    else if (g === maxc){
         h = 2+rc-bc;
     }
     else{
@@ -115,7 +116,7 @@ Color.rgbToHsl = function(r, g, b){
  * @return {{r: number, g: number, b: number, a: number}}   rgba color object.
  * @throws {ColorError} If illegal color value is passed.
  */
-function parseColor(color){
+parseColor = function(color){
     // TODO: How cross-browser compatible is this? How efficient?
     // Make a temporary HTML element styled with the given color string
     // then extract and parse the computed rgb(a) value.
@@ -136,11 +137,10 @@ function parseColor(color){
         }
     }
     return return_color;
-}
-
+};
 // Pre-warm the cache with named colors, as these are not
 // converted to rgb values by the parseColor function above.
-var cache = {
+cache = {
     "black": { "r": 0, "g": 0, "b": 0, "h": 0, "s": 0, "l": 0, "a": 255},
     "silver": { "r": 192, "g": 192, "b": 192, "h": 0, "s": 0, "l": 0.7529411764705882, "a": 255},
     "gray": { "r": 128, "g": 128, "b": 128, "h": 0, "s": 0, "l": 0.5019607843137255, "a": 255},

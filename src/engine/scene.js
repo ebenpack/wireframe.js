@@ -5,7 +5,6 @@ var KEYCODES = require('../utility/keycodes.js');
 
 var Vector = math.Vector;
 var Matrix = math.Matrix;
-var Mesh = math.Mesh;
 
 /**
  * @constructor
@@ -152,12 +151,12 @@ Scene.prototype.drawTriangle = function(vector1, vector2, vector3, color){
 /** @method */
 Scene.prototype.fillFlattopTriangle = function(v1, v2, v3, color){
     // TODO: Write this
-    return;
+    return [v1, v2, v3, color];
 };
 /** @method */
 Scene.prototype.fillFlatbottomTriangle = function(v1, v2, v3, color){
     // TODO: Write this
-    return;
+    return [v1, v2, v3, color];
 };
 /** @method */
 Scene.prototype.fillTriangle = function(v1, v2, v3, color){
@@ -175,7 +174,7 @@ Scene.prototype.fillTriangle = function(v1, v2, v3, color){
         v3 = temp;
     }
     if(v1.y > v2.y) {
-        temp3 = v2;
+        temp = v2;
         v2 = v1;
         v1 = temp;
     }
@@ -190,6 +189,7 @@ Scene.prototype.fillTriangle = function(v1, v2, v3, color){
     // Decompose into flattop and flatbottom triangles
     else {
         // TODO: Find x and z slopes, find point v4
+        var v4;
         this.fillFlattopTriangle(v1, v2, v4, color);
         this.fillFlatbottomTriangle(v4, v2, v3, color);
     }
@@ -238,6 +238,7 @@ Scene.prototype.addMesh = function(mesh){
 /** @method */
 Scene.prototype.removeMesh = function(mesh){
     // TODO: Write this
+    return mesh;
 };
 /** @method */
 Scene.prototype.update = function(){

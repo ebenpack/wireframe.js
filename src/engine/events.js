@@ -13,7 +13,7 @@ EventTarget.prototype = {
     constructor: EventTarget,
 
     addListener: function(type, listener){
-        if (typeof this._listeners[type] == "undefined"){
+        if (typeof this._listeners[type] === "undefined"){
             this._listeners[type] = [];
         }
 
@@ -21,7 +21,7 @@ EventTarget.prototype = {
     },
 
     fire: function(event){
-        if (typeof event == "string"){
+        if (typeof event === "string"){
             event = { type: event };
         }
         if (!event.target){
