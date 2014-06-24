@@ -149,18 +149,54 @@ Scene.prototype.drawTriangle = function(vector1, vector2, vector3, color){
     this.drawEdge(vector3, vector1, color);
 };
 /** @method */
-Scene.prototype.fillFlattopTriangle = function(v1, v2, v3, color){
-    // TODO: Write this
-    return [v1, v2, v3, color];
+Scene.prototype.drawFlatBottomTriangle = function(v1, v2, v3, color){
+    // compute deltas
+    var dxy_left  = (v3.x-v1.x)/(v3.y-v1.y);
+    var dxy_right = (v2.x-v1.x)/(v2.y-v1.y);
+    var z_slope_left = (v3.z-v1.z)/(v3.y-v1.y);
+    var z_slope_right = (v2.z-v1.z)/(v2.y-v1.y);
+
+    // set starting and ending points for edge trace
+    var xs = v1.x;
+    var xe = v1.x;
+
+    // draw each scanline
+    for (var y=v1.y; y <= v2.y; y++){
+        // draw a line from xs to xe at y in color c
+        var za = v3.z + ((y - v3.y) * z_slope_left);
+        var zb = v2.z + ((y - v2.y) * z_slope_right);
+        this.drawEdge({'x':xs, 'y':y, 'z':za}, {'x':xe, 'y':y, 'z':zb}, color);
+
+        // move down one scanline
+        xs+=dxy_left;
+        xe+=dxy_right;
+    }
 };
-/** @method */
-Scene.prototype.fillFlatbottomTriangle = function(v1, v2, v3, color){
-    // TODO: Write this
-    return [v1, v2, v3, color];
+Scene.prototype.drawFlatTopTriangle = function(v1, v2, v3, color){
+    // compute deltas
+    var dxy_left  = (v3.x-v1.x)/(v3.y-v1.y);
+    var dxy_right = (v3.x-v2.x)/(v3.y-v2.y);
+    var z_slope_left = (v3.z-v1.z)/(v3.y-v1.y);
+    var z_slope_right = (v3.z-v2.z)/(v3.y-v2.y);
+
+    // set starting and ending points for edge trace
+    var xs = v1.x;
+    var xe = v2.x;
+
+    // draw each scanline
+    for (var y=v1.y; y <= v3.y; y++){
+        var za = v1.z + ((y - v1.y) * z_slope_left);
+        var zb = v2.z + ((y - v2.y) * z_slope_right);
+        // draw a line from xs to xe at y in color c
+        this.drawEdge({'x':xs, 'y':y, 'z':za}, {'x':xe, 'y':y, 'z':zb}, color);
+        // move down one scanline
+        xs+=dxy_left;
+        xe+=dxy_right;
+
+    }
 };
 /** @method */
 Scene.prototype.fillTriangle = function(v1, v2, v3, color){
-    // TODO: Finish this
     // Sort vertices by y value
     var temp;
     if(v1.y > v2.y) {
@@ -178,25 +214,44 @@ Scene.prototype.fillTriangle = function(v1, v2, v3, color){
         v2 = v1;
         v1 = temp;
     }
-    // Do we have a flattop triangle
-    if (v1.y === v2.y){
-        this.fillFlattopTriangle(v1, v2, v3, color);
+    // Triangle with no height
+    if ((v1.y - v3.y) === 0){
+        return;
     }
-    // Do we have a flatbottom triangle
-    else if (v2.y === v3.y){
-        this.fillFlatbottomTriangle(v1, v2, v3, color);
+
+    var short_slope, long_slope;
+    if ((v2.y - v1.y) === 0) {
+        short_slope = 0;
+    } else {
+        short_slope = (v2.x - v1.x) / (v2.y - v1.y);
     }
-    // Decompose into flattop and flatbottom triangles
-    else {
-        // TODO: Find x and z slopes, find point v4
-        var v4;
-        this.fillFlattopTriangle(v1, v2, v4, color);
-        this.fillFlatbottomTriangle(v4, v2, v3, color);
+    if ((v3.y - v1.y) === 0) {
+        long_slope = 0;
+    } else {
+        long_slope = (v3.x - v1.x) / (v3.y - v1.y);
+    }
+
+    if (v2.y === v3.y){
+        // Flat top
+        this.drawFlatBottomTriangle(v1, v2, v3, color);
+    }
+    else if (v1.y === v2.y ){
+        // Flat bottom
+        this.drawFlatTopTriangle(v1, v2, v3, color);
+    } else {
+        // Interpolate 
+        // Decompose into flat top
+        var z_slope = (v3.z - v1.z) / (v3.y - v1.y);
+        var x = ((v2.y - v1.y)*long_slope) + v1.x;
+        var z = ((v2.y - v1.y)*z_slope) + v1.z;
+        var v4 = {'x': x, 'y': v2.y, 'z': z}
+        this.drawFlatBottomTriangle(v1, v2, v4, color);
+        this.drawFlatTopTriangle(v2, v4, v3, color);
     }
 };
 /** @method */
 Scene.prototype.renderScene = function(){
-    // TODO: Clarify this function.
+    // TODO: Simplify this function.
     this._back_buffer_image = this._back_buffer_ctx.createImageData(this.width, this.height);
     this.initializeDepthBuffer();
     var camera_matrix = this.camera.view_matrix;
@@ -220,11 +275,15 @@ Scene.prototype.renderScene = function(){
             var wv2 = v2.transform(wvp_matrix);
             var wv3 = v3.transform(wvp_matrix);
             var face_translation = Matrix.translation(wv1.x, wv1.y, wv1.z);
-            var normal = mesh.normal(k).transform(world_matrix).transform(face_translation);
+            var centroid = mesh.centroid(k).transform(wvp_matrix);
+            var centroid_translation = Matrix.translation(centroid.x, centroid.y, centroid.z);
+            var normal = mesh.normal(k).scale(20).transform(world_matrix).transform(centroid_translation);
             var illumination_angle = Math.abs(normal.cosAngle(this.illumination));
+            var origin = new Vector(0,0,0).transform(centroid_translation);
+            // this.drawEdge(centroid, normal, {'r':255, 'b':255, 'g':255});
             // TODO: Backface culling, if not in wireframe mode
             color = color.lighten(illumination_angle*0.25);
-            this.drawTriangle(wv1, wv2, wv3, color.rgb);
+            this.fillTriangle(wv1, wv2, wv3, color.rgb);
         }
     }
     this._back_buffer_ctx.putImageData(this._back_buffer_image, 0, 0);
