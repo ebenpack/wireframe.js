@@ -100,11 +100,11 @@ Scene.prototype.perspectiveFov = function() {
     var height = (1/Math.tan(fov/2)) * this.canvas.height;
     var width = height * aspect;
 
-    matrix.m[0] = width;
-    matrix.m[5] = height;
-    matrix.m[10] = far/(near-far) ;
-    matrix.m[11] = -1;
-    matrix.m[14] = near*far/(near-far);
+    matrix[0] = width;
+    matrix[5] = height;
+    matrix[10] = far/(near-far) ;
+    matrix[11] = -1;
+    matrix[14] = near*far/(near-far);
 
     return matrix;
 };
@@ -157,19 +157,22 @@ Scene.prototype.drawFlatBottomTriangle = function(v1, v2, v3, color){
     var z_slope_right = (v2.z-v1.z)/(v2.y-v1.y);
 
     // set starting and ending points for edge trace
-    var xs = v1.x;
-    var xe = v1.x;
+    var xs = new Vector(v1.x, v1.y, v1.z);
+    var xe = new Vector(v1.x, v1.y, v1.z);
+    xs.z = v3.z + ((v1.y - v3.y) * z_slope_left);
+    xe.z = v2.z + ((v1.y - v2.y) * z_slope_right);
 
     // draw each scanline
     for (var y=v1.y; y <= v2.y; y++){
-        // draw a line from xs to xe at y in color c
-        var za = v3.z + ((y - v3.y) * z_slope_left);
-        var zb = v2.z + ((y - v2.y) * z_slope_right);
-        this.drawEdge({'x':xs, 'y':y, 'z':za}, {'x':xe, 'y':y, 'z':zb}, color);
+        xs.y = y;
+        xe.y = y;
+        this.drawEdge(xs, xe, color);
 
         // move down one scanline
-        xs+=dxy_left;
-        xe+=dxy_right;
+        xs.x+=dxy_left;
+        xe.x+=dxy_right;
+        xs.z+=z_slope_left;
+        xe.z+=z_slope_right;
     }
 };
 Scene.prototype.drawFlatTopTriangle = function(v1, v2, v3, color){
@@ -180,18 +183,23 @@ Scene.prototype.drawFlatTopTriangle = function(v1, v2, v3, color){
     var z_slope_right = (v3.z-v2.z)/(v3.y-v2.y);
 
     // set starting and ending points for edge trace
-    var xs = v1.x;
-    var xe = v2.x;
+    var xs = new Vector(v1.x, v1.y, v1.z);
+    var xe = new Vector(v2.x, v1.y, v1.z);
+
+    xs.z = v1.z + ((v1.y - v1.y) * z_slope_left);
+    xe.z = v2.z + ((v1.y - v2.y) * z_slope_right);
 
     // draw each scanline
     for (var y=v1.y; y <= v3.y; y++){
-        var za = v1.z + ((y - v1.y) * z_slope_left);
-        var zb = v2.z + ((y - v2.y) * z_slope_right);
+        xs.y = y;
+        xe.y = y;
         // draw a line from xs to xe at y in color c
-        this.drawEdge({'x':xs, 'y':y, 'z':za}, {'x':xe, 'y':y, 'z':zb}, color);
+        this.drawEdge(xs, xe, color);
         // move down one scanline
-        xs+=dxy_left;
-        xe+=dxy_right;
+        xs.x+=dxy_left;
+        xe.x+=dxy_right;
+        xs.z+=z_slope_left;
+        xe.z+=z_slope_right;
 
     }
 };
@@ -244,7 +252,7 @@ Scene.prototype.fillTriangle = function(v1, v2, v3, color){
         var z_slope = (v3.z - v1.z) / (v3.y - v1.y);
         var x = ((v2.y - v1.y)*long_slope) + v1.x;
         var z = ((v2.y - v1.y)*z_slope) + v1.z;
-        var v4 = {'x': x, 'y': v2.y, 'z': z}
+        var v4 = new Vector(x, v2.y, z);
         this.drawFlatBottomTriangle(v1, v2, v4, color);
         this.drawFlatTopTriangle(v2, v4, v3, color);
     }
@@ -274,12 +282,11 @@ Scene.prototype.renderScene = function(){
             var wv1 = v1.transform(wvp_matrix);
             var wv2 = v2.transform(wvp_matrix);
             var wv3 = v3.transform(wvp_matrix);
-            var face_translation = Matrix.translation(wv1.x, wv1.y, wv1.z);
             var centroid = mesh.centroid(k).transform(wvp_matrix);
             var centroid_translation = Matrix.translation(centroid.x, centroid.y, centroid.z);
             var normal = mesh.normal(k).scale(20).transform(world_matrix).transform(centroid_translation);
             var illumination_angle = Math.abs(normal.cosAngle(this.illumination));
-            var origin = new Vector(0,0,0).transform(centroid_translation);
+            // var origin = new Vector(0,0,0).transform(centroid_translation);
             // this.drawEdge(centroid, normal, {'r':255, 'b':255, 'g':255});
             // TODO: Backface culling, if not in wireframe mode
             color = color.lighten(illumination_angle*0.25);
