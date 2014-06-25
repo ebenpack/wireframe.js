@@ -128,7 +128,7 @@ EventTarget.prototype = {
     constructor: EventTarget,
 
     addListener: function(type, listener){
-        if (typeof this._listeners[type] == "undefined"){
+        if (typeof this._listeners[type] === "undefined"){
             this._listeners[type] = [];
         }
 
@@ -136,7 +136,7 @@ EventTarget.prototype = {
     },
 
     fire: function(event){
-        if (typeof event == "string"){
+        if (typeof event === "string"){
             event = { type: event };
         }
         if (!event.target){
@@ -177,7 +177,6 @@ var KEYCODES = _dereq_('../utility/keycodes.js');
 
 var Vector = math.Vector;
 var Matrix = math.Matrix;
-var Mesh = math.Mesh;
 
 /**
  * @constructor
@@ -322,18 +321,54 @@ Scene.prototype.drawTriangle = function(vector1, vector2, vector3, color){
     this.drawEdge(vector3, vector1, color);
 };
 /** @method */
-Scene.prototype.fillFlattopTriangle = function(v1, v2, v3, color){
-    // TODO: Write this
-    return;
+Scene.prototype.drawFlatBottomTriangle = function(v1, v2, v3, color){
+    // compute deltas
+    var dxy_left  = (v3.x-v1.x)/(v3.y-v1.y);
+    var dxy_right = (v2.x-v1.x)/(v2.y-v1.y);
+    var z_slope_left = (v3.z-v1.z)/(v3.y-v1.y);
+    var z_slope_right = (v2.z-v1.z)/(v2.y-v1.y);
+
+    // set starting and ending points for edge trace
+    var xs = v1.x;
+    var xe = v1.x;
+
+    // draw each scanline
+    for (var y=v1.y; y <= v2.y; y++){
+        // draw a line from xs to xe at y in color c
+        var za = v3.z + ((y - v3.y) * z_slope_left);
+        var zb = v2.z + ((y - v2.y) * z_slope_right);
+        this.drawEdge({'x':xs, 'y':y, 'z':za}, {'x':xe, 'y':y, 'z':zb}, color);
+
+        // move down one scanline
+        xs+=dxy_left;
+        xe+=dxy_right;
+    }
 };
-/** @method */
-Scene.prototype.fillFlatbottomTriangle = function(v1, v2, v3, color){
-    // TODO: Write this
-    return;
+Scene.prototype.drawFlatTopTriangle = function(v1, v2, v3, color){
+    // compute deltas
+    var dxy_left  = (v3.x-v1.x)/(v3.y-v1.y);
+    var dxy_right = (v3.x-v2.x)/(v3.y-v2.y);
+    var z_slope_left = (v3.z-v1.z)/(v3.y-v1.y);
+    var z_slope_right = (v3.z-v2.z)/(v3.y-v2.y);
+
+    // set starting and ending points for edge trace
+    var xs = v1.x;
+    var xe = v2.x;
+
+    // draw each scanline
+    for (var y=v1.y; y <= v3.y; y++){
+        var za = v1.z + ((y - v1.y) * z_slope_left);
+        var zb = v2.z + ((y - v2.y) * z_slope_right);
+        // draw a line from xs to xe at y in color c
+        this.drawEdge({'x':xs, 'y':y, 'z':za}, {'x':xe, 'y':y, 'z':zb}, color);
+        // move down one scanline
+        xs+=dxy_left;
+        xe+=dxy_right;
+
+    }
 };
 /** @method */
 Scene.prototype.fillTriangle = function(v1, v2, v3, color){
-    // TODO: Finish this
     // Sort vertices by y value
     var temp;
     if(v1.y > v2.y) {
@@ -347,28 +382,48 @@ Scene.prototype.fillTriangle = function(v1, v2, v3, color){
         v3 = temp;
     }
     if(v1.y > v2.y) {
-        temp3 = v2;
+        temp = v2;
         v2 = v1;
         v1 = temp;
     }
-    // Do we have a flattop triangle
-    if (v1.y === v2.y){
-        this.fillFlattopTriangle(v1, v2, v3, color);
+    // Triangle with no height
+    if ((v1.y - v3.y) === 0){
+        return;
     }
-    // Do we have a flatbottom triangle
-    else if (v2.y === v3.y){
-        this.fillFlatbottomTriangle(v1, v2, v3, color);
+
+    var short_slope, long_slope;
+    if ((v2.y - v1.y) === 0) {
+        short_slope = 0;
+    } else {
+        short_slope = (v2.x - v1.x) / (v2.y - v1.y);
     }
-    // Decompose into flattop and flatbottom triangles
-    else {
-        // TODO: Find x and z slopes, find point v4
-        this.fillFlattopTriangle(v1, v2, v4, color);
-        this.fillFlatbottomTriangle(v4, v2, v3, color);
+    if ((v3.y - v1.y) === 0) {
+        long_slope = 0;
+    } else {
+        long_slope = (v3.x - v1.x) / (v3.y - v1.y);
+    }
+
+    if (v2.y === v3.y){
+        // Flat top
+        this.drawFlatBottomTriangle(v1, v2, v3, color);
+    }
+    else if (v1.y === v2.y ){
+        // Flat bottom
+        this.drawFlatTopTriangle(v1, v2, v3, color);
+    } else {
+        // Interpolate 
+        // Decompose into flat top
+        var z_slope = (v3.z - v1.z) / (v3.y - v1.y);
+        var x = ((v2.y - v1.y)*long_slope) + v1.x;
+        var z = ((v2.y - v1.y)*z_slope) + v1.z;
+        var v4 = new Vector(x, v2.y, z);
+        this.drawFlatBottomTriangle(v1, v2, v4, color);
+        this.drawFlatTopTriangle(v2, v4, v3, color);
     }
 };
 /** @method */
 Scene.prototype.renderScene = function(){
-    // TODO: Clarify this function.
+    // TODO: Simplify this function.
     this._back_buffer_image = this._back_buffer_ctx.createImageData(this.width, this.height);
     this.initializeDepthBuffer();
     var camera_matrix = this.camera.view_matrix;
@@ -391,12 +446,15 @@ Scene.prototype.renderScene = function(){
             var wv1 = v1.transform(wvp_matrix);
             var wv2 = v2.transform(wvp_matrix);
             var wv3 = v3.transform(wvp_matrix);
-            var face_translation = Matrix.translation(wv1.x, wv1.y, wv1.z);
-            var normal = mesh.normal(k).transform(world_matrix).scale(20).transform(face_translation);
-            // var illumination_angle = normal.angle(this.illumination);
+            var centroid = mesh.centroid(k).transform(wvp_matrix);
+            var centroid_translation = Matrix.translation(centroid.x, centroid.y, centroid.z);
+            var normal = mesh.normal(k).scale(20).transform(world_matrix).transform(centroid_translation);
+            var illumination_angle = Math.abs(normal.cosAngle(this.illumination));
+            // var origin = new Vector(0,0,0).transform(centroid_translation);
+            // this.drawEdge(centroid, normal, {'r':255, 'b':255, 'g':255});
             // TODO: Backface culling, if not in wireframe mode
-            // color = color.darken(illumination_angle);
-            this.drawTriangle(wv1, wv2, wv3, color);
+            color = color.lighten(illumination_angle*0.25);
+            this.fillTriangle(wv1, wv2, wv3, color.rgb);
         }
     }
     this._back_buffer_ctx.putImageData(this._back_buffer_image, 0, 0);
@@ -410,6 +468,7 @@ Scene.prototype.addMesh = function(mesh){
 /** @method */
 Scene.prototype.removeMesh = function(mesh){
     // TODO: Write this
+    return mesh;
 };
 /** @method */
 Scene.prototype.update = function(){
@@ -438,7 +497,6 @@ wireframe.engine = engine;
 module.exports = wireframe;
 },{"./engine/engine.js":2,"./math/math.js":7}],6:[function(_dereq_,module,exports){
 var Color = _dereq_('../utility/color.js');
-var Vector = _dereq_('./vector.js');
 
 /**
  * A 3D triangle
@@ -453,7 +511,7 @@ function Face(a, b, c, color){
 }
 
 module.exports = Face;
-},{"../utility/color.js":11,"./vector.js":10}],7:[function(_dereq_,module,exports){
+},{"../utility/color.js":11}],7:[function(_dereq_,module,exports){
 var Vector = _dereq_('./vector.js');
 var Mesh = _dereq_('./mesh.js');
 var Matrix = _dereq_('./matrix.js');
@@ -562,7 +620,7 @@ Matrix.prototype.multiply = function(matrix){
  * @param {number} scalar
  * @return {Matrix}
  */
-Matrix.prototype.negate = function(matrix){
+Matrix.prototype.negate = function(){
     var new_matrix = new Matrix();
     for (var i = 0, len = this.matrix.length; i < len; i++){
         this.matrix.m[i] = -this.matrix.m[i];
@@ -876,6 +934,22 @@ Vector.prototype.angle = function(vector){
     return Math.acos( a.dot(b) / (amag * bmag ));
 };
 /**
+ * Find the cos of the angle between two vectors.
+ * @method
+ * @param {Vector} vector
+ * @return {number}
+ */
+Vector.prototype.cosAngle = function(vector){
+    var a = this.normalize();
+    var b = vector.normalize();
+    var amag = a.magnitude();
+    var bmag = b.magnitude();
+    if (amag === 0 || bmag === 0){
+        return 0;
+    }
+    return a.dot(b) / (amag * bmag );
+};
+/**
  * Find magnitude of a vector.
  * @method
  * @return {number}
@@ -984,7 +1058,7 @@ Vector.prototype.rotate = function(axis, theta){
     var x = ((cos + ((ux*ux)*cos1)) * this.x) + (((xy*cos1) - (uz*sin)) * this.y) + (((xz*cos1)+(uy*sin)) * this.z);
     var y = (((xy*cos1)+(uz*sin)) * this.x) + ((cos+((uy*uy)*cos1)) * this.y) + (((yz*cos1)-(ux*sin)) * this.z);
     var z = (((xz*cos1)-(uy*sin)) * this.x) + (((yz*cos1)+(ux*sin)) * this.y) + ((cos + ((ux*ux)*cos1)) * this.z);
-    return new Vector(x, y, x);
+    return new Vector(x, y, z);
 };
 /**
  * Perform linear tranformation on self.
@@ -1055,8 +1129,9 @@ Vector.prototype.rotatePitchYawRoll = function(pitch_amnt, yaw_amnt, roll_amnt) 
 
 module.exports = Vector;
 },{}],11:[function(_dereq_,module,exports){
+var parseColor, cache;
 /**
- * An rgba color.
+ * A color with both rgb and hsl representations.
  * @constructor
  * @param {string} color Any legal CSS color value (hex, color keyword, rgb[a], hsl[a]).
  */
@@ -1068,16 +1143,12 @@ function Color(color){
         parsed_color = parseColor(color);
         cache[color] = parsed_color;
     }
-    this.r = parsed_color.r;
-    this.g = parsed_color.g;
-    this.b = parsed_color.b;
+    var hsl = Color.rgbToHsl(parsed_color.r, parsed_color.g, parsed_color.b);
     var alpha = parsed_color.a || 1;
-    this.a = Math.floor(alpha * 255);
+    this.rgb = {'r': parsed_color.r, 'g': parsed_color.g, 'b': parsed_color.b};
+    this.hsl = {'h': hsl.h, 's': hsl.s, 'l': hsl.l};
+    this.alpha = Math.floor(alpha * 255);
 }
-Color.prototype.toHSLA = function(){
-    // TODO: Write this
-    return;
-};
 /**
  * Lighten a color by percent amount.
  * @method
@@ -1085,15 +1156,13 @@ Color.prototype.toHSLA = function(){
  * @return {Color}
  */
 Color.prototype.lighten = function(percent){
-    // TODO: This function is temporary and its behavior will change.
-    // It will use the yet to be written toHSL function above to achieve better results.
-    // The results that it returns will change.
-    var correctionFactor = (1 - percent) * 0.00000010000;
-
-    var red = Math.floor((255 - this.r) * correctionFactor + this.r);
-    var green = Math.floor((255 - this.g) * correctionFactor + this.g);
-    var blue = Math.floor((255 - this.b) * correctionFactor + this.b);
-    return new Color("rgb(" + red + "," + green + "," + blue + ")");
+    var hsl = this.hsl;
+    var lum = hsl.l + percent;
+    if (lum > 1){
+        lum = 1;
+    }
+    var lighter = Color.hslToRgb(hsl.h, hsl.s, lum);
+    return new Color("rgb(" + Math.floor(lighter.r) + "," + Math.floor(lighter.g) + "," + Math.floor(lighter.b) + ")");
 };
 /**
  * Darken a color by percent amount.
@@ -1102,14 +1171,74 @@ Color.prototype.lighten = function(percent){
  * @return {Color}
  */
 Color.prototype.darken = function(percent){
-    // TODO: This function is temporary and its behavior will change.
-    // It will use the yet to be written toHSL function above to achieve better results.
-    // The results that it returns will change.
-    var correctionFactor = percent / 7;
-    var red = Math.floor((255 - this.r) * correctionFactor + this.r);
-    var green = Math.floor((255 - this.g) * correctionFactor + this.g);
-    var blue = Math.floor((255 - this.b) * correctionFactor + this.b);
-    return new Color("rgb(" + red + "," + green + "," + blue + ")");
+    var hsl = this.hsl;
+    var lum = hsl.l - percent;
+    if (lum < 0){
+        lum = 0;
+    }
+    var darker = Color.hslToRgb(hsl.h, hsl.s, lum);
+    return new Color("rgb(" + Math.floor(darker.r) + "," + Math.floor(darker.g) + "," + Math.floor(darker.b) + ")");
+};
+Color.hslToRgb = function(h, s, l){
+    function _v(m1, m2, hue){
+        hue = hue % 1;
+        if (hue < 0){hue+=1;}
+        if (hue < (1/6)){
+            return m1 + (m2-m1)*hue*6;
+        }
+        if (hue < 0.5){
+            return m2;
+        }
+        if (hue < (2/3)){
+            return m1 + (m2-m1)*((2/3)-hue)*6;
+        }
+        return m1;
+    }
+    var m2;
+    if (s === 0){
+        return {'r': l, 'g': l, 'b': l};
+    }
+    if (l <= 0.5){
+        m2 = l * (1+s);
+    }
+    else{
+        m2 = l+s-(l*s);
+    }
+    var m1 = 2*l - m2;
+    return {'r': _v(m1, m2, h+(1/3))*255, 'g': _v(m1, m2, h)*255, 'b': _v(m1, m2, h-(1/3))*255};
+};
+Color.rgbToHsl = function(r, g, b){
+    r = r / 255;
+    g = g / 255;
+    b = b / 255;
+    var maxc = Math.max(r, g, b);
+    var minc = Math.min(r, g, b);
+    var l = (minc+maxc)/2;
+    var h, s;
+    if (minc === maxc){
+        return {'h': 0, 's': 0, 'l': l};
+    }
+    if (l <= 0.5){
+        s = (maxc-minc) / (maxc+minc);
+    }
+    else{
+        s = (maxc-minc) / (2-maxc-minc);
+    }
+    var rc = (maxc-r) / (maxc-minc);
+    var gc = (maxc-g) / (maxc-minc);
+    var bc = (maxc-b) / (maxc-minc);
+    if (r === maxc){
+        h = bc-gc;
+    }
+    else if (g === maxc){
+        h = 2+rc-bc;
+    }
+    else{
+        h = 4+gc-rc;
+    }
+    h = (h/6) % 1;
+    if (h < 0){h+=1;}
+    return {'h': h, 's': s, 'l': l};
 };
 
 /**
@@ -1118,7 +1247,7 @@ Color.prototype.darken = function(percent){
  * @return {{r: number, g: number, b: number, a: number}}   rgba color object.
  * @throws {ColorError} If illegal color value is passed.
  */
-function parseColor(color){
+parseColor = function(color){
     // TODO: How cross-browser compatible is this? How efficient?
     // Make a temporary HTML element styled with the given color string
     // then extract and parse the computed rgb(a) value.
@@ -1139,156 +1268,155 @@ function parseColor(color){
         }
     }
     return return_color;
-}
-
+};
 // Pre-warm the cache with named colors, as these are not
 // converted to rgb values by the parseColor function above.
-var cache = {
-    "black": {"r": 0, "g": 0, "b": 0},
-    "silver": {"r": 192, "g": 192, "b": 192},
-    "gray": {"r": 128, "g": 128, "b": 128},
-    "white": {"r": 255, "g": 255, "b": 255},
-    "maroon": {"r": 128, "g": 0, "b": 0},
-    "red": {"r": 255, "g": 0, "b": 0},
-    "purple": {"r": 128, "g": 0, "b": 128},
-    "fuchsia": {"r": 255, "g": 0, "b": 255},
-    "green": {"r": 0, "g": 128, "b": 0},
-    "lime": {"r": 0, "g": 255, "b": 0},
-    "olive": {"r": 128, "g": 128, "b": 0},
-    "yellow": {"r": 255, "g": 255, "b": 0},
-    "navy": {"r": 0, "g": 0, "b": 128},
-    "blue": {"r": 0, "g": 0, "b": 255},
-    "teal": {"r": 0, "g": 128, "b": 128},
-    "aqua": {"r": 0, "g": 255, "b": 255},
-    "orange": {"r": 255, "g": 165, "b": 0},
-    "aliceblue": {"r": 240, "g": 248, "b": 255},
-    "antiquewhite": {"r": 250, "g": 235, "b": 215},
-    "aquamarine": {"r": 127, "g": 255, "b": 212},
-    "azure": {"r": 240, "g": 255, "b": 255},
-    "beige": {"r": 245, "g": 245, "b": 220},
-    "bisque": {"r": 255, "g": 228, "b": 196},
-    "blanchedalmond": {"r": 255, "g": 235, "b": 205},
-    "blueviolet": {"r": 138, "g": 43, "b": 226},
-    "brown": {"r": 165, "g": 42, "b": 42},
-    "burlywood": {"r": 222, "g": 184, "b": 135},
-    "cadetblue": {"r": 95, "g": 158, "b": 160},
-    "chartreuse": {"r": 127, "g": 255, "b": 0},
-    "chocolate": {"r": 210, "g": 105, "b": 30},
-    "coral": {"r": 255, "g": 127, "b": 80},
-    "cornflowerblue": {"r": 100, "g": 149, "b": 237},
-    "cornsilk": {"r": 255, "g": 248, "b": 220},
-    "crimson": {"r": 220, "g": 20, "b": 60},
-    "darkblue": {"r": 0, "g": 0, "b": 139},
-    "darkcyan": {"r": 0, "g": 139, "b": 139},
-    "darkgoldenrod": {"r": 184, "g": 134, "b": 11},
-    "darkgray": {"r": 169, "g": 169, "b": 169},
-    "darkgreen": {"r": 0, "g": 100, "b": 0},
-    "darkgrey": {"r": 169, "g": 169, "b": 169},
-    "darkkhaki": {"r": 189, "g": 183, "b": 107},
-    "darkmagenta": {"r": 139, "g": 0, "b": 139},
-    "darkolivegreen": {"r": 85, "g": 107, "b": 47},
-    "darkorange": {"r": 255, "g": 140, "b": 0},
-    "darkorchid": {"r": 153, "g": 50, "b": 204},
-    "darkred": {"r": 139, "g": 0, "b": 0},
-    "darksalmon": {"r": 233, "g": 150, "b": 122},
-    "darkseagreen": {"r": 143, "g": 188, "b": 143},
-    "darkslateblue": {"r": 72, "g": 61, "b": 139},
-    "darkslategray": {"r": 47, "g": 79, "b": 79},
-    "darkslategrey": {"r": 47, "g": 79, "b": 79},
-    "darkturquoise": {"r": 0, "g": 206, "b": 209},
-    "darkviolet": {"r": 148, "g": 0, "b": 211},
-    "deeppink": {"r": 255, "g": 20, "b": 147},
-    "deepskyblue": {"r": 0, "g": 191, "b": 255},
-    "dimgray": {"r": 105, "g": 105, "b": 105},
-    "dimgrey": {"r": 105, "g": 105, "b": 105},
-    "dodgerblue": {"r": 30, "g": 144, "b": 255},
-    "firebrick": {"r": 178, "g": 34, "b": 34},
-    "floralwhite": {"r": 255, "g": 250, "b": 240},
-    "forestgreen": {"r": 34, "g": 139, "b": 34},
-    "gainsboro": {"r": 220, "g": 220, "b": 220},
-    "ghostwhite": {"r": 248, "g": 248, "b": 255},
-    "gold": {"r": 255, "g": 215, "b": 0},
-    "goldenrod": {"r": 218, "g": 165, "b": 32},
-    "greenyellow": {"r": 173, "g": 255, "b": 47},
-    "grey": {"r": 128, "g": 128, "b": 128},
-    "honeydew": {"r": 240, "g": 255, "b": 240},
-    "hotpink": {"r": 255, "g": 105, "b": 180},
-    "indianred": {"r": 205, "g": 92, "b": 92},
-    "indigo": {"r": 75, "g": 0, "b": 130},
-    "ivory": {"r": 255, "g": 255, "b": 240},
-    "khaki": {"r": 240, "g": 230, "b": 140},
-    "lavender": {"r": 230, "g": 230, "b": 250},
-    "lavenderblush": {"r": 255, "g": 240, "b": 245},
-    "lawngreen": {"r": 124, "g": 252, "b": 0},
-    "lemonchiffon": {"r": 255, "g": 250, "b": 205},
-    "lightblue": {"r": 173, "g": 216, "b": 230},
-    "lightcoral": {"r": 240, "g": 128, "b": 128},
-    "lightcyan": {"r": 224, "g": 255, "b": 255},
-    "lightgoldenrodyellow": {"r": 250, "g": 250, "b": 210},
-    "lightgray": {"r": 211, "g": 211, "b": 211},
-    "lightgreen": {"r": 144, "g": 238, "b": 144},
-    "lightgrey": {"r": 211, "g": 211, "b": 211},
-    "lightpink": {"r": 255, "g": 182, "b": 193},
-    "lightsalmon": {"r": 255, "g": 160, "b": 122},
-    "lightseagreen": {"r": 32, "g": 178, "b": 170},
-    "lightskyblue": {"r": 135, "g": 206, "b": 250},
-    "lightslategray": {"r": 119, "g": 136, "b": 153},
-    "lightslategrey": {"r": 119, "g": 136, "b": 153},
-    "lightsteelblue": {"r": 176, "g": 196, "b": 222},
-    "lightyellow": {"r": 255, "g": 255, "b": 224},
-    "limegreen": {"r": 50, "g": 205, "b": 50},
-    "linen": {"r": 250, "g": 240, "b": 230},
-    "mediumaquamarine": {"r": 102, "g": 205, "b": 170},
-    "mediumblue": {"r": 0, "g": 0, "b": 205},
-    "mediumorchid": {"r": 186, "g": 85, "b": 211},
-    "mediumpurple": {"r": 147, "g": 112, "b": 219},
-    "mediumseagreen": {"r": 60, "g": 179, "b": 113},
-    "mediumslateblue": {"r": 123, "g": 104, "b": 238},
-    "mediumspringgreen": {"r": 0, "g": 250, "b": 154},
-    "mediumturquoise": {"r": 72, "g": 209, "b": 204},
-    "mediumvioletred": {"r": 199, "g": 21, "b": 133},
-    "midnightblue": {"r": 25, "g": 25, "b": 112},
-    "mintcream": {"r": 245, "g": 255, "b": 250},
-    "mistyrose": {"r": 255, "g": 228, "b": 225},
-    "moccasin": {"r": 255, "g": 228, "b": 181},
-    "navajowhite": {"r": 255, "g": 222, "b": 173},
-    "oldlace": {"r": 253, "g": 245, "b": 230},
-    "olivedrab": {"r": 107, "g": 142, "b": 35},
-    "orangered": {"r": 255, "g": 69, "b": 0},
-    "orchid": {"r": 218, "g": 112, "b": 214},
-    "palegoldenrod": {"r": 238, "g": 232, "b": 170},
-    "palegreen": {"r": 152, "g": 251, "b": 152},
-    "paleturquoise": {"r": 175, "g": 238, "b": 238},
-    "palevioletred": {"r": 219, "g": 112, "b": 147},
-    "papayawhip": {"r": 255, "g": 239, "b": 213},
-    "peachpuff": {"r": 255, "g": 218, "b": 185},
-    "peru": {"r": 205, "g": 133, "b": 63},
-    "pink": {"r": 255, "g": 192, "b": 203},
-    "plum": {"r": 221, "g": 160, "b": 221},
-    "powderblue": {"r": 176, "g": 224, "b": 230},
-    "rosybrown": {"r": 188, "g": 143, "b": 143},
-    "royalblue": {"r": 65, "g": 105, "b": 225},
-    "saddlebrown": {"r": 139, "g": 69, "b": 19},
-    "salmon": {"r": 250, "g": 128, "b": 114},
-    "sandybrown": {"r": 244, "g": 164, "b": 96},
-    "seagreen": {"r": 46, "g": 139, "b": 87},
-    "seashell": {"r": 255, "g": 245, "b": 238},
-    "sienna": {"r": 160, "g": 82, "b": 45},
-    "skyblue": {"r": 135, "g": 206, "b": 235},
-    "slateblue": {"r": 106, "g": 90, "b": 205},
-    "slategray": {"r": 112, "g": 128, "b": 144},
-    "slategrey": {"r": 112, "g": 128, "b": 144},
-    "snow": {"r": 255, "g": 250, "b": 250},
-    "springgreen": {"r": 0, "g": 255, "b": 127},
-    "steelblue": {"r": 70, "g": 130, "b": 180},
-    "tan": {"r": 210, "g": 180, "b": 140},
-    "thistle": {"r": 216, "g": 191, "b": 216},
-    "tomato": {"r": 255, "g": 99, "b": 71},
-    "turquoise": {"r": 64, "g": 224, "b": 208},
-    "violet": {"r": 238, "g": 130, "b": 238},
-    "wheat": {"r": 245, "g": 222, "b": 179},
-    "whitesmoke": {"r": 245, "g": 245, "b": 245},
-    "yellowgreen": {"r": 154, "g": 205, "b": 50}
+cache = {
+    "black": { "r": 0, "g": 0, "b": 0, "h": 0, "s": 0, "l": 0, "a": 255},
+    "silver": { "r": 192, "g": 192, "b": 192, "h": 0, "s": 0, "l": 0.7529411764705882, "a": 255},
+    "gray": { "r": 128, "g": 128, "b": 128, "h": 0, "s": 0, "l": 0.5019607843137255, "a": 255},
+    "white": { "r": 255, "g": 255, "b": 255, "h": 0, "s": 0, "l": 1, "a": 255},
+    "maroon": {"r": 128, "g": 0, "b": 0, "h": 0, "s": 1, "l": 0.25098039215686274, "a": 255},
+    "red": {"r": 255, "g": 0, "b": 0, "h": 0, "s": 1, "l": 0.5, "a": 255},
+    "purple": {"r": 128, "g": 0, "b": 128, "h": 0.8333333333333334, "s": 1, "l": 0.25098039215686274, "a": 255},
+    "fuchsia": {"r": 255, "g": 0, "b": 255, "h": 0.8333333333333334, "s": 1, "l": 0.5, "a": 255},
+    "green": {"r": 0, "g": 128, "b": 0, "h": 0.3333333333333333, "s": 1, "l": 0.25098039215686274, "a": 255},
+    "lime": {"r": 0, "g": 255, "b": 0, "h": 0.3333333333333333, "s": 1, "l": 0.5, "a": 255},
+    "olive": {"r": 128, "g": 128, "b": 0, "h": 0.16666666666666666, "s": 1, "l": 0.25098039215686274, "a": 255},
+    "yellow": {"r": 255, "g": 255, "b": 0, "h": 0.16666666666666666, "s": 1, "l": 0.5, "a": 255},
+    "navy": {"r": 0, "g": 0, "b": 128, "h": 0.6666666666666666, "s": 1, "l": 0.25098039215686274, "a": 255},
+    "blue": {"r": 0, "g": 0, "b": 255, "h": 0.6666666666666666, "s": 1, "l": 0.5, "a": 255},
+    "teal": {"r": 0, "g": 128, "b": 128, "h": 0.5, "s": 1, "l": 0.25098039215686274, "a": 255},
+    "aqua": {"r": 0, "g": 255, "b": 255, "h": 0.5, "s": 1, "l": 0.5, "a": 255},
+    "orange": {"r": 255, "g": 165, "b": 0, "h": 0.10784313725490197, "s": 1, "l": 0.5, "a": 255},
+    "aliceblue": {"r": 240, "g": 248, "b": 255, "h": 0.5777777777777778, "s": 1, "l": 0.9705882352941176, "a": 255},
+    "antiquewhite": {"r": 250, "g": 235, "b": 215, "h": 0.09523809523809519, "s": 0.7777777777777779, "l": 0.9117647058823529, "a": 255},
+    "aquamarine": {"r": 127, "g": 255, "b": 212, "h": 0.4440104166666667, "s": 1, "l": 0.7490196078431373, "a": 255},
+    "azure": {"r": 240, "g": 255, "b": 255, "h": 0.5, "s": 1, "l": 0.9705882352941176, "a": 255},
+    "beige": {"r": 245, "g": 245, "b": 220, "h": 0.16666666666666666, "s": 0.555555555555556, "l": 0.911764705882353, "a": 255},
+    "bisque": {"r": 255, "g": 228, "b": 196, "h": 0.09039548022598871, "s": 1, "l": 0.884313725490196, "a": 255},
+    "blanchedalmond": {"r": 255, "g": 235, "b": 205, "h": 0.09999999999999994, "s": 1, "l": 0.9019607843137255, "a": 255},
+    "blueviolet": {"r": 138, "g": 43, "b": 226, "h": 0.7531876138433514, "s": 0.7593360995850621, "l": 0.5274509803921569, "a": 255},
+    "brown": {"r": 165, "g": 42, "b": 42, "h": 0, "s": 0.5942028985507247, "l": 0.40588235294117647, "a": 255},
+    "burlywood": {"r": 222, "g": 184, "b": 135, "h": 0.09386973180076626, "s": 0.5686274509803922, "l": 0.7, "a": 255},
+    "cadetblue": {"r": 95, "g": 158, "b": 160, "h": 0.5051282051282051, "s": 0.2549019607843137, "l": 0.5, "a": 255},
+    "chartreuse": {"r": 127, "g": 255, "b": 0, "h": 0.2503267973856209, "s": 1, "l": 0.5, "a": 255},
+    "chocolate": {"r": 210, "g": 105, "b": 30, "h": 0.06944444444444443, "s": 0.7499999999999999, "l": 0.47058823529411764, "a": 255},
+    "coral": {"r": 255, "g": 127, "b": 80, "h": 0.04476190476190476, "s": 1, "l": 0.6568627450980392, "a": 255},
+    "cornflowerblue": {"r": 100, "g": 149, "b": 237, "h": 0.6070559610705596, "s": 0.7919075144508672, "l": 0.6607843137254902, "a": 255},
+    "cornsilk": {"r": 255, "g": 248, "b": 220, "h": 0.1333333333333333, "s": 1, "l": 0.9313725490196079, "a": 255},
+    "crimson": {"r": 220, "g": 20, "b": 60, "h": 0.9666666666666667, "s": 0.8333333333333335, "l": 0.47058823529411764, "a": 255},
+    "darkblue": {"r": 0, "g": 0, "b": 139, "h": 0.6666666666666666, "s": 1, "l": 0.2725490196078431, "a": 255},
+    "darkcyan": {"r": 0, "g": 139, "b": 139, "h": 0.5, "s": 1, "l": 0.2725490196078431, "a": 255},
+    "darkgoldenrod": {"r": 184, "g": 134, "b": 11, "h": 0.1184971098265896, "s": 0.8871794871794872, "l": 0.38235294117647056, "a": 255},
+    "darkgray": { "r": 169, "g": 169, "b": 169, "h": 0, "s": 0, "l": 0.6627450980392157, "a": 255},
+    "darkgreen": {"r": 0, "g": 100, "b": 0, "h": 0.3333333333333333, "s": 1, "l": 0.19607843137254902, "a": 255},
+    "darkgrey": { "r": 169, "g": 169, "b": 169, "h": 0, "s": 0, "l": 0.6627450980392157, "a": 255},
+    "darkkhaki": {"r": 189, "g": 183, "b": 107, "h": 0.15447154471544713, "s": 0.38317757009345804, "l": 0.5803921568627451, "a": 255},
+    "darkmagenta": {"r": 139, "g": 0, "b": 139, "h": 0.8333333333333334, "s": 1, "l": 0.2725490196078431, "a": 255},
+    "darkolivegreen": {"r": 85, "g": 107, "b": 47, "h": 0.22777777777777777, "s": 0.3896103896103896, "l": 0.3019607843137255, "a": 255},
+    "darkorange": {"r": 255, "g": 140, "b": 0, "h": 0.09150326797385622, "s": 1, "l": 0.5, "a": 255},
+    "darkorchid": {"r": 153, "g": 50, "b": 204, "h": 0.7781385281385281, "s": 0.6062992125984252, "l": 0.4980392156862745, "a": 255},
+    "darkred": {"r": 139, "g": 0, "b": 0, "h": 0, "s": 1, "l": 0.2725490196078431, "a": 255},
+    "darksalmon": {"r": 233, "g": 150, "b": 122, "h": 0.04204204204204204, "s": 0.7161290322580643, "l": 0.696078431372549, "a": 255},
+    "darkseagreen": {"r": 143, "g": 188, "b": 143, "h": 0.3333333333333333, "s": 0.2513966480446928, "l": 0.6490196078431373, "a": 255},
+    "darkslateblue": {"r": 72, "g": 61, "b": 139, "h": 0.69017094017094, "s": 0.3899999999999999, "l": 0.39215686274509803, "a": 255},
+    "darkslategray": {"r": 47, "g": 79, "b": 79, "h": 0.5, "s": 0.25396825396825395, "l": 0.24705882352941178, "a": 255},
+    "darkslategrey": {"r": 47, "g": 79, "b": 79, "h": 0.5, "s": 0.25396825396825395, "l": 0.24705882352941178, "a": 255},
+    "darkturquoise": {"r": 0, "g": 206, "b": 209, "h": 0.5023923444976076, "s": 1, "l": 0.40980392156862744, "a": 255},
+    "darkviolet": {"r": 148, "g": 0, "b": 211, "h": 0.7835703001579778, "s": 1, "l": 0.4137254901960784, "a": 255},
+    "deeppink": {"r": 255, "g": 20, "b": 147, "h": 0.9099290780141844, "s": 1, "l": 0.5392156862745098, "a": 255},
+    "deepskyblue": {"r": 0, "g": 191, "b": 255, "h": 0.5418300653594771, "s": 1, "l": 0.5, "a": 255},
+    "dimgray": { "r": 105, "g": 105, "b": 105, "h": 0, "s": 0, "l": 0.4117647058823529, "a": 255},
+    "dimgrey": { "r": 105, "g": 105, "b": 105, "h": 0, "s": 0, "l": 0.4117647058823529, "a": 255},
+    "dodgerblue": {"r": 30, "g": 144, "b": 255, "h": 0.5822222222222222, "s": 1, "l": 0.5588235294117647, "a": 255},
+    "firebrick": {"r": 178, "g": 34, "b": 34, "h": 0, "s": 0.679245283018868, "l": 0.4156862745098039, "a": 255},
+    "floralwhite": {"r": 255, "g": 250, "b": 240, "h": 0.11111111111111101, "s": 1, "l": 0.9705882352941176, "a": 255},
+    "forestgreen": {"r": 34, "g": 139, "b": 34, "h": 0.3333333333333333, "s": 0.6069364161849712, "l": 0.33921568627450976, "a": 255},
+    "gainsboro": { "r": 220, "g": 220, "b": 220, "h": 0, "s": 0, "l": 0.8627450980392157, "a": 255},
+    "ghostwhite": {"r": 248, "g": 248, "b": 255, "h": 0.6666666666666666, "s": 1, "l": 0.9862745098039216, "a": 255},
+    "gold": {"r": 255, "g": 215, "b": 0, "h": 0.14052287581699346, "s": 1, "l": 0.5, "a": 255},
+    "goldenrod": {"r": 218, "g": 165, "b": 32, "h": 0.11917562724014337, "s": 0.744, "l": 0.49019607843137253, "a": 255},
+    "greenyellow": {"r": 173, "g": 255, "b": 47, "h": 0.23237179487179485, "s": 1, "l": 0.592156862745098, "a": 255},
+    "grey": { "r": 128, "g": 128, "b": 128, "h": 0, "s": 0, "l": 0.5019607843137255, "a": 255},
+    "honeydew": {"r": 240, "g": 255, "b": 240, "h": 0.3333333333333333, "s": 1, "l": 0.9705882352941176, "a": 255},
+    "hotpink": {"r": 255, "g": 105, "b": 180, "h": 0.9166666666666666, "s": 1, "l": 0.7058823529411764, "a": 255},
+    "indianred": {"r": 205, "g": 92, "b": 92, "h": 0, "s": 0.5305164319248827, "l": 0.5823529411764706, "a": 255},
+    "indigo": {"r": 75, "g": 0, "b": 130, "h": 0.7628205128205128, "s": 1, "l": 0.2549019607843137, "a": 255},
+    "ivory": {"r": 255, "g": 255, "b": 240, "h": 0.16666666666666666, "s": 1, "l": 0.9705882352941176, "a": 255},
+    "khaki": {"r": 240, "g": 230, "b": 140, "h": 0.15, "s": 0.7692307692307692, "l": 0.7450980392156863, "a": 255},
+    "lavender": {"r": 230, "g": 230, "b": 250, "h": 0.6666666666666666, "s": 0.6666666666666666, "l": 0.9411764705882353, "a": 255},
+    "lavenderblush": {"r": 255, "g": 240, "b": 245, "h": 0.9444444444444443, "s": 1, "l": 0.9705882352941176, "a": 255},
+    "lawngreen": {"r": 124, "g": 252, "b": 0, "h": 0.25132275132275134, "s": 1, "l": 0.49411764705882355, "a": 255},
+    "lemonchiffon": {"r": 255, "g": 250, "b": 205, "h": 0.14999999999999997, "s": 1, "l": 0.9019607843137255, "a": 255},
+    "lightblue": {"r": 173, "g": 216, "b": 230, "h": 0.5409356725146198, "s": 0.5327102803738316, "l": 0.7901960784313726, "a": 255},
+    "lightcoral": {"r": 240, "g": 128, "b": 128, "h": 0, "s": 0.7887323943661971, "l": 0.7215686274509804, "a": 255},
+    "lightcyan": {"r": 224, "g": 255, "b": 255, "h": 0.5, "s": 1, "l": 0.9392156862745098, "a": 255},
+    "lightgoldenrodyellow": {"r": 250, "g": 250, "b": 210, "h": 0.16666666666666666, "s": 0.8000000000000002, "l": 0.9019607843137254, "a": 255},
+    "lightgray": { "r": 211, "g": 211, "b": 211, "h": 0, "s": 0, "l": 0.8274509803921568, "a": 255},
+    "lightgreen": {"r": 144, "g": 238, "b": 144, "h": 0.3333333333333333, "s": 0.734375, "l": 0.7490196078431373, "a": 255},
+    "lightgrey": { "r": 211, "g": 211, "b": 211, "h": 0, "s": 0, "l": 0.8274509803921568, "a": 255},
+    "lightpink": {"r": 255, "g": 182, "b": 193, "h": 0.9748858447488584, "s": 1, "l": 0.8568627450980393, "a": 255},
+    "lightsalmon": {"r": 255, "g": 160, "b": 122, "h": 0.047619047619047596, "s": 1, "l": 0.7392156862745098, "a": 255},
+    "lightseagreen": {"r": 32, "g": 178, "b": 170, "h": 0.49086757990867574, "s": 0.6952380952380952, "l": 0.4117647058823529, "a": 255},
+    "lightskyblue": {"r": 135, "g": 206, "b": 250, "h": 0.5637681159420289, "s": 0.92, "l": 0.7549019607843137, "a": 255},
+    "lightslategray": {"r": 119, "g": 136, "b": 153, "h": 0.5833333333333334, "s": 0.14285714285714285, "l": 0.5333333333333333, "a": 255},
+    "lightslategrey": {"r": 119, "g": 136, "b": 153, "h": 0.5833333333333334, "s": 0.14285714285714285, "l": 0.5333333333333333, "a": 255},
+    "lightsteelblue": {"r": 176, "g": 196, "b": 222, "h": 0.5942028985507246, "s": 0.41071428571428575, "l": 0.7803921568627451, "a": 255},
+    "lightyellow": {"r": 255, "g": 255, "b": 224, "h": 0.16666666666666666, "s": 1, "l": 0.9392156862745098, "a": 255},
+    "limegreen": {"r": 50, "g": 205, "b": 50, "h": 0.3333333333333333, "s": 0.607843137254902, "l": 0.5, "a": 255},
+    "linen": {"r": 250, "g": 240, "b": 230, "h": 0.08333333333333333, "s": 0.6666666666666666, "l": 0.9411764705882353, "a": 255},
+    "mediumaquamarine": {"r": 102, "g": 205, "b": 170, "h": 0.4433656957928802, "s": 0.5073891625615764, "l": 0.6019607843137256, "a": 255},
+    "mediumblue": {"r": 0, "g": 0, "b": 205, "h": 0.6666666666666666, "s": 1, "l": 0.4019607843137255, "a": 255},
+    "mediumorchid": {"r": 186, "g": 85, "b": 211, "h": 0.8002645502645502, "s": 0.5887850467289718, "l": 0.580392156862745, "a": 255},
+    "mediumpurple": {"r": 147, "g": 112, "b": 219, "h": 0.721183800623053, "s": 0.5977653631284916, "l": 0.6490196078431372, "a": 255},
+    "mediumseagreen": {"r": 60, "g": 179, "b": 113, "h": 0.4075630252100841, "s": 0.49790794979079495, "l": 0.46862745098039216, "a": 255},
+    "mediumslateblue": {"r": 123, "g": 104, "b": 238, "h": 0.6902985074626865, "s": 0.7976190476190477, "l": 0.6705882352941177, "a": 255},
+    "mediumspringgreen": {"r": 0, "g": 250, "b": 154, "h": 0.436, "s": 1, "l": 0.49019607843137253, "a": 255},
+    "mediumturquoise": {"r": 72, "g": 209, "b": 204, "h": 0.49391727493917276, "s": 0.5982532751091703, "l": 0.5509803921568628, "a": 255},
+    "mediumvioletred": {"r": 199, "g": 21, "b": 133, "h": 0.8951310861423221, "s": 0.809090909090909, "l": 0.43137254901960786, "a": 255},
+    "midnightblue": {"r": 25, "g": 25, "b": 112, "h": 0.6666666666666666, "s": 0.635036496350365, "l": 0.26862745098039215, "a": 255},
+    "mintcream": {"r": 245, "g": 255, "b": 250, "h": 0.41666666666666646, "s": 1, "l": 0.9803921568627452, "a": 255},
+    "mistyrose": {"r": 255, "g": 228, "b": 225, "h": 0.016666666666666757, "s": 1, "l": 0.9411764705882353, "a": 255},
+    "moccasin": {"r": 255, "g": 228, "b": 181, "h": 0.10585585585585588, "s": 1, "l": 0.8549019607843138, "a": 255},
+    "navajowhite": {"r": 255, "g": 222, "b": 173, "h": 0.09959349593495936, "s": 1, "l": 0.8392156862745098, "a": 255},
+    "oldlace": {"r": 253, "g": 245, "b": 230, "h": 0.10869565217391304, "s": 0.8518518518518523, "l": 0.9470588235294117, "a": 255},
+    "olivedrab": {"r": 107, "g": 142, "b": 35, "h": 0.22118380062305296, "s": 0.6045197740112994, "l": 0.34705882352941175, "a": 255},
+    "orangered": {"r": 255, "g": 69, "b": 0, "h": 0.04509803921568626, "s": 1, "l": 0.5, "a": 255},
+    "orchid": {"r": 218, "g": 112, "b": 214, "h": 0.8396226415094339, "s": 0.5888888888888889, "l": 0.6470588235294117, "a": 255},
+    "palegoldenrod": {"r": 238, "g": 232, "b": 170, "h": 0.15196078431372548, "s": 0.6666666666666667, "l": 0.8, "a": 255},
+    "palegreen": {"r": 152, "g": 251, "b": 152, "h": 0.3333333333333333, "s": 0.9252336448598131, "l": 0.7901960784313725, "a": 255},
+    "paleturquoise": {"r": 175, "g": 238, "b": 238, "h": 0.5, "s": 0.6494845360824743, "l": 0.8098039215686275, "a": 255},
+    "palevioletred": {"r": 219, "g": 112, "b": 147, "h": 0.9454828660436138, "s": 0.5977653631284916, "l": 0.6490196078431372, "a": 255},
+    "papayawhip": {"r": 255, "g": 239, "b": 213, "h": 0.10317460317460315, "s": 1, "l": 0.9176470588235295, "a": 255},
+    "peachpuff": {"r": 255, "g": 218, "b": 185, "h": 0.07857142857142856, "s": 1, "l": 0.8627450980392157, "a": 255},
+    "peru": {"r": 205, "g": 133, "b": 63, "h": 0.08215962441314555, "s": 0.5867768595041323, "l": 0.5254901960784314, "a": 255},
+    "pink": {"r": 255, "g": 192, "b": 203, "h": 0.9708994708994709, "s": 1, "l": 0.8764705882352941, "a": 255},
+    "plum": {"r": 221, "g": 160, "b": 221, "h": 0.8333333333333334, "s": 0.4728682170542637, "l": 0.7470588235294118, "a": 255},
+    "powderblue": {"r": 176, "g": 224, "b": 230, "h": 0.5185185185185186, "s": 0.5192307692307692, "l": 0.7960784313725491, "a": 255},
+    "rosybrown": {"r": 188, "g": 143, "b": 143, "h": 0, "s": 0.2513966480446928, "l": 0.6490196078431373, "a": 255},
+    "royalblue": {"r": 65, "g": 105, "b": 225, "h": 0.625, "s": 0.7272727272727272, "l": 0.5686274509803921, "a": 255},
+    "saddlebrown": {"r": 139, "g": 69, "b": 19, "h": 0.06944444444444443, "s": 0.759493670886076, "l": 0.3098039215686274, "a": 255},
+    "salmon": {"r": 250, "g": 128, "b": 114, "h": 0.017156862745098016, "s": 0.9315068493150683, "l": 0.7137254901960784, "a": 255},
+    "sandybrown": {"r": 244, "g": 164, "b": 96, "h": 0.07657657657657659, "s": 0.8705882352941179, "l": 0.6666666666666667, "a": 255},
+    "seagreen": {"r": 46, "g": 139, "b": 87, "h": 0.4068100358422939, "s": 0.5027027027027026, "l": 0.3627450980392157, "a": 255},
+    "seashell": {"r": 255, "g": 245, "b": 238, "h": 0.0686274509803922, "s": 1, "l": 0.9666666666666667, "a": 255},
+    "sienna": {"r": 160, "g": 82, "b": 45, "h": 0.053623188405797106, "s": 0.5609756097560975, "l": 0.4019607843137255, "a": 255},
+    "skyblue": {"r": 135, "g": 206, "b": 235, "h": 0.5483333333333333, "s": 0.714285714285714, "l": 0.7254901960784313, "a": 255},
+    "slateblue": {"r": 106, "g": 90, "b": 205, "h": 0.6898550724637681, "s": 0.5348837209302326, "l": 0.5784313725490197, "a": 255},
+    "slategray": {"r": 112, "g": 128, "b": 144, "h": 0.5833333333333334, "s": 0.12598425196850394, "l": 0.5019607843137255, "a": 255},
+    "slategrey": {"r": 112, "g": 128, "b": 144, "h": 0.5833333333333334, "s": 0.12598425196850394, "l": 0.5019607843137255, "a": 255},
+    "snow": {"r": 255, "g": 250, "b": 250, "h": 0, "s": 1, "l": 0.9901960784313726, "a": 255},
+    "springgreen": {"r": 0, "g": 255, "b": 127, "h": 0.41633986928104577, "s": 1, "l": 0.5, "a": 255},
+    "steelblue": {"r": 70, "g": 130, "b": 180, "h": 0.5757575757575758, "s": 0.44, "l": 0.4901960784313726, "a": 255},
+    "tan": {"r": 210, "g": 180, "b": 140, "h": 0.09523809523809527, "s": 0.4374999999999999, "l": 0.6862745098039216, "a": 255},
+    "thistle": {"r": 216, "g": 191, "b": 216, "h": 0.8333333333333334, "s": 0.24271844660194178, "l": 0.7980392156862746, "a": 255},
+    "tomato": {"r": 255, "g": 99, "b": 71, "h": 0.025362318840579694, "s": 1, "l": 0.6392156862745098, "a": 255},
+    "turquoise": {"r": 64, "g": 224, "b": 208, "h": 0.48333333333333334, "s": 0.7207207207207207, "l": 0.5647058823529412, "a": 255},
+    "violet": {"r": 238, "g": 130, "b": 238, "h": 0.8333333333333334, "s": 0.7605633802816902, "l": 0.7215686274509804, "a": 255},
+    "wheat": {"r": 245, "g": 222, "b": 179, "h": 0.1085858585858586, "s": 0.7674418604651168, "l": 0.8313725490196078, "a": 255},
+    "whitesmoke": { "r": 245, "g": 245, "b": 245, "h": 0, "s": 0, "l": 0.9607843137254902, "a": 255},
+    "yellowgreen": {"r": 154, "g": 205, "b": 50, "h": 0.22150537634408604, "s": 0.607843137254902, "l": 0.5, "a": 255}
 };
 
 module.exports = Color;
