@@ -9,11 +9,9 @@ var Matrix = math.Matrix;
  * @param {Vector} position Camera position.
  * @param {Vector} target   Camera
  */
-// TODO: Camera should store view matrix. Instead of computing every render, it will be
-// re-computed only when position, orientation, etc. changes
 function Camera(width, height, position, target){
     this.position = position || new Vector(1,1,20);
-    this.target = target || new Vector(0,0,0);
+    this.target = target || new Vector(0,0,1);
     this.up = new Vector(0, 1, 0);
     this.rotation = {'yaw': 0, 'pitch': 0, 'roll': 0};
     this.view_matrix = this.lookAt();
@@ -24,6 +22,10 @@ function Camera(width, height, position, target){
     this.fov = 90;
     this.perspectiveFov = this.calculatePerspectiveFov();
 }
+/** @method */
+Camera.prototype.direction = function() {
+    return this.target.subtract(this.position);
+};
 /**
  * Builds a perspective projection matrix based on a field of view.
  * @method
@@ -49,7 +51,7 @@ Camera.prototype.calculatePerspectiveFov = function() {
 /** @method */
 Camera.prototype.lookAt = function(){
     var eye = this.position;
-    var target = this.target;
+    var target = this.direction();
     var up = this.up;
     var zaxis = eye.subtract(target).normalize();
     var xaxis = up.cross(zaxis).normalize();
@@ -74,30 +76,60 @@ Camera.prototype.moveTo = function(x, y, z){
 };
 /** @method */
 Camera.prototype.moveRight = function(amount){
-    // TODO: WRONG!!!
-    this.position.x += amount;
-    //this.target.x += amount;
+    // TODO: FIX, WRONG
+    var right = this.up.cross(this.direction().normalize().scale(amount));
+    this.position = this.position.add(right);
+    //this.direction().x += amount;
     this.view_matrix = this.lookAt();
 };
 /** @method */
 Camera.prototype.moveLeft = function(amount){
-    // TODO: WRONG!!!
-    this.position.x -= amount;
-    //this.target.x -= amount;
+    // TODO: FIX, WRONG
+    var left = this.up.cross(this.direction().normalize().scale(amount));
+    this.position = this.position.subtract(left);
+    //this.direction().x -= amount;
     this.view_matrix = this.lookAt();
 };
 /** @method */
 Camera.prototype.moveUp = function(amount){
     // TODO: WRONG!!!
-    this.position.y -= amount;
-    //this.target.y -= amount;
+    this.position = this.position.add(this.up.normalize().scale(amount));
+    //this.direction().y -= amount;
     this.view_matrix = this.lookAt();
 };
 /** @method */
 Camera.prototype.moveDown = function(amount){
     // TODO: WRONG!!!
-    this.position.y += amount;
-    //this.target.y += amount;
+    this.position = this.position.subtract(this.up.normalize().scale(amount));
+    //this.direction().y += amount;
+    this.view_matrix = this.lookAt();
+};
+/** @method */
+Camera.prototype.moveForward = function(amount){
+    // TODO: WRONG!!!
+    this.position = this.position.add(this.direction().normalize().scale(amount));
+    //this.direction().y += amount;
+    this.view_matrix = this.lookAt();
+};
+/** @method */
+Camera.prototype.moveBackward = function(amount){
+    // TODO: WRONG!!!
+    this.position = this.position.subtract(this.direction().normalize().scale(amount));
+    //this.direction().y += amount;
+    this.view_matrix = this.lookAt();
+};
+Camera.prototype.rollLeft = function(amount){
+    this.rotation.roll += amount;
+    this.up.x = Math.sin(this.rotation.roll);
+    this.up.y = -Math.cos(this.rotation.roll);
+    this.up.z = 0;
+    this.view_matrix = this.lookAt();
+};
+Camera.prototype.rollRight = function(amount){
+    this.rotation.roll -= amount;
+    this.up.x = Math.sin(this.rotation.roll);
+    this.up.y = -Math.cos(this.rotation.roll);
+    this.up.z = 0;
     this.view_matrix = this.lookAt();
 };
 /** @method */
@@ -108,14 +140,14 @@ Camera.prototype.orbitTo = function(){
 Camera.prototype.zoomIn = function(amount){
     // TODO: WRONG!!!
     this.position.z += amount;
-    //this.target.z += amount;
+    //this.direction().z += amount;
     this.view_matrix = this.lookAt();
 };
 /** @method */
 Camera.prototype.zoomOut = function(amount){
     // TODO: WRONG!!!
     this.position.z -= amount;
-    //this.target.z += amount;
+    //this.direction().z += amount;
     this.view_matrix = this.lookAt();
 };
 /** @method */
@@ -456,7 +488,7 @@ Scene.prototype.renderScene = function(){
     this.initializeDepthBuffer();
     var camera_matrix = this.camera.view_matrix;
     var projection_matrix = this.camera.perspectiveFov;
-    var light = this.illumination.transform(camera_matrix.multiply(projection_matrix));
+    var light = this.illumination;
     for (var i = 0, len = this.meshes.length; i < len; i++){
         var mesh = this.meshes[i];
         var scale = mesh.scale;
@@ -475,10 +507,8 @@ Scene.prototype.renderScene = function(){
             var wv1 = v1.transform(wvp_matrix);
             var wv2 = v2.transform(wvp_matrix);
             var wv3 = v3.transform(wvp_matrix);
-            // TODO: Fix illumination
-            var face_translation = Matrix.translation(wv1.x, wv1.y, wv1.z);
-            var normal = mesh.normal(k).transform(wvp_matrix).normalize();
-            var light_direction = light.subtract(wv1).transform(face_translation).normalize();
+            var normal = mesh.normal(k).transform(world_matrix).normalize();
+            var light_direction = light.subtract(v1.transform(world_matrix)).normalize();
             var illumination_angle = normal.dot(light_direction);
             // TODO: Backface culling, if not in wireframe mode
             color = color.lighten(illumination_angle/4);

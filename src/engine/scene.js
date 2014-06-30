@@ -258,7 +258,7 @@ Scene.prototype.renderScene = function(){
     this.initializeDepthBuffer();
     var camera_matrix = this.camera.view_matrix;
     var projection_matrix = this.camera.perspectiveFov;
-    var light = this.illumination.transform(camera_matrix.multiply(projection_matrix));
+    var light = this.illumination;
     for (var i = 0, len = this.meshes.length; i < len; i++){
         var mesh = this.meshes[i];
         var scale = mesh.scale;
@@ -277,10 +277,8 @@ Scene.prototype.renderScene = function(){
             var wv1 = v1.transform(wvp_matrix);
             var wv2 = v2.transform(wvp_matrix);
             var wv3 = v3.transform(wvp_matrix);
-            // TODO: Fix illumination
-            var face_translation = Matrix.translation(wv1.x, wv1.y, wv1.z);
-            var normal = mesh.normal(k).transform(wvp_matrix).normalize();
-            var light_direction = light.subtract(wv1).transform(face_translation).normalize();
+            var normal = mesh.normal(k).transform(world_matrix).normalize();
+            var light_direction = light.subtract(v1.transform(world_matrix)).normalize();
             var illumination_angle = normal.dot(light_direction);
             // TODO: Backface culling, if not in wireframe mode
             color = color.lighten(illumination_angle/4);

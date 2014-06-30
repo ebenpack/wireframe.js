@@ -124,6 +124,24 @@
                     if (scene.isKeyDown('i')) {
                         scene.camera.zoomOut(1);
                     }
+                    if (scene.isKeyDown('up_arrow')) {
+                        scene.camera.moveForward(1);
+                    }
+                    if (scene.isKeyDown('down_arrow')) {
+                        scene.camera.moveBackward(1);
+                    }
+                    if (scene.isKeyDown('left_arrow')) {
+                        scene.camera.rollLeft(0.05);
+                    }
+                    if (scene.isKeyDown('right_arrow')) {
+                        scene.camera.rollRight(0.05);
+                    }
+                    if (scene.isKeyDown('v')) {
+                        scene.camera.moveLeft(10);
+                    }
+                    if (scene.isKeyDown('b')) {
+                        scene.camera.moveRight(10);
+                    }
                     // DEBUG
                     dbg.innerHTML = "CameraX: " + scene.camera.position.x + "<br>" +
                     "CameraY: " + scene.camera.position.y + "<br>" +
