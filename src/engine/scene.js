@@ -26,7 +26,7 @@ function Scene(options){
     this._depth_buffer = [];
     this.drawing_mode = 1;
     this.camera = new Camera();
-    this.illumination = new Vector(100,100,100);
+    this.illumination = new Vector(90,0,0);
     /** @type {Array.<Mesh>} */
     this.meshes = [];
     /** @type {Object.<number, boolean>} */
@@ -110,8 +110,8 @@ Scene.prototype.perspectiveFov = function() {
 };
 /** @method */
 Scene.prototype.drawPixel = function(x, y, z, color){
-    x = Math.round(x + this._x_offset);
-    y = Math.round(y + this._y_offset);
+    x = Math.floor(x + this._x_offset);
+    y = Math.floor(y + this._y_offset);
     if (x >= 0 && x < this.width && y >= 0 && y < this.height) {
         var index = x + (y * this.width);
         if (z < this._depth_buffer[index]) {
@@ -135,11 +135,12 @@ Scene.prototype.drawEdge = function(vector1, vector2, color){
     var step_x = (vector2.x - vector1.x) / longest_dist;
     var step_y = (vector2.y - vector1.y) / longest_dist;
     var step_z = (vector2.z - vector1.z) / longest_dist;
+
     for (var i = 0; i < longest_dist; i++){
+        this.drawPixel(current_x, current_y, current_z, color);
         current_x += step_x;
         current_y += step_y;
         current_z += step_z;
-        this.drawPixel(current_x, current_y, current_z, color);
     }
 };
 /** @method */
@@ -150,6 +151,12 @@ Scene.prototype.drawTriangle = function(vector1, vector2, vector3, color){
 };
 /** @method */
 Scene.prototype.drawFlatBottomTriangle = function(v1, v2, v3, color){
+    // Draw left to right
+    if (v2.x >= v3.x){
+        var temp = v3;
+        v3 = v2;
+        v2 = temp;
+    }
     // compute deltas
     var dxy_left  = (v3.x-v1.x)/(v3.y-v1.y);
     var dxy_right = (v2.x-v1.x)/(v2.y-v1.y);
@@ -176,6 +183,12 @@ Scene.prototype.drawFlatBottomTriangle = function(v1, v2, v3, color){
     }
 };
 Scene.prototype.drawFlatTopTriangle = function(v1, v2, v3, color){
+    // Draw left to right
+    if (v1.x >= v2.x){
+        var temp = v1;
+        v1 = v2;
+        v2 = temp;
+    }
     // compute deltas
     var dxy_left  = (v3.x-v1.x)/(v3.y-v1.y);
     var dxy_right = (v3.x-v2.x)/(v3.y-v2.y);
@@ -200,11 +213,14 @@ Scene.prototype.drawFlatTopTriangle = function(v1, v2, v3, color){
         xe.x+=dxy_right;
         xs.z+=z_slope_left;
         xe.z+=z_slope_right;
-
     }
+    // Round right edge
 };
 /** @method */
 Scene.prototype.fillTriangle = function(v1, v2, v3, color){
+    // Draw edges first
+    // TODO: Fix. This is a hack. 
+    //this.drawTriangle(v1, v2, v3, color);
     // Sort vertices by y value
     var temp;
     if(v1.y > v2.y) {
@@ -264,6 +280,7 @@ Scene.prototype.renderScene = function(){
     this.initializeDepthBuffer();
     var camera_matrix = this.camera.view_matrix;
     var projection_matrix = this.perspectiveFov();
+    var light = this.illumination.transform(camera_matrix.multiply(projection_matrix));
     for (var i = 0, len = this.meshes.length; i < len; i++){
         var mesh = this.meshes[i];
         var scale = mesh.scale;
@@ -282,14 +299,13 @@ Scene.prototype.renderScene = function(){
             var wv1 = v1.transform(wvp_matrix);
             var wv2 = v2.transform(wvp_matrix);
             var wv3 = v3.transform(wvp_matrix);
-            var centroid = mesh.centroid(k).transform(wvp_matrix);
-            var centroid_translation = Matrix.translation(centroid.x, centroid.y, centroid.z);
-            var normal = mesh.normal(k).scale(20).transform(world_matrix).transform(centroid_translation);
-            var illumination_angle = Math.abs(normal.cosAngle(this.illumination));
-            // var origin = new Vector(0,0,0).transform(centroid_translation);
-            // this.drawEdge(centroid, normal, {'r':255, 'b':255, 'g':255});
+            // TODO: Fix illumination
+            var face_translation = Matrix.translation(wv1.x, wv1.y, wv1.z);
+            var normal = mesh.normal(k).transform(wvp_matrix).normalize();
+            var light_direction = light.subtract(wv1).transform(face_translation).normalize();
+            var illumination_angle = normal.dot(light_direction);
             // TODO: Backface culling, if not in wireframe mode
-            color = color.lighten(illumination_angle*0.25);
+            color = color.lighten(illumination_angle/4);
             this.fillTriangle(wv1, wv2, wv3, color.rgb);
         }
     }
@@ -317,7 +333,5 @@ Scene.prototype.update = function(){
     }
     this._anim_id = window.requestAnimationFrame(this.update.bind(this));
 };
-
-
 
 module.exports = Scene;

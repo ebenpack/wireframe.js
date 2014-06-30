@@ -198,7 +198,7 @@ function Scene(options){
     this._depth_buffer = [];
     this.drawing_mode = 1;
     this.camera = new Camera();
-    this.illumination = new Vector(100,100,100);
+    this.illumination = new Vector(90,0,0);
     /** @type {Array.<Mesh>} */
     this.meshes = [];
     /** @type {Object.<number, boolean>} */
@@ -272,18 +272,18 @@ Scene.prototype.perspectiveFov = function() {
     var height = (1/Math.tan(fov/2)) * this.canvas.height;
     var width = height * aspect;
 
-    matrix.m[0] = width;
-    matrix.m[5] = height;
-    matrix.m[10] = far/(near-far) ;
-    matrix.m[11] = -1;
-    matrix.m[14] = near*far/(near-far);
+    matrix[0] = width;
+    matrix[5] = height;
+    matrix[10] = far/(near-far) ;
+    matrix[11] = -1;
+    matrix[14] = near*far/(near-far);
 
     return matrix;
 };
 /** @method */
 Scene.prototype.drawPixel = function(x, y, z, color){
-    x = Math.round(x + this._x_offset);
-    y = Math.round(y + this._y_offset);
+    x = Math.floor(x + this._x_offset);
+    y = Math.floor(y + this._y_offset);
     if (x >= 0 && x < this.width && y >= 0 && y < this.height) {
         var index = x + (y * this.width);
         if (z < this._depth_buffer[index]) {
@@ -307,11 +307,12 @@ Scene.prototype.drawEdge = function(vector1, vector2, color){
     var step_x = (vector2.x - vector1.x) / longest_dist;
     var step_y = (vector2.y - vector1.y) / longest_dist;
     var step_z = (vector2.z - vector1.z) / longest_dist;
+
     for (var i = 0; i < longest_dist; i++){
+        this.drawPixel(current_x, current_y, current_z, color);
         current_x += step_x;
         current_y += step_y;
         current_z += step_z;
-        this.drawPixel(current_x, current_y, current_z, color);
     }
 };
 /** @method */
@@ -322,6 +323,12 @@ Scene.prototype.drawTriangle = function(vector1, vector2, vector3, color){
 };
 /** @method */
 Scene.prototype.drawFlatBottomTriangle = function(v1, v2, v3, color){
+    // Draw left to right
+    if (v2.x >= v3.x){
+        var temp = v3;
+        v3 = v2;
+        v2 = temp;
+    }
     // compute deltas
     var dxy_left  = (v3.x-v1.x)/(v3.y-v1.y);
     var dxy_right = (v2.x-v1.x)/(v2.y-v1.y);
@@ -329,22 +336,31 @@ Scene.prototype.drawFlatBottomTriangle = function(v1, v2, v3, color){
     var z_slope_right = (v2.z-v1.z)/(v2.y-v1.y);
 
     // set starting and ending points for edge trace
-    var xs = v1.x;
-    var xe = v1.x;
+    var xs = new Vector(v1.x, v1.y, v1.z);
+    var xe = new Vector(v1.x, v1.y, v1.z);
+    xs.z = v3.z + ((v1.y - v3.y) * z_slope_left);
+    xe.z = v2.z + ((v1.y - v2.y) * z_slope_right);
 
     // draw each scanline
     for (var y=v1.y; y <= v2.y; y++){
-        // draw a line from xs to xe at y in color c
-        var za = v3.z + ((y - v3.y) * z_slope_left);
-        var zb = v2.z + ((y - v2.y) * z_slope_right);
-        this.drawEdge({'x':xs, 'y':y, 'z':za}, {'x':xe, 'y':y, 'z':zb}, color);
+        xs.y = y;
+        xe.y = y;
+        this.drawEdge(xs, xe, color);
 
         // move down one scanline
-        xs+=dxy_left;
-        xe+=dxy_right;
+        xs.x+=dxy_left;
+        xe.x+=dxy_right;
+        xs.z+=z_slope_left;
+        xe.z+=z_slope_right;
     }
 };
 Scene.prototype.drawFlatTopTriangle = function(v1, v2, v3, color){
+    // Draw left to right
+    if (v1.x >= v2.x){
+        var temp = v1;
+        v1 = v2;
+        v2 = temp;
+    }
     // compute deltas
     var dxy_left  = (v3.x-v1.x)/(v3.y-v1.y);
     var dxy_right = (v3.x-v2.x)/(v3.y-v2.y);
@@ -352,23 +368,31 @@ Scene.prototype.drawFlatTopTriangle = function(v1, v2, v3, color){
     var z_slope_right = (v3.z-v2.z)/(v3.y-v2.y);
 
     // set starting and ending points for edge trace
-    var xs = v1.x;
-    var xe = v2.x;
+    var xs = new Vector(v1.x, v1.y, v1.z);
+    var xe = new Vector(v2.x, v1.y, v1.z);
+
+    xs.z = v1.z + ((v1.y - v1.y) * z_slope_left);
+    xe.z = v2.z + ((v1.y - v2.y) * z_slope_right);
 
     // draw each scanline
     for (var y=v1.y; y <= v3.y; y++){
-        var za = v1.z + ((y - v1.y) * z_slope_left);
-        var zb = v2.z + ((y - v2.y) * z_slope_right);
+        xs.y = y;
+        xe.y = y;
         // draw a line from xs to xe at y in color c
-        this.drawEdge({'x':xs, 'y':y, 'z':za}, {'x':xe, 'y':y, 'z':zb}, color);
+        this.drawEdge(xs, xe, color);
         // move down one scanline
-        xs+=dxy_left;
-        xe+=dxy_right;
-
+        xs.x+=dxy_left;
+        xe.x+=dxy_right;
+        xs.z+=z_slope_left;
+        xe.z+=z_slope_right;
     }
+    // Round right edge
 };
 /** @method */
 Scene.prototype.fillTriangle = function(v1, v2, v3, color){
+    // Draw edges first
+    // TODO: Fix. This is a hack. 
+    //this.drawTriangle(v1, v2, v3, color);
     // Sort vertices by y value
     var temp;
     if(v1.y > v2.y) {
@@ -428,6 +452,7 @@ Scene.prototype.renderScene = function(){
     this.initializeDepthBuffer();
     var camera_matrix = this.camera.view_matrix;
     var projection_matrix = this.perspectiveFov();
+    var light = this.illumination.transform(camera_matrix.multiply(projection_matrix));
     for (var i = 0, len = this.meshes.length; i < len; i++){
         var mesh = this.meshes[i];
         var scale = mesh.scale;
@@ -446,14 +471,13 @@ Scene.prototype.renderScene = function(){
             var wv1 = v1.transform(wvp_matrix);
             var wv2 = v2.transform(wvp_matrix);
             var wv3 = v3.transform(wvp_matrix);
-            var centroid = mesh.centroid(k).transform(wvp_matrix);
-            var centroid_translation = Matrix.translation(centroid.x, centroid.y, centroid.z);
-            var normal = mesh.normal(k).scale(20).transform(world_matrix).transform(centroid_translation);
-            var illumination_angle = Math.abs(normal.cosAngle(this.illumination));
-            // var origin = new Vector(0,0,0).transform(centroid_translation);
-            // this.drawEdge(centroid, normal, {'r':255, 'b':255, 'g':255});
+            // TODO: Fix illumination
+            var face_translation = Matrix.translation(wv1.x, wv1.y, wv1.z);
+            var normal = mesh.normal(k).transform(wvp_matrix).normalize();
+            var light_direction = light.subtract(wv1).transform(face_translation).normalize();
+            var illumination_angle = normal.dot(light_direction);
             // TODO: Backface culling, if not in wireframe mode
-            color = color.lighten(illumination_angle*0.25);
+            color = color.lighten(illumination_angle/4);
             this.fillTriangle(wv1, wv2, wv3, color.rgb);
         }
     }
@@ -482,9 +506,8 @@ Scene.prototype.update = function(){
     this._anim_id = window.requestAnimationFrame(this.update.bind(this));
 };
 
-
-
 module.exports = Scene;
+
 },{"../math/math.js":7,"../utility/keycodes.js":12,"./camera.js":1,"./events.js":3}],5:[function(_dereq_,module,exports){
 var math = _dereq_('./math/math.js');
 var engine = _dereq_('./engine/engine.js');
@@ -533,7 +556,10 @@ module.exports = math;
  */
 function Matrix(){
     /** @type {Array.<number>} */
-    this.m = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
+    for (var i=0; i<16; i++){
+        this[i] = 0;
+    }
+    this.length = 16;
 }
 /**
  * Compare matrix with self for equality.
@@ -543,7 +569,7 @@ function Matrix(){
  */
 Matrix.prototype.equals = function(matrix){
     for (var i = 0, len = this.m.length; i < len; i++){
-        if (this.m[i] !== matrix.m[i]){
+        if (this[i] !== matrix[i]){
             return false;
         }
     }
@@ -558,7 +584,7 @@ Matrix.prototype.equals = function(matrix){
 Matrix.prototype.add = function(matrix){
     var new_matrix = new Matrix();
     for (var i = 0, len = this.m.length; i < len; i++){
-        new_matrix.m[i] = this.m[i] + matrix.m[i];
+        new_matrix[i] = this[i] + matrix[i];
     }
     return new_matrix;
 };
@@ -571,7 +597,7 @@ Matrix.prototype.add = function(matrix){
 Matrix.prototype.subtract = function(matrix){
     var new_matrix = new Matrix();
     for (var i = 0, len = this.m.length; i < len; i++){
-        this.m[i] = this.m[i] - matrix.m[i];
+        this[i] = this[i] - matrix[i];
     }
     return new_matrix;
 };
@@ -584,7 +610,7 @@ Matrix.prototype.subtract = function(matrix){
 Matrix.prototype.multiplyScalar = function(scalar){
     var new_matrix = new Matrix();
     for (var i = 0, len = this.m.length; i < len; i++){
-        this.m[i] = this.m[i] * scalar;
+        this[i] = this[i] * scalar;
     }
     return new_matrix;
 };
@@ -596,22 +622,22 @@ Matrix.prototype.multiplyScalar = function(scalar){
  */
 Matrix.prototype.multiply = function(matrix){
     var new_matrix = new Matrix();
-    new_matrix.m[0] = (this.m[0] * matrix.m[0]) + (this.m[1] * matrix.m[4]) + (this.m[2] * matrix.m[8]) + (this.m[3] * matrix.m[12]);
-    new_matrix.m[1] = (this.m[0] * matrix.m[1]) + (this.m[1] * matrix.m[5]) + (this.m[2] * matrix.m[9]) + (this.m[3] * matrix.m[13]);
-    new_matrix.m[2] = (this.m[0] * matrix.m[2]) + (this.m[1] * matrix.m[6]) + (this.m[2] * matrix.m[10]) + (this.m[3] * matrix.m[14]);
-    new_matrix.m[3] = (this.m[0] * matrix.m[3]) + (this.m[1] * matrix.m[7]) + (this.m[2] * matrix.m[11]) + (this.m[3] * matrix.m[15]);
-    new_matrix.m[4] = (this.m[4] * matrix.m[0]) + (this.m[5] * matrix.m[4]) + (this.m[6] * matrix.m[8]) + (this.m[7] * matrix.m[12]);
-    new_matrix.m[5] = (this.m[4] * matrix.m[1]) + (this.m[5] * matrix.m[5]) + (this.m[6] * matrix.m[9]) + (this.m[7] * matrix.m[13]);
-    new_matrix.m[6] = (this.m[4] * matrix.m[2]) + (this.m[5] * matrix.m[6]) + (this.m[6] * matrix.m[10]) + (this.m[7] * matrix.m[14]);
-    new_matrix.m[7] = (this.m[4] * matrix.m[3]) + (this.m[5] * matrix.m[7]) + (this.m[6] * matrix.m[11]) + (this.m[7] * matrix.m[15]);
-    new_matrix.m[8] = (this.m[8] * matrix.m[0]) + (this.m[9] * matrix.m[4]) + (this.m[10] * matrix.m[8]) + (this.m[11] * matrix.m[12]);
-    new_matrix.m[9] = (this.m[8] * matrix.m[1]) + (this.m[9] * matrix.m[5]) + (this.m[10] * matrix.m[9]) + (this.m[11] * matrix.m[13]);
-    new_matrix.m[10] = (this.m[8] * matrix.m[2]) + (this.m[9] * matrix.m[6]) + (this.m[10] * matrix.m[10]) + (this.m[11] * matrix.m[14]);
-    new_matrix.m[11] = (this.m[8] * matrix.m[3]) + (this.m[9] * matrix.m[7]) + (this.m[10] * matrix.m[11]) + (this.m[11] * matrix.m[15]);
-    new_matrix.m[12] = (this.m[12] * matrix.m[0]) + (this.m[13] * matrix.m[4]) + (this.m[14] * matrix.m[8]) + (this.m[15] * matrix.m[12]);
-    new_matrix.m[13] = (this.m[12] * matrix.m[1]) + (this.m[13] * matrix.m[5]) + (this.m[14] * matrix.m[9]) + (this.m[15] * matrix.m[13]);
-    new_matrix.m[14] = (this.m[12] * matrix.m[2]) + (this.m[13] * matrix.m[6]) + (this.m[14] * matrix.m[10]) + (this.m[15] * matrix.m[14]);
-    new_matrix.m[15] = (this.m[12] * matrix.m[3]) + (this.m[13] * matrix.m[7]) + (this.m[14] * matrix.m[11]) + (this.m[15] * matrix.m[15]);
+    new_matrix[0] = (this[0] * matrix[0]) + (this[1] * matrix[4]) + (this[2] * matrix[8]) + (this[3] * matrix[12]);
+    new_matrix[1] = (this[0] * matrix[1]) + (this[1] * matrix[5]) + (this[2] * matrix[9]) + (this[3] * matrix[13]);
+    new_matrix[2] = (this[0] * matrix[2]) + (this[1] * matrix[6]) + (this[2] * matrix[10]) + (this[3] * matrix[14]);
+    new_matrix[3] = (this[0] * matrix[3]) + (this[1] * matrix[7]) + (this[2] * matrix[11]) + (this[3] * matrix[15]);
+    new_matrix[4] = (this[4] * matrix[0]) + (this[5] * matrix[4]) + (this[6] * matrix[8]) + (this[7] * matrix[12]);
+    new_matrix[5] = (this[4] * matrix[1]) + (this[5] * matrix[5]) + (this[6] * matrix[9]) + (this[7] * matrix[13]);
+    new_matrix[6] = (this[4] * matrix[2]) + (this[5] * matrix[6]) + (this[6] * matrix[10]) + (this[7] * matrix[14]);
+    new_matrix[7] = (this[4] * matrix[3]) + (this[5] * matrix[7]) + (this[6] * matrix[11]) + (this[7] * matrix[15]);
+    new_matrix[8] = (this[8] * matrix[0]) + (this[9] * matrix[4]) + (this[10] * matrix[8]) + (this[11] * matrix[12]);
+    new_matrix[9] = (this[8] * matrix[1]) + (this[9] * matrix[5]) + (this[10] * matrix[9]) + (this[11] * matrix[13]);
+    new_matrix[10] = (this[8] * matrix[2]) + (this[9] * matrix[6]) + (this[10] * matrix[10]) + (this[11] * matrix[14]);
+    new_matrix[11] = (this[8] * matrix[3]) + (this[9] * matrix[7]) + (this[10] * matrix[11]) + (this[11] * matrix[15]);
+    new_matrix[12] = (this[12] * matrix[0]) + (this[13] * matrix[4]) + (this[14] * matrix[8]) + (this[15] * matrix[12]);
+    new_matrix[13] = (this[12] * matrix[1]) + (this[13] * matrix[5]) + (this[14] * matrix[9]) + (this[15] * matrix[13]);
+    new_matrix[14] = (this[12] * matrix[2]) + (this[13] * matrix[6]) + (this[14] * matrix[10]) + (this[15] * matrix[14]);
+    new_matrix[15] = (this[12] * matrix[3]) + (this[13] * matrix[7]) + (this[14] * matrix[11]) + (this[15] * matrix[15]);
     return new_matrix;
 };
 /**
@@ -623,7 +649,7 @@ Matrix.prototype.multiply = function(matrix){
 Matrix.prototype.negate = function(){
     var new_matrix = new Matrix();
     for (var i = 0, len = this.matrix.length; i < len; i++){
-        this.matrix.m[i] = -this.matrix.m[i];
+        this.matrix[i] = -this.matrix[i];
     }
     return new_matrix;
 };
@@ -635,22 +661,22 @@ Matrix.prototype.negate = function(){
  */
 Matrix.prototype.transpose = function(){
     var new_matrix = new Matrix();
-    new_matrix.m[0] = this.m[0];
-    new_matrix.m[1] = this.m[4];
-    new_matrix.m[2] = this.m[8];
-    new_matrix.m[3] = this.m[12];
-    new_matrix.m[4] = this.m[1];
-    new_matrix.m[5] = this.m[5];
-    new_matrix.m[6] = this.m[9];
-    new_matrix.m[7] = this.m[13];
-    new_matrix.m[8] = this.m[2];
-    new_matrix.m[9] = this.m[6];
-    new_matrix.m[10] = this.m[10];
-    new_matrix.m[11] = this.m[14];
-    new_matrix.m[12] = this.m[3];
-    new_matrix.m[13] = this.m[7];
-    new_matrix.m[14] = this.m[11];
-    new_matrix.m[15] = this.m[15];
+    new_matrix[0] = this[0];
+    new_matrix[1] = this[4];
+    new_matrix[2] = this[8];
+    new_matrix[3] = this[12];
+    new_matrix[4] = this[1];
+    new_matrix[5] = this[5];
+    new_matrix[6] = this[9];
+    new_matrix[7] = this[13];
+    new_matrix[8] = this[2];
+    new_matrix[9] = this[6];
+    new_matrix[10] = this[10];
+    new_matrix[11] = this[14];
+    new_matrix[12] = this[3];
+    new_matrix[13] = this[7];
+    new_matrix[14] = this[11];
+    new_matrix[15] = this[15];
     return new_matrix;
 };
 
@@ -665,12 +691,12 @@ Matrix.rotationX = function(theta){
     var rotation_matrix = new Matrix();
     var cos = Math.cos(theta);
     var sin = Math.sin(theta);
-    rotation_matrix.m[0] = 1;
-    rotation_matrix.m[5] = cos;
-    rotation_matrix.m[6] = -sin;
-    rotation_matrix.m[9] = sin;
-    rotation_matrix.m[10] = cos;
-    rotation_matrix.m[15] = 1;
+    rotation_matrix[0] = 1;
+    rotation_matrix[5] = cos;
+    rotation_matrix[6] = -sin;
+    rotation_matrix[9] = sin;
+    rotation_matrix[10] = cos;
+    rotation_matrix[15] = 1;
     return rotation_matrix;
 };
 /**
@@ -684,12 +710,12 @@ Matrix.rotationY = function(theta){
     var rotation_matrix = new Matrix();
     var cos = Math.cos(theta);
     var sin = Math.sin(theta);
-    rotation_matrix.m[0] = cos;
-    rotation_matrix.m[2] = sin;
-    rotation_matrix.m[5] = 1;
-    rotation_matrix.m[8] = -sin;
-    rotation_matrix.m[10] = cos;
-    rotation_matrix.m[15] = 1;
+    rotation_matrix[0] = cos;
+    rotation_matrix[2] = sin;
+    rotation_matrix[5] = 1;
+    rotation_matrix[8] = -sin;
+    rotation_matrix[10] = cos;
+    rotation_matrix[15] = 1;
     return rotation_matrix;
 };
 /**
@@ -703,12 +729,12 @@ Matrix.rotationZ = function(theta){
     var rotation_matrix = new Matrix();
     var cos = Math.cos(theta);
     var sin = Math.sin(theta);
-    rotation_matrix.m[0] = cos;
-    rotation_matrix.m[1] = -sin;
-    rotation_matrix.m[4] = sin;
-    rotation_matrix.m[5] = cos;
-    rotation_matrix.m[10] = 1;
-    rotation_matrix.m[15] = 1;
+    rotation_matrix[0] = cos;
+    rotation_matrix[1] = -sin;
+    rotation_matrix[4] = sin;
+    rotation_matrix[5] = cos;
+    rotation_matrix[10] = 1;
+    rotation_matrix[15] = 1;
     return rotation_matrix;
 };
 /**
@@ -731,16 +757,16 @@ Matrix.rotationAxis = function(axis, theta){
     var xy = ux * uy;
     var xz = ux * uz;
     var yz = uy * uz;
-    rotation_matrix.m[0] = cos + ((ux*ux)*cos1);
-    rotation_matrix.m[1] = (xy*cos1) - (uz*sin);
-    rotation_matrix.m[2] = (xz*cos1)+(uy*sin);
-    rotation_matrix.m[4] = (xy*cos1)+(uz*sin);
-    rotation_matrix.m[5] = cos+((uy*uy)*cos1);
-    rotation_matrix.m[6] = (yz*cos1)-(ux*sin);
-    rotation_matrix.m[8] = (xz*cos1)-(uy*sin);
-    rotation_matrix.m[9] = (yz*cos1)+(ux*sin);
-    rotation_matrix.m[10] = cos + ((uz*uz)*cos1);
-    rotation_matrix.m[15] = 1;
+    rotation_matrix[0] = cos + ((ux*ux)*cos1);
+    rotation_matrix[1] = (xy*cos1) - (uz*sin);
+    rotation_matrix[2] = (xz*cos1)+(uy*sin);
+    rotation_matrix[4] = (xy*cos1)+(uz*sin);
+    rotation_matrix[5] = cos+((uy*uy)*cos1);
+    rotation_matrix[6] = (yz*cos1)-(ux*sin);
+    rotation_matrix[8] = (xz*cos1)-(uy*sin);
+    rotation_matrix[9] = (yz*cos1)+(ux*sin);
+    rotation_matrix[10] = cos + ((uz*uz)*cos1);
+    rotation_matrix[15] = 1;
     return rotation_matrix;
 };
 /**
@@ -766,9 +792,9 @@ Matrix.rotation = function(pitch, yaw, roll){
  */
 Matrix.translation = function(xtrans, ytrans, ztrans){
     var translation_matrix = Matrix.identity();
-    translation_matrix.m[12] = xtrans;
-    translation_matrix.m[13] = ytrans;
-    translation_matrix.m[14] = ztrans;
+    translation_matrix[12] = xtrans;
+    translation_matrix[13] = ytrans;
+    translation_matrix[14] = ztrans;
     return translation_matrix;
 };
 /**
@@ -782,10 +808,10 @@ Matrix.translation = function(xtrans, ytrans, ztrans){
  */
 Matrix.scale = function(xscale, yscale, zscale){
     var scaling_matrix = new Matrix();
-    scaling_matrix.m[0] = xscale;
-    scaling_matrix.m[5] = yscale;
-    scaling_matrix.m[10] = zscale;
-    scaling_matrix.m[15] = 1;
+    scaling_matrix[0] = xscale;
+    scaling_matrix[5] = yscale;
+    scaling_matrix[10] = zscale;
+    scaling_matrix[15] = 1;
     return scaling_matrix;
 };
 /**
@@ -796,10 +822,10 @@ Matrix.scale = function(xscale, yscale, zscale){
  */
 Matrix.identity = function(){
     var identity = new Matrix();
-    identity.m[0] = 1;
-    identity.m[5] = 1;
-    identity.m[10] = 1;
-    identity.m[15] = 1;
+    identity[0] = 1;
+    identity[5] = 1;
+    identity[10] = 1;
+    identity[15] = 1;
     return identity;
 };
 /**
@@ -820,7 +846,7 @@ Matrix.zero = function(){
 Matrix.fromArray = function(arr){
     var new_matrix = new Matrix();
     for (var i = 0; i < 16; i++){
-        new_matrix.m[i] = arr[i];
+        new_matrix[i] = arr[i];
     }
     return new_matrix;
 };
@@ -1067,10 +1093,10 @@ Vector.prototype.rotate = function(axis, theta){
  * @return {Vector}
  */
 Vector.prototype.transform = function(transform_matrix){
-     var x = (this.x * transform_matrix.m[0]) + (this.y * transform_matrix.m[4]) + (this.z * transform_matrix.m[8]) + transform_matrix.m[12];
-    var y = (this.x * transform_matrix.m[1]) + (this.y * transform_matrix.m[5]) + (this.z * transform_matrix.m[9]) + transform_matrix.m[13];
-    var z = (this.x * transform_matrix.m[2]) + (this.y * transform_matrix.m[6]) + (this.z * transform_matrix.m[10]) + transform_matrix.m[14];
-    var w = (this.x * transform_matrix.m[3]) + (this.y * transform_matrix.m[7]) + (this.z * transform_matrix.m[11]) + transform_matrix.m[15];
+     var x = (this.x * transform_matrix[0]) + (this.y * transform_matrix[4]) + (this.z * transform_matrix[8]) + transform_matrix[12];
+    var y = (this.x * transform_matrix[1]) + (this.y * transform_matrix[5]) + (this.z * transform_matrix[9]) + transform_matrix[13];
+    var z = (this.x * transform_matrix[2]) + (this.y * transform_matrix[6]) + (this.z * transform_matrix[10]) + transform_matrix[14];
+    var w = (this.x * transform_matrix[3]) + (this.y * transform_matrix[7]) + (this.z * transform_matrix[11]) + transform_matrix[15];
     return new Vector(x / w, y / w, z / w);
 };
 /**
