@@ -11,15 +11,41 @@ var Matrix = math.Matrix;
  */
 // TODO: Camera should store view matrix. Instead of computing every render, it will be
 // re-computed only when position, orientation, etc. changes
-function Camera(position, target){
+function Camera(width, height, position, target){
     this.position = position || new Vector(1,1,20);
     this.target = target || new Vector(0,0,0);
     this.up = new Vector(0, 1, 0);
+    this.rotation = {'yaw': 0, 'pitch': 0, 'roll': 0};
     this.view_matrix = this.lookAt();
+    this.width = width;
+    this.height = height;
     this.near = 0.1;
     this.far = 1000;
     this.fov = 90;
+    this.perspectiveFov = this.calculatePerspectiveFov();
 }
+/**
+ * Builds a perspective projection matrix based on a field of view.
+ * @method
+ * @return {Matrix}
+ */
+Camera.prototype.calculatePerspectiveFov = function() {
+    var fov = this.fov * (Math.PI / 180); // convert to radians
+    var aspect = this.width / this.height;
+    var near = this.near;
+    var far = this.far;
+    var matrix = Matrix.zero();
+    var height = (1/Math.tan(fov/2)) * this.height;
+    var width = height * aspect;
+
+    matrix[0] = width;
+    matrix[5] = height;
+    matrix[10] = far/(near-far) ;
+    matrix[11] = -1;
+    matrix[14] = near*far/(near-far);
+
+    return matrix;
+};
 /** @method */
 Camera.prototype.lookAt = function(){
     var eye = this.position;
@@ -197,7 +223,7 @@ function Scene(options){
     this._back_buffer_image = null;
     this._depth_buffer = [];
     this.drawing_mode = 1;
-    this.camera = new Camera();
+    this.camera = new Camera(this.width, this.height);
     this.illumination = new Vector(90,0,0);
     /** @type {Array.<Mesh>} */
     this.meshes = [];
@@ -257,28 +283,6 @@ Scene.prototype.initializeDepthBuffer = function(){
     for (var x = 0, len = this.width * this.height; x < len; x++){
         this._depth_buffer[x] = 9999999;
     }
-};
-/**
- * Builds a perspective projection matrix based on a field of view.
- * @method
- * @return {Matrix}
- */
-Scene.prototype.perspectiveFov = function() {
-    var fov = this.camera.fov * (Math.PI / 180); // convert to radians
-    var aspect = this.canvas.width / this.canvas.height;
-    var near = this.camera.near;
-    var far = this.camera.far;
-    var matrix = Matrix.zero();
-    var height = (1/Math.tan(fov/2)) * this.canvas.height;
-    var width = height * aspect;
-
-    matrix[0] = width;
-    matrix[5] = height;
-    matrix[10] = far/(near-far) ;
-    matrix[11] = -1;
-    matrix[14] = near*far/(near-far);
-
-    return matrix;
 };
 /** @method */
 Scene.prototype.drawPixel = function(x, y, z, color){
@@ -451,7 +455,7 @@ Scene.prototype.renderScene = function(){
     this._back_buffer_image = this._back_buffer_ctx.createImageData(this.width, this.height);
     this.initializeDepthBuffer();
     var camera_matrix = this.camera.view_matrix;
-    var projection_matrix = this.perspectiveFov();
+    var projection_matrix = this.camera.perspectiveFov;
     var light = this.illumination.transform(camera_matrix.multiply(projection_matrix));
     for (var i = 0, len = this.meshes.length; i < len; i++){
         var mesh = this.meshes[i];

@@ -10,15 +10,41 @@ var Matrix = math.Matrix;
  */
 // TODO: Camera should store view matrix. Instead of computing every render, it will be
 // re-computed only when position, orientation, etc. changes
-function Camera(position, target){
+function Camera(width, height, position, target){
     this.position = position || new Vector(1,1,20);
     this.target = target || new Vector(0,0,0);
     this.up = new Vector(0, 1, 0);
+    this.rotation = {'yaw': 0, 'pitch': 0, 'roll': 0};
     this.view_matrix = this.lookAt();
+    this.width = width;
+    this.height = height;
     this.near = 0.1;
     this.far = 1000;
     this.fov = 90;
+    this.perspectiveFov = this.calculatePerspectiveFov();
 }
+/**
+ * Builds a perspective projection matrix based on a field of view.
+ * @method
+ * @return {Matrix}
+ */
+Camera.prototype.calculatePerspectiveFov = function() {
+    var fov = this.fov * (Math.PI / 180); // convert to radians
+    var aspect = this.width / this.height;
+    var near = this.near;
+    var far = this.far;
+    var matrix = Matrix.zero();
+    var height = (1/Math.tan(fov/2)) * this.height;
+    var width = height * aspect;
+
+    matrix[0] = width;
+    matrix[5] = height;
+    matrix[10] = far/(near-far) ;
+    matrix[11] = -1;
+    matrix[14] = near*far/(near-far);
+
+    return matrix;
+};
 /** @method */
 Camera.prototype.lookAt = function(){
     var eye = this.position;
