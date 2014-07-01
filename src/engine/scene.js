@@ -25,6 +25,7 @@ function Scene(options){
     this._back_buffer_image = null;
     this._depth_buffer = [];
     this.drawing_mode = 1;
+    this._backface_culling = true;
     this.camera = new Camera(this.width, this.height);
     this.illumination = new Vector(90,0,0);
     /** @type {Array.<Mesh>} */
@@ -81,10 +82,17 @@ Scene.prototype.onKeyUp = function(e){
         delete this._keys[pressed];
     }
 };
+/** @method */
 Scene.prototype.initializeDepthBuffer = function(){
     for (var x = 0, len = this.width * this.height; x < len; x++){
         this._depth_buffer[x] = 9999999;
     }
+};
+/** @method */
+Scene.prototype.offscreen = function(vector){
+    var x = vector.x + this._x_offset;
+    var y = vector.y + this._y_offset;
+    return (x < 0 || x > this.width || y < 0 || y > this.height);
 };
 /** @method */
 Scene.prototype.drawPixel = function(x, y, z, color){
@@ -274,15 +282,33 @@ Scene.prototype.renderScene = function(){
             var v1 = mesh.vertices[face[0]];
             var v2 = mesh.vertices[face[1]];
             var v3 = mesh.vertices[face[2]];
+            var vv1 = v1.transform(world_matrix); // Vertex1 in world space
             var wv1 = v1.transform(wvp_matrix);
             var wv2 = v2.transform(wvp_matrix);
             var wv3 = v3.transform(wvp_matrix);
             var normal = mesh.normal(k).transform(world_matrix).normalize();
-            var light_direction = light.subtract(v1.transform(world_matrix)).normalize();
-            var illumination_angle = normal.dot(light_direction);
-            // TODO: Backface culling, if not in wireframe mode
-            color = color.lighten(illumination_angle/4);
-            this.fillTriangle(wv1, wv2, wv3, color.rgb);
+            var draw = false;
+            if (this._backface_culling) {
+                if (this.camera.position.subtract(vv1).dot(normal) > 0){
+                    draw = true;
+                } else {
+                    draw = false;
+                }
+            }
+            // TODO: Fix frustum culling
+            // This is really stupid frustum culling... this can result in some faces not being
+            // drawn when they should, e.g. when a triangles vertices straddle the frustrum.
+            if (draw && this.offscreen(wv1) && this.offscreen(wv2) && this.offscreen(wv3)){
+                draw = false;
+            }
+            if (draw){
+                var light_direction = light.subtract(vv1).normalize();
+                var illumination_angle = normal.dot(light_direction);
+                color = color.lighten(illumination_angle/4);
+                this.fillTriangle(wv1, wv2, wv3, color.rgb);
+                //this.drawTriangle(wv1, wv2, wv3, color.rgb);
+            }
+            
         }
     }
     this._back_buffer_ctx.putImageData(this._back_buffer_image, 0, 0);
