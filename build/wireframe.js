@@ -21,19 +21,14 @@ function Camera(width, height, position){
     this.fov = 90;
     this.perspectiveFov = this.calculatePerspectiveFov();
 }
-/**
- * Calculate the point the camera is looking at.
- * @return {[type]} [description]
- */
-Camera.prototype.lookAt = function() {
-    var rotation = Matrix.rotationZ(this.rotation.yaw);
-    var transformed = this.position.transform(rotation);
-    return this.position.add(transformed);
-};
 /** @method */
 Camera.prototype.direction = function() {
-    var look_at = this.lookAt().normalize();
-    return this.position.subtract(look_at);
+    var sin_pitch = Math.sin(this.rotation.pitch);
+    var cos_pitch = Math.cos(this.rotation.pitch);
+    var sin_yaw = Math.sin(this.rotation.yaw);
+    var cos_yaw = Math.cos(this.rotation.yaw);
+
+    return new Vector(-cos_pitch * sin_yaw, sin_pitch, -cos_pitch * cos_yaw);
 };
 /**
  * Builds a perspective projection matrix based on a field of view.
@@ -62,29 +57,23 @@ Camera.prototype.createViewMatrix = function(){
     var eye = this.position;
     var pitch = this.rotation.pitch;
     var yaw = this.rotation.yaw;
-    var cosPitch = Math.cos(pitch);
-    var sinPitch = Math.sin(pitch);
-    var cosYaw = Math.cos(yaw);
-    var sinYaw = Math.sin(yaw);
- 
-    var xaxis = new Vector(cosYaw, 0, -sinYaw );
-    var yaxis = new Vector(sinYaw * sinPitch, cosPitch, cosYaw * sinPitch );
-    var zaxis = new Vector(sinYaw * cosPitch, -sinPitch, cosPitch * cosYaw );
- 
-    // Create a 4x4 view matrix from the right, up, forward and eye position vectors
+    var cos_pitch = Math.cos(pitch);
+    var sin_pitch = Math.sin(pitch);
+    var cos_yaw = Math.cos(yaw);
+    var sin_yaw = Math.sin(yaw);
+
+    var xaxis = new Vector(cos_yaw, 0, -sin_yaw );
+    var yaxis = new Vector(sin_yaw * sin_pitch, cos_pitch, cos_yaw * sin_pitch );
+    var zaxis = new Vector(sin_yaw * cos_pitch, -sin_pitch, cos_pitch * cos_yaw );
+
     var view_matrix = Matrix.fromArray([
-              xaxis.x,            yaxis.x,            zaxis.x,      0,
-              xaxis.y,            yaxis.y,            zaxis.y,      0,
-              xaxis.z,            yaxis.z,            zaxis.z,      0,
+        xaxis.x, yaxis.x, zaxis.x, 0,
+        xaxis.y, yaxis.y, zaxis.y, 0,
+        xaxis.z, yaxis.z, zaxis.z, 0,
         -(xaxis.dot(eye) ), -( yaxis.dot(eye) ), -( zaxis.dot(eye) ), 1
     ]);
-     
     return view_matrix;
 };
-
-// Vector3 dirVector = Vector3(0.0, 0.0, -1.0);
-// dirVector = scene->getDefaultCamera()->getConcatenatedMatrix().rotateVector(dirVector);
-// Vector3 newPosition = scene->getDefaultCamera()->getPosition() + (dirVector * moveSpeed * elapsed);
 /** @method */
 Camera.prototype.moveTo = function(x, y, z){
     this.position = new Vector(x,y,z);
@@ -104,11 +93,32 @@ Camera.prototype.moveLeft = function(amount){
 };
 Camera.prototype.turnRight = function(amount){
     this.rotation.yaw += amount;
+    if (this.rotation.yaw > (Math.PI*2)){
+        this.rotation.yaw = this.rotation.yaw - (Math.PI*2);
+    }
     this.view_matrix = this.createViewMatrix();
 };
 /** @method */
 Camera.prototype.turnLeft = function(amount){
     this.rotation.yaw -= amount;
+    if (this.rotation.yaw < 0){
+        this.rotation.yaw = this.rotation.yaw + (Math.PI*2);
+    }
+    this.view_matrix = this.createViewMatrix();
+};
+Camera.prototype.lookUp = function(amount){
+    this.rotation.pitch -= amount;
+    if (this.rotation.pitch > (Math.PI*2)){
+        this.rotation.pitch = this.rotation.pitch - (Math.PI*2);
+    }
+    this.view_matrix = this.createViewMatrix();
+};
+/** @method */
+Camera.prototype.lookDown = function(amount){
+    this.rotation.pitch += amount;
+    if (this.rotation.pitch < 0){
+        this.rotation.pitch = this.rotation.pitch + (Math.PI*2);
+    }
     this.view_matrix = this.createViewMatrix();
 };
 /** @method */
@@ -125,17 +135,19 @@ Camera.prototype.moveDown = function(amount){
 };
 /** @method */
 Camera.prototype.moveForward = function(amount){
-    //var forward = this.target.normalize().scale(amount);
-    this.position = this.position.subtract(new Vector(0,0,amount));
+    var forward = this.direction().scale(amount);
+    this.position = this.position.add(forward);
     this.view_matrix = this.createViewMatrix();
 };
 /** @method */
 Camera.prototype.moveBackward = function(amount){
-    this.position = this.position.add(new Vector(0,0,amount));
+    var backward = this.direction().scale(amount);
+    this.position = this.position.subtract(backward);
     this.view_matrix = this.createViewMatrix();
 };
 
 module.exports = Camera;
+
 },{"../math/math.js":7}],2:[function(_dereq_,module,exports){
 var Scene = _dereq_('./scene.js');
 var Camera = _dereq_('./camera.js');
@@ -952,6 +964,7 @@ Mesh.fromJSON = function(json){
 };
 
 module.exports = Mesh;
+
 },{"./face.js":6,"./vector.js":10}],10:[function(_dereq_,module,exports){
 /**
  * @constructor
