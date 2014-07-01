@@ -22,11 +22,10 @@ function Camera(width, height, position){
 }
 /** @method */
 Camera.prototype.direction = function() {
-    // TODO: Why does a full circle here seem to be pi radians instead of 2pi radians?
-    var sin_pitch = Math.sin(this.rotation.pitch * 2);
-    var cos_pitch = Math.cos(this.rotation.pitch * 2);
-    var sin_yaw = Math.sin(this.rotation.yaw * 2);
-    var cos_yaw = Math.cos(this.rotation.yaw * 2);
+    var sin_pitch = Math.sin(this.rotation.pitch);
+    var cos_pitch = Math.cos(this.rotation.pitch);
+    var sin_yaw = Math.sin(this.rotation.yaw);
+    var cos_yaw = Math.cos(this.rotation.yaw);
 
     return new Vector(-cos_pitch * sin_yaw, sin_pitch, -cos_pitch * cos_yaw);
 };
@@ -66,7 +65,6 @@ Camera.prototype.createViewMatrix = function(){
     var yaxis = new Vector(sin_yaw * sin_pitch, cos_pitch, cos_yaw * sin_pitch );
     var zaxis = new Vector(sin_yaw * cos_pitch, -sin_pitch, cos_pitch * cos_yaw );
 
-    // Create a 4x4 view matrix from the right, up, forward and eye position vectors
     var view_matrix = Matrix.fromArray([
         xaxis.x, yaxis.x, zaxis.x, 0,
         xaxis.y, yaxis.y, zaxis.y, 0,
@@ -94,8 +92,8 @@ Camera.prototype.moveLeft = function(amount){
 };
 Camera.prototype.turnRight = function(amount){
     this.rotation.yaw += amount;
-    if (this.rotation.yaw > Math.PI){
-        this.rotation.yaw = this.rotation.yaw - Math.PI;
+    if (this.rotation.yaw > (Math.PI*2)){
+        this.rotation.yaw = this.rotation.yaw - (Math.PI*2);
     }
     this.view_matrix = this.createViewMatrix();
 };
@@ -103,22 +101,22 @@ Camera.prototype.turnRight = function(amount){
 Camera.prototype.turnLeft = function(amount){
     this.rotation.yaw -= amount;
     if (this.rotation.yaw < 0){
-        this.rotation.yaw = this.rotation.yaw + Math.PI;
+        this.rotation.yaw = this.rotation.yaw + (Math.PI*2);
     }
     this.view_matrix = this.createViewMatrix();
 };
 Camera.prototype.lookUp = function(amount){
-    this.rotation.pitch += amount;
-    if (this.rotation.pitch > Math.PI){
-        this.rotation.pitch = this.rotation.pitch - Math.PI;
+    this.rotation.pitch -= amount;
+    if (this.rotation.pitch > (Math.PI*2)){
+        this.rotation.pitch = this.rotation.pitch - (Math.PI*2);
     }
     this.view_matrix = this.createViewMatrix();
 };
 /** @method */
 Camera.prototype.lookDown = function(amount){
-    this.rotation.pitch -= amount;
+    this.rotation.pitch += amount;
     if (this.rotation.pitch < 0){
-        this.rotation.pitch = this.rotation.pitch + Math.PI;
+        this.rotation.pitch = this.rotation.pitch + (Math.PI*2);
     }
     this.view_matrix = this.createViewMatrix();
 };
