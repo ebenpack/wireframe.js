@@ -277,11 +277,9 @@ Scene.prototype.renderScene = function(){
         var world_matrix = Matrix.scale(scale.x, scale.y, scale.z).multiply(
             Matrix.rotation(rotation.pitch, rotation.yaw, rotation.roll).multiply(
                 Matrix.translation(position.x, position.y, position.z)));
-        var wvp_matrix = world_matrix.multiply(camera_matrix).multiply(projection_matrix);
         for (var k = 0; k < mesh.faces.length; k++){
             var face = mesh.faces[k].face;
             var color = mesh.faces[k].color;
-            var normal = mesh.faces[k].normal;
             var v1 = mesh.vertices[face[0]];
             var v2 = mesh.vertices[face[1]];
             var v3 = mesh.vertices[face[2]];
@@ -295,6 +293,7 @@ Scene.prototype.renderScene = function(){
                 norm = norm.normalize();
             }
             if (cam_to_vert.dot(norm) >= 0) {
+                var wvp_matrix = world_matrix.multiply(camera_matrix).multiply(projection_matrix);
                 var wv1 = v1.transform(wvp_matrix);
                 var wv2 = v2.transform(wvp_matrix);
                 var wv3 = v3.transform(wvp_matrix);
@@ -302,7 +301,7 @@ Scene.prototype.renderScene = function(){
 
                 // Draw surface normals
                 // var face_trans = Matrix.translation(v1.x, v1.y, v1.z);
-                // this.drawEdge(wv1, normal.scale(20).transform(face_trans).transform(wvp_matrix), {'r':255,"g":255,"b":255})
+                // this.drawEdge(wv1, norm.scale(20).transform(face_trans).transform(wvp_matrix), {'r':255,"g":255,"b":255})
 
                 // TODO: Fix frustum culling
                 // This is really stupid frustum culling... this can result in some faces not being
@@ -310,23 +309,12 @@ Scene.prototype.renderScene = function(){
                 if (this.offscreen(wv1) && this.offscreen(wv2) && this.offscreen(wv3)){
                     draw = false;
                 }
-                // TODO: This is not correct. Fix.
-                // if (draw && this._backface_culling) {
-                //     var nor = normal.transform(wvp_matrix)
-                //     var cam_dir = new Vector(0,0,0).subtract(wv1);
-                //     if (cam_dir.dot(nor) >= 0){
-                //         draw = false;
-                //     } else {
-                //         draw = true;
-                //     }
-                // }
                 if (draw){
-                    var light_direction = light.transform(world_matrix).subtract(v1.transform(world_matrix)).normalize();
-                    var light_normal = normal.transform(world_matrix).normalize();
-                    var illumination_angle = light_normal.dot(light_direction);
-                    color = color.lighten(illumination_angle/4);
-                    //this.fillTriangle(wv1, wv2, wv3, color.rgb);
-                    this.drawTriangle(wv1, wv2, wv3, color.rgb);
+                    var light_direction = light.subtract(v1.transform(world_matrix)).normalize();
+                    var illumination_angle = norm.dot(light_direction);
+                    color = color.lighten(illumination_angle/6);
+                    this.fillTriangle(wv1, wv2, wv3, color.rgb);
+                    //this.drawTriangle(wv1, wv2, wv3, color.rgb);
                 }
             }
         }
