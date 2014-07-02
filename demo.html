@@ -7,11 +7,11 @@
         <meta name="viewport" content="width=device-width, initial-scale=1">
     </head>
     <body>
-        <div class="main" style="position:relative; width: 600px; margin: 80px auto 0 auto;">
+        <div class="main" style="position:relative; width: 600px; float: left; margin: 10px">
             <canvas id="wireframe" style="background-color:black; position:relative; border: 2px solid green;" width='600' height='400'></canvas>
             <p>Click on the canvas to give it focus. QWEASD controls pitch/yaw/roll of cube. HJKL moves cube left/right, up/down.</p>
         </div>
-        <div id="controls">
+        <div id="controls" style="float: left; margin: 10px">
             <label><input id="fov" type="number" value="90">FOV</label><br>
             <label><input id="camx" type="number" value="0">Cam Target X</label><br>
             <label><input id="camy" type="number" value="0">Cam Target Y</label><br>
@@ -31,31 +31,38 @@
                 var Scene = wireframe.engine.Scene;
                 var Camera = wireframe.engine.Camera;
 
-                var cube = new Mesh('cube',
-                    [
-                        new Vector(-40, -40, -40),
-                        new Vector(-40, -40,  40),
-                        new Vector(-40,  40, -40),
-                        new Vector(-40,  40,  40),
-                        new Vector( 40, -40, -40),
-                        new Vector( 40, -40,  40),
-                        new Vector( 40,  40, -40),
-                        new Vector( 40,  40,  40)
+                var cubejson = {
+                    "name": "cube",
+                    "vertices": [
+                        [-40, -40,  40],
+                        [-40, -40, -40],
+                        [ 40, -40, -40],
+                        [ 40, -40,  40],
+                        [-40,  40,  40],
+                        [-40,  40, -40],
+                        [ 40,  40, -40],
+                        [ 40,  40,  40]
                     ],
-                    [
-                        new Face(3, 0, 1, 'red'), // Left
-                        new Face(3, 2, 0, 'red'), // Left
-                        new Face(5, 1, 0, 'red'), // Top
-                        new Face(5, 0, 4, 'red'), // Top
-                        new Face(2, 6, 4, 'red'), // Back
-                        new Face(2, 4, 0, 'red'), // Back
-                        new Face(7, 3, 1, 'red'), // Front
-                        new Face(7, 1, 5, 'red'), // Front
-                        new Face(6, 2, 3, 'red'), // Bottom
-                        new Face(6, 3, 7, 'red'), // Bottom
-                        new Face(6, 5, 4, 'red'), // Right
-                        new Face(6, 7, 5, 'red')  // Right
-                    ]);
+                    "faces": [
+                        {"face": [1, 2, 0], "color": "red"},
+                        {"face": [2, 3, 0], "color": "red"},
+                        {"face": [7, 6, 4], "color": "red"},
+                        {"face": [6, 5, 4], "color": "red"},
+                        {"face": [4, 5, 0], "color": "red"},
+                        {"face": [5, 1, 0], "color": "red"},
+                        {"face": [5, 6, 1], "color": "red"},
+                        {"face": [6, 2, 1], "color": "red"},
+                        {"face": [6, 7, 2], "color": "red"},
+                        {"face": [7, 3, 2], "color": "red"},
+                        {"face": [0, 3, 4], "color": "red"},
+                        {"face": [3, 7, 4], "color": "red"}
+                    ]
+                };
+
+
+
+
+                var cube = Mesh.fromJSON(cubejson);
                 var icosjson = {
                     "name": "ico",
                     "vertices": [
@@ -103,86 +110,86 @@
                         [-11.21475,58.723099999999995,34.5161]
                     ],
                     "faces": [
-                        {"face": [13, 12, 0], "color": "red"},
-                        {"face": [13, 15, 1], "color": "red"},
-                        {"face": [12, 17, 0], "color": "red"},
-                        {"face": [17, 19, 0], "color": "red"},
-                        {"face": [19, 16, 0], "color": "red"},
-                        {"face": [15, 22, 1], "color": "red"},
-                        {"face": [14, 24, 2], "color": "red"},
-                        {"face": [18, 26, 3], "color": "red"},
-                        {"face": [20, 28, 4], "color": "red"},
-                        {"face": [21, 30, 5], "color": "red"},
-                        {"face": [22, 25, 1], "color": "red"},
-                        {"face": [24, 27, 2], "color": "red"},
-                        {"face": [26, 29, 3], "color": "red"},
-                        {"face": [28, 31, 4], "color": "red"},
-                        {"face": [30, 23, 5], "color": "red"},
-                        {"face": [32, 37, 6], "color": "red"},
-                        {"face": [33, 39, 7], "color": "red"},
-                        {"face": [34, 40, 8], "color": "red"},
-                        {"face": [35, 41, 9], "color": "red"},
-                        {"face": [36, 38,10], "color": "red"},
-                        {"face": [14,  2,12], "color": "red"},
-                        {"face": [13, 14,12], "color": "red"},
-                        {"face": [ 1, 14,13], "color": "red"},
-                        {"face": [16,  5,15], "color": "red"},
-                        {"face": [13, 16,15], "color": "red"},
-                        {"face": [ 0, 16,13], "color": "red"},
-                        {"face": [18,  3,17], "color": "red"},
-                        {"face": [12, 18,17], "color": "red"},
-                        {"face": [ 2, 18,12], "color": "red"},
-                        {"face": [20,  4,19], "color": "red"},
-                        {"face": [17, 20,19], "color": "red"},
-                        {"face": [ 3, 20,17], "color": "red"},
-                        {"face": [21,  5,16], "color": "red"},
-                        {"face": [19, 21,16], "color": "red"},
-                        {"face": [ 4, 21,19], "color": "red"},
-                        {"face": [23, 10,22], "color": "red"},
-                        {"face": [15, 23,22], "color": "red"},
-                        {"face": [ 5, 23,15], "color": "red"},
-                        {"face": [25,  6,24], "color": "red"},
-                        {"face": [14, 25,24], "color": "red"},
-                        {"face": [ 1, 25,14], "color": "red"},
-                        {"face": [27,  7,26], "color": "red"},
-                        {"face": [18, 27,26], "color": "red"},
-                        {"face": [ 2, 27,18], "color": "red"},
-                        {"face": [29,  8,28], "color": "red"},
-                        {"face": [20, 29,28], "color": "red"},
-                        {"face": [ 3, 29,20], "color": "red"},
-                        {"face": [31,  9,30], "color": "red"},
-                        {"face": [21, 31,30], "color": "red"},
-                        {"face": [ 4, 31,21], "color": "red"},
-                        {"face": [32,  6,25], "color": "red"},
-                        {"face": [22, 32,25], "color": "red"},
-                        {"face": [10, 32,22], "color": "red"},
-                        {"face": [33,  7,27], "color": "red"},
-                        {"face": [24, 33,27], "color": "red"},
-                        {"face": [ 6, 33,24], "color": "red"},
-                        {"face": [34,  8,29], "color": "red"},
-                        {"face": [26, 34,29], "color": "red"},
-                        {"face": [ 7, 34,26], "color": "red"},
-                        {"face": [35,  9,31], "color": "red"},
-                        {"face": [28, 35,31], "color": "red"},
-                        {"face": [ 8, 35,28], "color": "red"},
-                        {"face": [36, 10,23], "color": "red"},
-                        {"face": [30, 36,23], "color": "red"},
-                        {"face": [ 9, 36,30], "color": "red"},
-                        {"face": [38, 11,37], "color": "red"},
-                        {"face": [32, 38,37], "color": "red"},
-                        {"face": [10, 38,32], "color": "red"},
-                        {"face": [37, 11,39], "color": "red"},
-                        {"face": [33, 37,39], "color": "red"},
-                        {"face": [ 6, 37,33], "color": "red"},
-                        {"face": [39, 11,40], "color": "red"},
-                        {"face": [34, 39,40], "color": "red"},
-                        {"face": [ 7, 39,34], "color": "red"},
-                        {"face": [40, 11,41], "color": "red"},
-                        {"face": [35, 40,41], "color": "red"},
-                        {"face": [ 8, 40,35], "color": "red"},
-                        {"face": [41, 11,38], "color": "red"},
-                        {"face": [36, 41,38], "color": "red"},
-                        {"face": [ 9, 41,36], "color": "red"}
+                        {"face": [13, 12,  0], "color": "red"},
+                        {"face": [13, 15,  1], "color": "red"},
+                        {"face": [12, 17,  0], "color": "red"},
+                        {"face": [17, 19,  0], "color": "red"},
+                        {"face": [19, 16,  0], "color": "red"},
+                        {"face": [15, 22,  1], "color": "red"},
+                        {"face": [14, 24,  2], "color": "red"},
+                        {"face": [18, 26,  3], "color": "red"},
+                        {"face": [20, 28,  4], "color": "red"},
+                        {"face": [21, 30,  5], "color": "red"},
+                        {"face": [22, 25,  1], "color": "red"},
+                        {"face": [24, 27,  2], "color": "red"},
+                        {"face": [26, 29,  3], "color": "red"},
+                        {"face": [28, 31,  4], "color": "red"},
+                        {"face": [30, 23,  5], "color": "red"},
+                        {"face": [32, 37,  6], "color": "red"},
+                        {"face": [33, 39,  7], "color": "red"},
+                        {"face": [34, 40,  8], "color": "red"},
+                        {"face": [35, 41,  9], "color": "red"},
+                        {"face": [36, 38, 10], "color": "red"},
+                        {"face": [14,  2, 12], "color": "red"},
+                        {"face": [13, 14, 12], "color": "red"},
+                        {"face": [ 1, 14, 13], "color": "red"},
+                        {"face": [16,  5, 15], "color": "red"},
+                        {"face": [13, 16, 15], "color": "red"},
+                        {"face": [ 0, 16, 13], "color": "red"},
+                        {"face": [18,  3, 17], "color": "red"},
+                        {"face": [12, 18, 17], "color": "red"},
+                        {"face": [ 2, 18, 12], "color": "red"},
+                        {"face": [20,  4, 19], "color": "red"},
+                        {"face": [17, 20, 19], "color": "red"},
+                        {"face": [ 3, 20, 17], "color": "red"},
+                        {"face": [21,  5, 16], "color": "red"},
+                        {"face": [19, 21, 16], "color": "red"},
+                        {"face": [ 4, 21, 19], "color": "red"},
+                        {"face": [23, 10, 22], "color": "red"},
+                        {"face": [15, 23, 22], "color": "red"},
+                        {"face": [ 5, 23, 15], "color": "red"},
+                        {"face": [25,  6, 24], "color": "red"},
+                        {"face": [14, 25, 24], "color": "red"},
+                        {"face": [ 1, 25, 14], "color": "red"},
+                        {"face": [27,  7, 26], "color": "red"},
+                        {"face": [18, 27, 26], "color": "red"},
+                        {"face": [ 2, 27, 18], "color": "red"},
+                        {"face": [29,  8, 28], "color": "red"},
+                        {"face": [20, 29, 28], "color": "red"},
+                        {"face": [ 3, 29, 20], "color": "red"},
+                        {"face": [31,  9, 30], "color": "red"},
+                        {"face": [21, 31, 30], "color": "red"},
+                        {"face": [ 4, 31, 21], "color": "red"},
+                        {"face": [32,  6, 25], "color": "red"},
+                        {"face": [22, 32, 25], "color": "red"},
+                        {"face": [10, 32, 22], "color": "red"},
+                        {"face": [33,  7, 27], "color": "red"},
+                        {"face": [24, 33, 27], "color": "red"},
+                        {"face": [ 6, 33, 24], "color": "red"},
+                        {"face": [34,  8, 29], "color": "red"},
+                        {"face": [26, 34, 29], "color": "red"},
+                        {"face": [ 7, 34, 26], "color": "red"},
+                        {"face": [35,  9, 31], "color": "red"},
+                        {"face": [28, 35, 31], "color": "red"},
+                        {"face": [ 8, 35, 28], "color": "red"},
+                        {"face": [36, 10, 23], "color": "red"},
+                        {"face": [30, 36, 23], "color": "red"},
+                        {"face": [ 9, 36, 30], "color": "red"},
+                        {"face": [38, 11, 37], "color": "red"},
+                        {"face": [32, 38, 37], "color": "red"},
+                        {"face": [10, 38, 32], "color": "red"},
+                        {"face": [37, 11, 39], "color": "red"},
+                        {"face": [33, 37, 39], "color": "red"},
+                        {"face": [ 6, 37, 33], "color": "red"},
+                        {"face": [39, 11, 40], "color": "red"},
+                        {"face": [34, 39, 40], "color": "red"},
+                        {"face": [ 7, 39, 34], "color": "red"},
+                        {"face": [40, 11, 41], "color": "red"},
+                        {"face": [35, 40, 41], "color": "red"},
+                        {"face": [ 8, 40, 35], "color": "red"},
+                        {"face": [41, 11, 38], "color": "red"},
+                        {"face": [36, 41, 38], "color": "red"},
+                        {"face": [ 9, 41, 36], "color": "red"}
                      ]
                 }
 
@@ -235,7 +242,7 @@
                         scene.meshes[0].rotation.roll -= 0.03;
                     }
                 }
-                function moveCamera(){
+                function moveCamera(E, H){
                     if (scene.isKeyDown('h')) {
                         scene.camera.moveRight(1);
                     }
@@ -279,10 +286,14 @@
                         scene.camera.lookDown(0.05);
                     }
                     // DEBUG
+                    var direction = scene.camera.direction();
                     dbg.innerHTML = "CameraX: " + scene.camera.position.x + "<br>" +
                     "CameraY: " + scene.camera.position.y + "<br>" +
                     "CameraZ: " + scene.camera.position.z + "<br>" +
-                    "Yaw: " + scene.camera.rotation.yaw + "<br>"; 
+                    "Yaw: " + scene.camera.rotation.yaw + "<br>" +
+                    "FacingX: " + direction.x + "<br>" +
+                    "FacingY: " + direction.y + "<br>" +
+                    "FacingZ: " + direction.z + "<br>";
                     scene._needs_update = true;
                 }
 
@@ -290,11 +301,13 @@
                 scene.addListener('keydown', rotateCube);
                 scene.addListener('keydown', moveCamera);
 
+                cube.position.z = 600
                 scene.camera.moveTo(0, 0, 400);
+                scene.addMesh(cube);
                 scene.addMesh(icos);
-                scene.addMesh(xaxis);
-                scene.addMesh(yaxis);
-                scene.addMesh(zaxis);
+                // scene.addMesh(xaxis);
+                // scene.addMesh(yaxis);
+                // scene.addMesh(zaxis);
                 scene.renderScene();
 
                 //DEBUG

@@ -82,27 +82,27 @@ Camera.prototype.moveTo = function(x, y, z){
 /** @method */
 Camera.prototype.moveRight = function(amount){
     var right = this.up.cross(this.direction()).normalize().scale(amount);
-    this.position = this.position.add(right);
+    this.position = this.position.subtract(right);
     this.view_matrix = this.createViewMatrix();
 };
 /** @method */
 Camera.prototype.moveLeft = function(amount){
     var left = this.up.cross(this.direction()).normalize().scale(amount);
-    this.position = this.position.subtract(left);
+    this.position = this.position.add(left);
     this.view_matrix = this.createViewMatrix();
 };
 Camera.prototype.turnRight = function(amount){
-    this.rotation.yaw += amount;
-    if (this.rotation.yaw > (Math.PI*2)){
-        this.rotation.yaw = this.rotation.yaw - (Math.PI*2);
+    this.rotation.yaw -= amount;
+    if (this.rotation.yaw < 0){
+        this.rotation.yaw = this.rotation.yaw + (Math.PI*2);
     }
     this.view_matrix = this.createViewMatrix();
 };
 /** @method */
 Camera.prototype.turnLeft = function(amount){
-    this.rotation.yaw -= amount;
-    if (this.rotation.yaw < 0){
-        this.rotation.yaw = this.rotation.yaw + (Math.PI*2);
+    this.rotation.yaw += amount;
+    if (this.rotation.yaw > (Math.PI*2)){
+        this.rotation.yaw = this.rotation.yaw - (Math.PI*2);
     }
     this.view_matrix = this.createViewMatrix();
 };
@@ -308,9 +308,11 @@ Scene.prototype.initializeDepthBuffer = function(){
 };
 /** @method */
 Scene.prototype.offscreen = function(vector){
+    // TODO: Not totally certain that z>1 indicates vector is behind camera.
     var x = vector.x + this._x_offset;
     var y = vector.y + this._y_offset;
-    return (x < 0 || x > this.width || y < 0 || y > this.height);
+    var z = vector.z;
+    return (z > 1 || x < 0 || x > this.width || y < 0 || y > this.height);
 };
 /** @method */
 Scene.prototype.drawPixel = function(x, y, z, color){
@@ -497,36 +499,54 @@ Scene.prototype.renderScene = function(){
         for (var k = 0; k < mesh.faces.length; k++){
             var face = mesh.faces[k].face;
             var color = mesh.faces[k].color;
+            var normal = mesh.faces[k].normal;
             var v1 = mesh.vertices[face[0]];
             var v2 = mesh.vertices[face[1]];
             var v3 = mesh.vertices[face[2]];
-            var vv1 = v1.transform(world_matrix); // Vertex1 in world space
-            var wv1 = v1.transform(wvp_matrix);
-            var wv2 = v2.transform(wvp_matrix);
-            var wv3 = v3.transform(wvp_matrix);
-            var normal = mesh.normal(k).transform(world_matrix).normalize();
-            var draw = false;
-            if (this._backface_culling) {
-                if (this.camera.position.subtract(vv1).dot(normal) > 0){
-                    draw = true;
-                } else {
+            var cam_to_vert = this.camera.position.subtract(v1.transform(world_matrix));
+            var side1 = v2.transform(world_matrix).subtract(v1.transform(world_matrix));
+            var side2 = v3.transform(world_matrix).subtract(v1.transform(world_matrix));
+            var norm = side1.cross(side2);
+            if (norm.magnitude() <= 0.00000001){
+                norm = norm;
+            } else {
+                norm = norm.normalize();
+            }
+            if (cam_to_vert.dot(norm) >= 0) {
+                var wv1 = v1.transform(wvp_matrix);
+                var wv2 = v2.transform(wvp_matrix);
+                var wv3 = v3.transform(wvp_matrix);
+                var draw = true;
+                
+                // Draw surface normals 
+                // var face_trans = Matrix.translation(v1.x, v1.y, v1.z);
+                // this.drawEdge(wv1, normal.scale(20).transform(face_trans).transform(wvp_matrix), {'r':255,"g":255,"b":255})
+                
+                // TODO: Fix frustum culling
+                // This is really stupid frustum culling... this can result in some faces not being
+                // drawn when they should, e.g. when a triangles vertices straddle the frustrum.
+                if (this.offscreen(wv1) && this.offscreen(wv2) && this.offscreen(wv3)){
                     draw = false;
                 }
+                // TODO: This is not correct. Fix.
+                // if (draw && this._backface_culling) {
+                //     var nor = normal.transform(wvp_matrix)
+                //     var cam_dir = new Vector(0,0,0).subtract(wv1);
+                //     if (cam_dir.dot(nor) >= 0){
+                //         draw = false;
+                //     } else {
+                //         draw = true;
+                //     }
+                // }
+                if (draw){
+                    var light_direction = light.transform(world_matrix).subtract(v1.transform(world_matrix)).normalize();
+                    var light_normal = normal.transform(world_matrix).normalize();
+                    var illumination_angle = light_normal.dot(light_direction);
+                    color = color.lighten(illumination_angle/4);
+                    //this.fillTriangle(wv1, wv2, wv3, color.rgb);
+                    this.drawTriangle(wv1, wv2, wv3, color.rgb);
+                }
             }
-            // TODO: Fix frustum culling
-            // This is really stupid frustum culling... this can result in some faces not being
-            // drawn when they should, e.g. when a triangles vertices straddle the frustrum.
-            if (draw && this.offscreen(wv1) && this.offscreen(wv2) && this.offscreen(wv3)){
-                draw = false;
-            }
-            if (draw){
-                var light_direction = light.subtract(vv1).normalize();
-                var illumination_angle = normal.dot(light_direction);
-                color = color.lighten(illumination_angle/4);
-                this.fillTriangle(wv1, wv2, wv3, color.rgb);
-                //this.drawTriangle(wv1, wv2, wv3, color.rgb);
-            }
-            
         }
     }
     this._back_buffer_ctx.putImageData(this._back_buffer_image, 0, 0);
@@ -918,17 +938,33 @@ function Mesh(name, vertices, faces){
     this.position = new Vector(0, 0, 0);
     this.rotation = {'yaw': 0, 'pitch': 0, 'roll': 0};
     this.scale = {'x': 1, 'y': 1, 'z': 1};
+    for (var i = 0; i < this.faces.length; i++){
+        var face = this.faces[i];
+        var a = this.vertices[face.face[0]];
+        var b = this.vertices[face.face[1]];
+        var c = this.vertices[face.face[2]];
+        this.faces[i].normal = Mesh.normal(a,b,c);
+        this.faces[i].centroid = Mesh.centroid(a,b,c);
+    }
 }
 /**
- * Returns the normal vector for the given face.
- * @param  {number} index 
+ * Returns the centroid vector for the given face.
+ * @param  {Vector} a
+ * @param  {Vector} b
+ * @param  {Vector} c
  * @return {Vector}
  */
-Mesh.prototype.normal = function(index){
-    var face = this.faces[index].face;
-    var a = this.vertices[face[0]];
-    var b = this.vertices[face[1]];
-    var c = this.vertices[face[2]];
+Mesh.centroid = function(a, b, c){
+    return new Vector((a.x + b.x + c.x) / 3, (a.y + b.y + c.y) / 3, (a.z + b.z + c.z) / 3);
+};
+/**
+ * Returns the normal vector for a face with the given vertices.
+ * @param  {Vector} a
+ * @param  {Vector} b
+ * @param  {Vector} c
+ * @return {Vector}
+ */
+Mesh.normal = function(a, b, c){
     var side1 = b.subtract(a);
     var side2 = c.subtract(a);
     var norm = side1.cross(side2);
@@ -938,29 +974,18 @@ Mesh.prototype.normal = function(index){
         return norm.normalize();
     }
 };
-/**
- * Returns the centroid vector for the given face.
- * @param  {number} index 
- * @return {Vector}
- */
-Mesh.prototype.centroid = function(index){
-    var face = this.faces[index].face;
-    var a = this.vertices[face[0]];
-    var b = this.vertices[face[1]];
-    var c = this.vertices[face[2]];
-    return new Vector((a.x + b.x + c.x) / 3, (a.y + b.y + c.y) / 3, (a.z + b.z + c.z) / 3);
-};
 Mesh.fromJSON = function(json){
-    var mesh = new Mesh(json.name, [], []);
+    var vertices = [];
+    var faces = [];
     for (var i = 0, len = json.vertices.length; i < len; i++){
         var vertex = json.vertices[i];
-        mesh.vertices.push(new Vector(vertex[0], vertex[1], vertex[2]));
+        vertices.push(new Vector(vertex[0], vertex[1], vertex[2]));
     }
     for (var j = 0, ln = json.faces.length; j < ln; j++){
         var face = json.faces[j];
-        mesh.faces.push(new Face(face.face[0], face.face[1], face.face[2], face.color));
+        faces.push(new Face(face.face[0], face.face[1], face.face[2], face.color));
     }
-    return mesh;
+    return new Mesh(json.name, vertices, faces);
 };
 
 module.exports = Mesh;
