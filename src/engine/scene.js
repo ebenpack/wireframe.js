@@ -90,9 +90,11 @@ Scene.prototype.initializeDepthBuffer = function(){
 };
 /** @method */
 Scene.prototype.offscreen = function(vector){
+    // TODO: Not totally certain that z>1 indicates vector is behind camera.
     var x = vector.x + this._x_offset;
     var y = vector.y + this._y_offset;
-    return (x < 0 || x > this.width || y < 0 || y > this.height);
+    var z = vector.z;
+    return (z > 1 || x < 0 || x > this.width || y < 0 || y > this.height);
 };
 /** @method */
 Scene.prototype.drawPixel = function(x, y, z, color){
@@ -279,36 +281,54 @@ Scene.prototype.renderScene = function(){
         for (var k = 0; k < mesh.faces.length; k++){
             var face = mesh.faces[k].face;
             var color = mesh.faces[k].color;
+            var normal = mesh.faces[k].normal;
             var v1 = mesh.vertices[face[0]];
             var v2 = mesh.vertices[face[1]];
             var v3 = mesh.vertices[face[2]];
-            var vv1 = v1.transform(world_matrix); // Vertex1 in world space
-            var wv1 = v1.transform(wvp_matrix);
-            var wv2 = v2.transform(wvp_matrix);
-            var wv3 = v3.transform(wvp_matrix);
-            var normal = mesh.normal(k).transform(world_matrix).normalize();
-            var draw = false;
-            if (this._backface_culling) {
-                if (this.camera.position.subtract(vv1).dot(normal) > 0){
-                    draw = true;
-                } else {
+            var cam_to_vert = this.camera.position.subtract(v1.transform(world_matrix));
+            var side1 = v2.transform(world_matrix).subtract(v1.transform(world_matrix));
+            var side2 = v3.transform(world_matrix).subtract(v1.transform(world_matrix));
+            var norm = side1.cross(side2);
+            if (norm.magnitude() <= 0.00000001){
+                norm = norm;
+            } else {
+                norm = norm.normalize();
+            }
+            if (cam_to_vert.dot(norm) >= 0) {
+                var wv1 = v1.transform(wvp_matrix);
+                var wv2 = v2.transform(wvp_matrix);
+                var wv3 = v3.transform(wvp_matrix);
+                var draw = true;
+
+                // Draw surface normals
+                // var face_trans = Matrix.translation(v1.x, v1.y, v1.z);
+                // this.drawEdge(wv1, normal.scale(20).transform(face_trans).transform(wvp_matrix), {'r':255,"g":255,"b":255})
+
+                // TODO: Fix frustum culling
+                // This is really stupid frustum culling... this can result in some faces not being
+                // drawn when they should, e.g. when a triangles vertices straddle the frustrum.
+                if (this.offscreen(wv1) && this.offscreen(wv2) && this.offscreen(wv3)){
                     draw = false;
                 }
+                // TODO: This is not correct. Fix.
+                // if (draw && this._backface_culling) {
+                //     var nor = normal.transform(wvp_matrix)
+                //     var cam_dir = new Vector(0,0,0).subtract(wv1);
+                //     if (cam_dir.dot(nor) >= 0){
+                //         draw = false;
+                //     } else {
+                //         draw = true;
+                //     }
+                // }
+                if (draw){
+                    var light_direction = light.transform(world_matrix).subtract(v1.transform(world_matrix)).normalize();
+                    var light_normal = normal.transform(world_matrix).normalize();
+                    var illumination_angle = light_normal.dot(light_direction);
+                    color = color.lighten(illumination_angle/4);
+                    //this.fillTriangle(wv1, wv2, wv3, color.rgb);
+                    this.drawTriangle(wv1, wv2, wv3, color.rgb);
+                }
             }
-            // TODO: Fix frustum culling
-            // This is really stupid frustum culling... this can result in some faces not being
-            // drawn when they should, e.g. when a triangles vertices straddle the frustrum.
-            if (draw && this.offscreen(wv1) && this.offscreen(wv2) && this.offscreen(wv3)){
-                draw = false;
-            }
-            if (draw){
-                var light_direction = light.subtract(vv1).normalize();
-                var illumination_angle = normal.dot(light_direction);
-                color = color.lighten(illumination_angle/4);
-                this.fillTriangle(wv1, wv2, wv3, color.rgb);
-                //this.drawTriangle(wv1, wv2, wv3, color.rgb);
-            }
-            
         }
     }
     this._back_buffer_ctx.putImageData(this._back_buffer_image, 0, 0);
