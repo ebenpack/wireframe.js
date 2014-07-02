@@ -495,11 +495,9 @@ Scene.prototype.renderScene = function(){
         var world_matrix = Matrix.scale(scale.x, scale.y, scale.z).multiply(
             Matrix.rotation(rotation.pitch, rotation.yaw, rotation.roll).multiply(
                 Matrix.translation(position.x, position.y, position.z)));
-        var wvp_matrix = world_matrix.multiply(camera_matrix).multiply(projection_matrix);
         for (var k = 0; k < mesh.faces.length; k++){
             var face = mesh.faces[k].face;
             var color = mesh.faces[k].color;
-            var normal = mesh.faces[k].normal;
             var v1 = mesh.vertices[face[0]];
             var v2 = mesh.vertices[face[1]];
             var v3 = mesh.vertices[face[2]];
@@ -513,38 +511,28 @@ Scene.prototype.renderScene = function(){
                 norm = norm.normalize();
             }
             if (cam_to_vert.dot(norm) >= 0) {
+                var wvp_matrix = world_matrix.multiply(camera_matrix).multiply(projection_matrix);
                 var wv1 = v1.transform(wvp_matrix);
                 var wv2 = v2.transform(wvp_matrix);
                 var wv3 = v3.transform(wvp_matrix);
                 var draw = true;
-                
-                // Draw surface normals 
+
+                // Draw surface normals
                 // var face_trans = Matrix.translation(v1.x, v1.y, v1.z);
-                // this.drawEdge(wv1, normal.scale(20).transform(face_trans).transform(wvp_matrix), {'r':255,"g":255,"b":255})
-                
+                // this.drawEdge(wv1, norm.scale(20).transform(face_trans).transform(wvp_matrix), {'r':255,"g":255,"b":255})
+
                 // TODO: Fix frustum culling
                 // This is really stupid frustum culling... this can result in some faces not being
                 // drawn when they should, e.g. when a triangles vertices straddle the frustrum.
                 if (this.offscreen(wv1) && this.offscreen(wv2) && this.offscreen(wv3)){
                     draw = false;
                 }
-                // TODO: This is not correct. Fix.
-                // if (draw && this._backface_culling) {
-                //     var nor = normal.transform(wvp_matrix)
-                //     var cam_dir = new Vector(0,0,0).subtract(wv1);
-                //     if (cam_dir.dot(nor) >= 0){
-                //         draw = false;
-                //     } else {
-                //         draw = true;
-                //     }
-                // }
                 if (draw){
-                    var light_direction = light.transform(world_matrix).subtract(v1.transform(world_matrix)).normalize();
-                    var light_normal = normal.transform(world_matrix).normalize();
-                    var illumination_angle = light_normal.dot(light_direction);
-                    color = color.lighten(illumination_angle/4);
-                    //this.fillTriangle(wv1, wv2, wv3, color.rgb);
-                    this.drawTriangle(wv1, wv2, wv3, color.rgb);
+                    var light_direction = light.subtract(v1.transform(world_matrix)).normalize();
+                    var illumination_angle = norm.dot(light_direction);
+                    color = color.lighten(illumination_angle/6);
+                    this.fillTriangle(wv1, wv2, wv3, color.rgb);
+                    //this.drawTriangle(wv1, wv2, wv3, color.rgb);
                 }
             }
         }
@@ -938,42 +926,7 @@ function Mesh(name, vertices, faces){
     this.position = new Vector(0, 0, 0);
     this.rotation = {'yaw': 0, 'pitch': 0, 'roll': 0};
     this.scale = {'x': 1, 'y': 1, 'z': 1};
-    for (var i = 0; i < this.faces.length; i++){
-        var face = this.faces[i];
-        var a = this.vertices[face.face[0]];
-        var b = this.vertices[face.face[1]];
-        var c = this.vertices[face.face[2]];
-        this.faces[i].normal = Mesh.normal(a,b,c);
-        this.faces[i].centroid = Mesh.centroid(a,b,c);
-    }
 }
-/**
- * Returns the centroid vector for the given face.
- * @param  {Vector} a
- * @param  {Vector} b
- * @param  {Vector} c
- * @return {Vector}
- */
-Mesh.centroid = function(a, b, c){
-    return new Vector((a.x + b.x + c.x) / 3, (a.y + b.y + c.y) / 3, (a.z + b.z + c.z) / 3);
-};
-/**
- * Returns the normal vector for a face with the given vertices.
- * @param  {Vector} a
- * @param  {Vector} b
- * @param  {Vector} c
- * @return {Vector}
- */
-Mesh.normal = function(a, b, c){
-    var side1 = b.subtract(a);
-    var side2 = c.subtract(a);
-    var norm = side1.cross(side2);
-    if (norm.magnitude() <= 0.00000001){
-        return norm;
-    } else {
-        return norm.normalize();
-    }
-};
 Mesh.fromJSON = function(json){
     var vertices = [];
     var faces = [];
