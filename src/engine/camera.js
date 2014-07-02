@@ -81,27 +81,27 @@ Camera.prototype.moveTo = function(x, y, z){
 /** @method */
 Camera.prototype.moveRight = function(amount){
     var right = this.up.cross(this.direction()).normalize().scale(amount);
-    this.position = this.position.add(right);
+    this.position = this.position.subtract(right);
     this.view_matrix = this.createViewMatrix();
 };
 /** @method */
 Camera.prototype.moveLeft = function(amount){
     var left = this.up.cross(this.direction()).normalize().scale(amount);
-    this.position = this.position.subtract(left);
+    this.position = this.position.add(left);
     this.view_matrix = this.createViewMatrix();
 };
 Camera.prototype.turnRight = function(amount){
-    this.rotation.yaw += amount;
-    if (this.rotation.yaw > (Math.PI*2)){
-        this.rotation.yaw = this.rotation.yaw - (Math.PI*2);
+    this.rotation.yaw -= amount;
+    if (this.rotation.yaw < 0){
+        this.rotation.yaw = this.rotation.yaw + (Math.PI*2);
     }
     this.view_matrix = this.createViewMatrix();
 };
 /** @method */
 Camera.prototype.turnLeft = function(amount){
-    this.rotation.yaw -= amount;
-    if (this.rotation.yaw < 0){
-        this.rotation.yaw = this.rotation.yaw + (Math.PI*2);
+    this.rotation.yaw += amount;
+    if (this.rotation.yaw > (Math.PI*2)){
+        this.rotation.yaw = this.rotation.yaw - (Math.PI*2);
     }
     this.view_matrix = this.createViewMatrix();
 };
