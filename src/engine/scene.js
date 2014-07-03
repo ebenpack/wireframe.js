@@ -8,7 +8,6 @@ var Matrix = math.Matrix;
 
 /**
  * @constructor
- * @this {Scene}
  * @param {{canvas_id: string, width: number, height: number}} options
  */
 function Scene(options){

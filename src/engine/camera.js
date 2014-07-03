@@ -4,7 +4,6 @@ var Matrix = math.Matrix;
 
 /** 
  * @constructor
- * @this {Camera}
  * @param {Vector} position Camera position.
  * @param {Vector} target   Camera
  */

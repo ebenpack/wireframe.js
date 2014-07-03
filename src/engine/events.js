@@ -1,4 +1,6 @@
 /**
+ * Event handler.
+ * @constructor
  * @license
  * Copyright (c) 2010 Nicholas C. Zakas. All rights reserved.
  * MIT License
