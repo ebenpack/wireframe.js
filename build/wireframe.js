@@ -5,7 +5,6 @@ var Matrix = math.Matrix;
 
 /** 
  * @constructor
- * @this {Camera}
  * @param {Vector} position Camera position.
  * @param {Vector} target   Camera
  */
@@ -160,6 +159,8 @@ engine.Camera = Camera;
 module.exports = engine;
 },{"./camera.js":1,"./scene.js":4}],3:[function(_dereq_,module,exports){
 /**
+ * Event handler.
+ * @constructor
  * @license
  * Copyright (c) 2010 Nicholas C. Zakas. All rights reserved.
  * MIT License
@@ -169,46 +170,42 @@ function EventTarget(){
     this._listeners = {};
 }
 
-EventTarget.prototype = {
+/** @method */
+EventTarget.prototype.addListener = function(type, listener){
+    if (typeof this._listeners[type] === "undefined"){
+        this._listeners[type] = [];
+    }
 
-    constructor: EventTarget,
+    this._listeners[type].push(listener);
+};
+/** @method */
+EventTarget.prototype.fire = function(event){
+    if (typeof event === "string"){
+        event = { type: event };
+    }
+    if (!event.target){
+        event.target = this;
+    }
 
-    addListener: function(type, listener){
-        if (typeof this._listeners[type] === "undefined"){
-            this._listeners[type] = [];
+    if (!event.type){  //falsy
+        throw new Error("Event object missing 'type' property.");
+    }
+
+    if (this._listeners[event.type] instanceof Array){
+        var listeners = this._listeners[event.type];
+        for (var i=0, len=listeners.length; i < len; i++){
+            listeners[i].call(this, event);
         }
-
-        this._listeners[type].push(listener);
-    },
-
-    fire: function(event){
-        if (typeof event === "string"){
-            event = { type: event };
-        }
-        if (!event.target){
-            event.target = this;
-        }
-
-        if (!event.type){  //falsy
-            throw new Error("Event object missing 'type' property.");
-        }
-
-        if (this._listeners[event.type] instanceof Array){
-            var listeners = this._listeners[event.type];
-            for (var i=0, len=listeners.length; i < len; i++){
-                listeners[i].call(this, event);
-            }
-        }
-    },
-
-    removeListener: function(type, listener){
-        if (this._listeners[type] instanceof Array){
-            var listeners = this._listeners[type];
-            for (var i=0, len=listeners.length; i < len; i++){
-                if (listeners[i] === listener){
-                    listeners.splice(i, 1);
-                    break;
-                }
+    }
+};
+/** @method */
+EventTarget.prototype.removeListener = function(type, listener){
+    if (this._listeners[type] instanceof Array){
+        var listeners = this._listeners[type];
+        for (var i=0, len=listeners.length; i < len; i++){
+            if (listeners[i] === listener){
+                listeners.splice(i, 1);
+                break;
             }
         }
     }
@@ -226,7 +223,6 @@ var Matrix = math.Matrix;
 
 /**
  * @constructor
- * @this {Scene}
  * @param {{canvas_id: string, width: number, height: number}} options
  */
 function Scene(options){
@@ -334,6 +330,11 @@ Scene.prototype.drawPixel = function(x, y, z, color){
 /** @method  */
 Scene.prototype.drawEdge = function(vector1, vector2, color){
     var abs = Math.abs;
+    if (vector1.x > vector2.x){
+        var temp = vector1;
+        vector1 = vector2;
+        vector2 = temp;
+    }
     var current_x = vector1.x;
     var current_y = vector1.y;
     var current_z = vector1.z;
@@ -461,6 +462,7 @@ Scene.prototype.fillTriangle = function(v1, v2, v3, color){
         long_slope = (v3.x - v1.x) / (v3.y - v1.y);
     }
 
+    this.drawTriangle(v1, v2, v3, color);
     if (v2.y === v3.y){
         // Flat top
         this.drawFlatBottomTriangle(v1, v2, v3, color);
@@ -608,7 +610,6 @@ module.exports = math;
 /** 
  * 4x4 matrix.
  * @constructor
- * @this {Matrix}
  */
 function Matrix(){
     /** @type {Array.<number>} */
@@ -914,7 +915,6 @@ var Face = _dereq_('./face.js');
 
 /**
  * @constructor
- * @this {Mesh}
  * @param {string} name
  * @param {Array.<Vertex>} vertices
  * @param {Array.<{edge: Array.<number>, color: string}>} edges
@@ -946,7 +946,6 @@ module.exports = Mesh;
 },{"./face.js":6,"./vector.js":10}],10:[function(_dereq_,module,exports){
 /**
  * @constructor
- * @this {Vector}
  * @param {number} x
  * @param {number} y
  * @param {number} z

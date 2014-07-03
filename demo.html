@@ -7,23 +7,13 @@
         <meta name="viewport" content="width=device-width, initial-scale=1">
     </head>
     <body>
-        <div class="main" style="position:relative; width: 600px; float: left; margin: 10px">
+        <div class="main" style="position:relative; width: 600px; margin: 80px auto">
             <canvas id="wireframe" style="background-color:black; position:relative; border: 2px solid green;" width='600' height='400'></canvas>
-            <p>Click on the canvas to give it focus. QWEASD controls pitch/yaw/roll of cube. HJKL moves cube left/right, up/down.</p>
-        </div>
-        <div id="controls" style="float: left; margin: 10px">
-            <label><input id="fov" type="number" value="90">FOV</label><br>
-            <label><input id="camx" type="number" value="0">Cam Target X</label><br>
-            <label><input id="camy" type="number" value="0">Cam Target Y</label><br>
-            <label><input id="camz" type="number" value="0">Cam Target Z</label>
-        </div>
-        <div id="debug">
-            
+            <p>Click on the canvas to give it focus. Move with WASDRF keys. Look around with QETG. Spin icosahedron with HJKLUI.</p>
         </div>
         <script src="build/wireframe.js"></script>
         <script>
             (function () {
-                var dbg = document.getElementById('debug');
                 var Vector = wireframe.math.Vector;
                 var Mesh = wireframe.math.Mesh;
                 var Face = wireframe.math.Face;
@@ -59,10 +49,6 @@
                     ]
                 };
 
-
-
-
-                var cube = Mesh.fromJSON(cubejson);
                 var icosjson = {
                     "name": "ico",
                     "vertices": [
@@ -194,89 +180,45 @@
                 }
 
                 var icos = Mesh.fromJSON(icosjson);
-                var xaxis = new Mesh('xaxis',
-                    [
-                        new Vector(-80, 0, 0),
-                        new Vector( 80, 0, 0)
-                    ],
-                    [
-                        new Face(0, 0, 1, 'green')
-                    ]
-                    );
-                var yaxis = new Mesh('yaxis',
-                    [
-                        new Vector(0, -80, 0),
-                        new Vector(0,  80, 0)
-                    ],
-                    [
-                        new Face(0, 0, 1, 'blue')
-                    ]
-                    );
-                var zaxis = new Mesh('zaxis',
-                    [
-                        new Vector(0, 0, -80),
-                        new Vector(0, 0,  80)
-                    ],
-                    [
-                        new Face(0, 0, 1, 'yellow')
-                    ]
-                    );
+                var cube = Mesh.fromJSON(cubejson);
 
-                function rotateCube(){
-                    if (scene.isKeyDown('a')) {
+                function rotateMesh(){
+                    if (scene.isKeyDown('h')) {
                         scene.meshes[0].rotation.yaw -= 0.03;
                     }
-                    if (scene.isKeyDown('s')) {
+                    if (scene.isKeyDown('j')) {
                         scene.meshes[0].rotation.pitch -= 0.03;
                     }
-                    if (scene.isKeyDown('f')) {
+                    if (scene.isKeyDown('l')) {
                         scene.meshes[0].rotation.yaw += 0.03;
                     }
-                    if (scene.isKeyDown('d')) {
+                    if (scene.isKeyDown('k')) {
                         scene.meshes[0].rotation.pitch += 0.03;
                     }
-                    if (scene.isKeyDown('w')) {
+                    if (scene.isKeyDown('u')) {
                         scene.meshes[0].rotation.roll += 0.03;
                     }
-                    if (scene.isKeyDown('e')) {
+                    if (scene.isKeyDown('i')) {
                         scene.meshes[0].rotation.roll -= 0.03;
                     }
                 }
                 function moveCamera(E, H){
-                    if (scene.isKeyDown('h')) {
-                        scene.camera.moveRight(1);
-                    }
-                    if (scene.isKeyDown('j')) {
-                        scene.camera.moveUp(1);
-                    }
-                    if (scene.isKeyDown('k')) {
-                        scene.camera.moveDown(1);
-                    }
-                    if (scene.isKeyDown('l')) {
-                        scene.camera.moveLeft(1);
-                    }
-                    if (scene.isKeyDown('up_arrow')) {
+                    if (scene.isKeyDown('w')) {
                         scene.camera.moveForward(10);
                     }
-                    if (scene.isKeyDown('down_arrow')) {
+                    if (scene.isKeyDown('s')) {
                         scene.camera.moveBackward(10);
                     }
-                    if (scene.isKeyDown('left_arrow')) {
-                        scene.camera.turnLeft(0.05);
-                    }
-                    if (scene.isKeyDown('right_arrow')) {
-                        scene.camera.turnRight(0.05);
-                    }
-                    if (scene.isKeyDown('v')) {
+                    if (scene.isKeyDown('a')) {
                         scene.camera.moveLeft(10);
                     }
-                    if (scene.isKeyDown('b')) {
+                    if (scene.isKeyDown('d')) {
                         scene.camera.moveRight(10);
                     }
-                    if (scene.isKeyDown('p')) {
+                    if (scene.isKeyDown('r')) {
                         scene.camera.moveUp(10);
                     }
-                    if (scene.isKeyDown('o')) {
+                    if (scene.isKeyDown('f')) {
                         scene.camera.moveDown(10);
                     }
                     if (scene.isKeyDown('t')) {
@@ -285,51 +227,25 @@
                     if (scene.isKeyDown('g')) {
                         scene.camera.lookDown(0.05);
                     }
-                    // DEBUG
-                    var direction = scene.camera.direction();
-                    dbg.innerHTML = "CameraX: " + scene.camera.position.x + "<br>" +
-                    "CameraY: " + scene.camera.position.y + "<br>" +
-                    "CameraZ: " + scene.camera.position.z + "<br>" +
-                    "Yaw: " + scene.camera.rotation.yaw + "<br>" +
-                    "FacingX: " + direction.x + "<br>" +
-                    "FacingY: " + direction.y + "<br>" +
-                    "FacingZ: " + direction.z + "<br>";
+                    if (scene.isKeyDown('q')) {
+                        scene.camera.turnLeft(0.05);
+                    }
+                    if (scene.isKeyDown('e')) {
+                        scene.camera.turnRight(0.05);
+                    }
                     scene._needs_update = true;
                 }
 
                 var scene = new Scene({canvas_id: 'wireframe', width:600, height:400});
-                scene.addListener('keydown', rotateCube);
+                scene.addListener('keydown', rotateMesh);
                 scene.addListener('keydown', moveCamera);
 
-                cube.position.z = 600
+                cube.position.x = 200
                 scene.camera.moveTo(0, 0, 400);
                 scene.addMesh(icos);
                 scene.addMesh(cube);
-                // scene.addMesh(xaxis);
-                // scene.addMesh(yaxis);
-                // scene.addMesh(zaxis);
                 scene.renderScene();
 
-                //DEBUG
-                var fov = document.getElementById('fov');
-                fov.addEventListener('input', function(e){
-                    scene.camera.fov = parseInt(this.value, 10);
-                })
-                var camx = document.getElementById('camx');
-                camx.addEventListener('input', function(e){
-                    scene.camera.target.x = parseInt(this.value, 10);
-                    scene.camera.view_matrix = scene.camera.lookAt();
-                })
-                var camy = document.getElementById('camy');
-                camy.addEventListener('input', function(e){
-                    scene.camera.target.y = parseInt(this.value, 10);
-                    scene.camera.view_matrix = scene.camera.lookAt();
-                })
-                var camz = document.getElementById('camz');
-                camz.addEventListener('input', function(e){
-                    scene.camera.target.z = parseInt(this.value, 10);
-                    scene.camera.view_matrix = scene.camera.lookAt();
-                })
             })();
         </script>
     </body>
