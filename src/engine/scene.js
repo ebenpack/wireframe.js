@@ -115,6 +115,11 @@ Scene.prototype.drawPixel = function(x, y, z, color){
 /** @method  */
 Scene.prototype.drawEdge = function(vector1, vector2, color){
     var abs = Math.abs;
+    if (vector1.x > vector2.x){
+        var temp = vector1;
+        vector1 = vector2;
+        vector2 = temp;
+    }
     var current_x = vector1.x;
     var current_y = vector1.y;
     var current_z = vector1.z;
@@ -242,6 +247,7 @@ Scene.prototype.fillTriangle = function(v1, v2, v3, color){
         long_slope = (v3.x - v1.x) / (v3.y - v1.y);
     }
 
+    this.drawTriangle(v1, v2, v3, color);
     if (v2.y === v3.y){
         // Flat top
         this.drawFlatBottomTriangle(v1, v2, v3, color);
