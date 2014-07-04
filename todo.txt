@@ -9,3 +9,4 @@
 * Make it easier to control meshes in a scene ().
 * Improve documentation
 * Fix `scene._needs_update` kludge.
+* Add mouse event handling
