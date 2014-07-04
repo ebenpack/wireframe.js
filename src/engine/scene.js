@@ -212,7 +212,7 @@ Scene.prototype.drawFlatTopTriangle = function(v1, v2, v3, color){
 Scene.prototype.fillTriangle = function(v1, v2, v3, color){
     // Draw edges first
     // TODO: Fix. This is a hack. 
-    //this.drawTriangle(v1, v2, v3, color);
+    this.drawTriangle(v1, v2, v3, color);
     // Sort vertices by y value
     var temp;
     if(v1.y > v2.y) {
