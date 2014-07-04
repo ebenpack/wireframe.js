@@ -1,0 +1,11 @@
+* Is `Scene.prototype.offscreen` correct w/r/t z-index culling?
+* `Scene.prototype.fillTriangle` can leave gaps between shared edges
+* Refactor `Scene.prototype.renderScene`
+* Fix frustum culling
+* Add `Scene.prototype.removeMesh` method
+* Is `parseColor` cross-browser compatible 
+* Clean up `Scene`
+* Add tests
+* Make it easier to control meshes in a scene ().
+* Improve documentation
+* Fix `scene._needs_update` kludge.
