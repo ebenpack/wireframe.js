@@ -212,7 +212,7 @@ Scene.prototype.drawFlatTopTriangle = function(v1, v2, v3, color){
 Scene.prototype.fillTriangle = function(v1, v2, v3, color){
     // Draw edges first
     // TODO: Fix. This is a hack. 
-    this.drawTriangle(v1, v2, v3, color);
+    //this.drawTriangle(v1, v2, v3, color);
     // Sort vertices by y value
     var temp;
     if(v1.y > v2.y) {
@@ -247,7 +247,6 @@ Scene.prototype.fillTriangle = function(v1, v2, v3, color){
         long_slope = (v3.x - v1.x) / (v3.y - v1.y);
     }
 
-    this.drawTriangle(v1, v2, v3, color);
     if (v2.y === v3.y){
         // Flat top
         this.drawFlatBottomTriangle(v1, v2, v3, color);
@@ -256,8 +255,7 @@ Scene.prototype.fillTriangle = function(v1, v2, v3, color){
         // Flat bottom
         this.drawFlatTopTriangle(v1, v2, v3, color);
     } else {
-        // Interpolate 
-        // Decompose into flat top
+        // Decompose into flat top and flat bottom triangles
         var z_slope = (v3.z - v1.z) / (v3.y - v1.y);
         var x = ((v2.y - v1.y)*long_slope) + v1.x;
         var z = ((v2.y - v1.y)*z_slope) + v1.z;
@@ -288,6 +286,10 @@ Scene.prototype.renderScene = function(){
             var v1 = mesh.vertices[face[0]];
             var v2 = mesh.vertices[face[1]];
             var v3 = mesh.vertices[face[2]];
+
+            // Calculate the normal
+            // TODO: Can this be calculated just once, and then transformed into
+            // camera space?
             var cam_to_vert = this.camera.position.subtract(v1.transform(world_matrix));
             var side1 = v2.transform(world_matrix).subtract(v1.transform(world_matrix));
             var side2 = v3.transform(world_matrix).subtract(v1.transform(world_matrix));
@@ -297,6 +299,7 @@ Scene.prototype.renderScene = function(){
             } else {
                 norm = norm.normalize();
             }
+            // Backface culling.
             if (cam_to_vert.dot(norm) >= 0) {
                 var wvp_matrix = world_matrix.multiply(camera_matrix).multiply(projection_matrix);
                 var wv1 = v1.transform(wvp_matrix);
@@ -305,8 +308,8 @@ Scene.prototype.renderScene = function(){
                 var draw = true;
 
                 // Draw surface normals
-                // var face_trans = Matrix.translation(v1.x, v1.y, v1.z);
-                // this.drawEdge(wv1, norm.scale(20).transform(face_trans).transform(wvp_matrix), {'r':255,"g":255,"b":255})
+                // var face_trans = Matrix.translation(wv1.x, wv1.y, v1.z);
+                // this.drawEdge(wv1, norm.scale(20).transform(face_trans), {'r':255,"g":255,"b":255})
 
                 // TODO: Fix frustum culling
                 // This is really stupid frustum culling... this can result in some faces not being
@@ -318,8 +321,8 @@ Scene.prototype.renderScene = function(){
                     var light_direction = light.subtract(v1.transform(world_matrix)).normalize();
                     var illumination_angle = norm.dot(light_direction);
                     color = color.lighten(illumination_angle/6);
-                    this.fillTriangle(wv1, wv2, wv3, color.rgb);
-                    //this.drawTriangle(wv1, wv2, wv3, color.rgb);
+                    //this.fillTriangle(wv1, wv2, wv3, color.rgb);
+                    this.drawTriangle(wv1, wv2, wv3, color.rgb);
                 }
             }
         }
