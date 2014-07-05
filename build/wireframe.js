@@ -625,7 +625,7 @@ function Matrix(){
  * @return {boolean}
  */
 Matrix.prototype.equals = function(matrix){
-    for (var i = 0, len = this.m.length; i < len; i++){
+    for (var i = 0, len = this.length; i < len; i++){
         if (this[i] !== matrix[i]){
             return false;
         }
@@ -640,7 +640,7 @@ Matrix.prototype.equals = function(matrix){
  */
 Matrix.prototype.add = function(matrix){
     var new_matrix = new Matrix();
-    for (var i = 0, len = this.m.length; i < len; i++){
+    for (var i = 0, len = this.length; i < len; i++){
         new_matrix[i] = this[i] + matrix[i];
     }
     return new_matrix;
@@ -653,7 +653,7 @@ Matrix.prototype.add = function(matrix){
  */
 Matrix.prototype.subtract = function(matrix){
     var new_matrix = new Matrix();
-    for (var i = 0, len = this.m.length; i < len; i++){
+    for (var i = 0, len = this.length; i < len; i++){
         this[i] = this[i] - matrix[i];
     }
     return new_matrix;
@@ -666,7 +666,7 @@ Matrix.prototype.subtract = function(matrix){
  */
 Matrix.prototype.multiplyScalar = function(scalar){
     var new_matrix = new Matrix();
-    for (var i = 0, len = this.m.length; i < len; i++){
+    for (var i = 0, len = this.length; i < len; i++){
         this[i] = this[i] * scalar;
     }
     return new_matrix;
@@ -705,8 +705,8 @@ Matrix.prototype.multiply = function(matrix){
  */
 Matrix.prototype.negate = function(){
     var new_matrix = new Matrix();
-    for (var i = 0, len = this.matrix.length; i < len; i++){
-        this.matrix[i] = -this.matrix[i];
+    for (var i = 0, len = this.length; i < len; i++){
+        this[i] = -this[i];
     }
     return new_matrix;
 };
