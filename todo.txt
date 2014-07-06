@@ -2,12 +2,13 @@
 * `Scene.prototype.fillTriangle` can leave gaps between shared edges
 * Refactor `Scene.prototype.renderScene`
 * Fix frustum culling
-* Add `Scene.prototype.removeMesh` method
-* Is `parseColor` cross-browser compatible 
+* Is `parseColor` cross-browser compatible?
 * Clean up `Scene`
 * Add tests
-* Make it easier to control meshes in a scene ().
+* Make it easier to control meshes in a scene.
 * Improve documentation
 * Fix `scene._needs_update` kludge.
 * Add mouse event handling
-* Add mesh deformation methods
+* Add mesh deformation methods4
+* Improve shading (Gouraud?)
+* ~Add `Scene.prototype.removeMesh` method~

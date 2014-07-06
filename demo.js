@@ -189,34 +189,34 @@
     }
     function moveCamera(E, H){
         if (scene.isKeyDown('w')) {
-            scene.camera.moveForward(10);
+            scene.camera.moveForward(3);
         }
         if (scene.isKeyDown('s')) {
-            scene.camera.moveBackward(10);
+            scene.camera.moveBackward(3);
         }
         if (scene.isKeyDown('a')) {
-            scene.camera.moveLeft(10);
+            scene.camera.moveLeft(3);
         }
         if (scene.isKeyDown('d')) {
-            scene.camera.moveRight(10);
+            scene.camera.moveRight(3);
         }
         if (scene.isKeyDown('r')) {
-            scene.camera.moveUp(10);
+            scene.camera.moveUp(3);
         }
         if (scene.isKeyDown('f')) {
-            scene.camera.moveDown(10);
+            scene.camera.moveDown(3);
         }
         if (scene.isKeyDown('t')) {
-            scene.camera.lookUp(0.05);
+            scene.camera.lookUp(0.02);
         }
         if (scene.isKeyDown('g')) {
-            scene.camera.lookDown(0.05);
+            scene.camera.lookDown(0.02);
         }
         if (scene.isKeyDown('q')) {
-            scene.camera.turnLeft(0.05);
+            scene.camera.turnLeft(0.02);
         }
         if (scene.isKeyDown('e')) {
-            scene.camera.turnRight(0.05);
+            scene.camera.turnRight(0.02);
         }
         scene._needs_update = true;
     }
