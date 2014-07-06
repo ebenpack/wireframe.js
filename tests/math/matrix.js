@@ -1,62 +1,69 @@
 var Matrix = require('../../src/math/matrix.js');
 var assert = require("assert");
 
-describe('Matrix', function(){
-    describe('length', function(){
-        it('should have a length of 16', function(){
-            var matrix = new Matrix();
-            assert.equal(16, matrix.length);
-        })
+suite('Matrix', function(){
+    var zero, identity;
+    setup(function(){
+        zero = new Matrix();
+        identity = Matrix.identity();
     });
-    describe('equal', function(){
-
+    suite('length', function(){
+        test('should have a length of 16', function(){
+            assert.equal(16, zero.length);
+            assert.equal(16, identity.length);
+        });
     });
-    describe('add', function(){
-        
-    });
-    describe('subtract', function(){
-        
-    });
-    describe('multiplyScalar', function(){
-        
-    });
-    describe('multiply', function(){
-        
-    });
-    describe('negate', function(){
-        
-    });
-    describe('transpose', function(){
-        
-    });
-    describe('rotationX', function(){
-        
-    });
-    describe('rotationY', function(){
-        
-    });
-    describe('rotationZ', function(){
-        
-    });
-    describe('rotationAxis', function(){
-        
-    });
-    describe('rotation', function(){
-        
-    });
-    describe('translation', function(){
-        
-    });
-    describe('scale', function(){
-        
-    });
-    describe('identity', function(){
-        
-    });
-    describe('zero', function(){
-        
-    });
-    describe('fromArray', function(){
-        
+    suite('methods', function(){
+        test('equal', function(){
+            
+        });
+        test('add', function(){
+            
+        });
+        test('subtract', function(){
+            
+        });
+        test('multiplyScalar', function(){
+            
+        });
+        test('multiply', function(){
+            
+        });
+        test('negate', function(){
+            
+        });
+        test('transpose', function(){
+            
+        });
+        test('rotationX', function(){
+            
+        });
+        test('rotationY', function(){
+            
+        });
+        test('rotationZ', function(){
+            
+        });
+        test('rotationAxis', function(){
+            
+        });
+        test('rotation', function(){
+            
+        });
+        test('translation', function(){
+            
+        });
+        test('scale', function(){
+            
+        });
+        test('identity', function(){
+            
+        });
+        test('zero', function(){
+            
+        });
+        test('fromArray', function(){
+            
+        });
     });
 });
