@@ -1078,6 +1078,10 @@ Vector.prototype.normalize = function(){
 Vector.prototype.scale = function(scale){
     return new Vector(this.x * scale, this.y * scale, this.z * scale);
 };
+/** @method */
+Vector.prototype.negate = function(){
+    return new Vector(-this.x, -this.y, -this.z);
+};
 /**
  * Project self onto vector
  * @method
@@ -1102,7 +1106,7 @@ Vector.prototype.scalarProjection = function(vector){
  * @param {Vector} vector
  * @return {number}
  */
-Vector.prototype.comp = function(vector){
+Vector.prototype.component = function(vector){
     //A.comp(B) = dot(A,norm(B))
     return this.dot(vector) / this.magnitude();
 };
