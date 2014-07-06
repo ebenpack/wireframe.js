@@ -15,10 +15,10 @@ var mesh = new Mesh('triangle',
     );
 
 describe('Mesh', function(){
-  describe('name', function(){
-    it('should have a name', function(){
-      assert.ok(mesh.name);
-      assert.equal(mesh.name, 'triangle');
+    describe('name', function(){
+        it('should have a name', function(){
+            assert.ok(mesh.name);
+            assert.equal(mesh.name, 'triangle');
+        })
     })
-  })
 });
