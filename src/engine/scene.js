@@ -28,7 +28,7 @@ function Scene(options){
     this.camera = new Camera(this.width, this.height);
     this.illumination = new Vector(90,0,0);
     /** @type {Array.<Mesh>} */
-    this.meshes = [];
+    this.meshes = {};
     /** @type {Object.<number, boolean>} */
     this._keys = {}; // Keys currently pressed
     this._key_count = 0; // Number of keys being pressed... this feels kludgy
@@ -206,7 +206,6 @@ Scene.prototype.drawFlatTopTriangle = function(v1, v2, v3, color){
         xs.z+=z_slope_left;
         xe.z+=z_slope_right;
     }
-    // Round right edge
 };
 /** @method */
 Scene.prototype.fillTriangle = function(v1, v2, v3, color){
@@ -272,57 +271,59 @@ Scene.prototype.renderScene = function(){
     var camera_matrix = this.camera.view_matrix;
     var projection_matrix = this.camera.perspectiveFov;
     var light = this.illumination;
-    for (var i = 0, len = this.meshes.length; i < len; i++){
-        var mesh = this.meshes[i];
-        var scale = mesh.scale;
-        var rotation = mesh.rotation;
-        var position = mesh.position;
-        var world_matrix = Matrix.scale(scale.x, scale.y, scale.z).multiply(
-            Matrix.rotation(rotation.pitch, rotation.yaw, rotation.roll).multiply(
-                Matrix.translation(position.x, position.y, position.z)));
-        for (var k = 0; k < mesh.faces.length; k++){
-            var face = mesh.faces[k].face;
-            var color = mesh.faces[k].color;
-            var v1 = mesh.vertices[face[0]];
-            var v2 = mesh.vertices[face[1]];
-            var v3 = mesh.vertices[face[2]];
+    for (var key in this.meshes){
+        if (this.meshes.hasOwnProperty(key)){
+            var mesh = this.meshes[key];
+            var scale = mesh.scale;
+            var rotation = mesh.rotation;
+            var position = mesh.position;
+            var world_matrix = Matrix.scale(scale.x, scale.y, scale.z).multiply(
+                Matrix.rotation(rotation.pitch, rotation.yaw, rotation.roll).multiply(
+                    Matrix.translation(position.x, position.y, position.z)));
+            for (var k = 0; k < mesh.faces.length; k++){
+                var face = mesh.faces[k].face;
+                var color = mesh.faces[k].color;
+                var v1 = mesh.vertices[face[0]];
+                var v2 = mesh.vertices[face[1]];
+                var v3 = mesh.vertices[face[2]];
 
-            // Calculate the normal
-            // TODO: Can this be calculated just once, and then transformed into
-            // camera space?
-            var cam_to_vert = this.camera.position.subtract(v1.transform(world_matrix));
-            var side1 = v2.transform(world_matrix).subtract(v1.transform(world_matrix));
-            var side2 = v3.transform(world_matrix).subtract(v1.transform(world_matrix));
-            var norm = side1.cross(side2);
-            if (norm.magnitude() <= 0.00000001){
-                norm = norm;
-            } else {
-                norm = norm.normalize();
-            }
-            // Backface culling.
-            if (cam_to_vert.dot(norm) >= 0) {
-                var wvp_matrix = world_matrix.multiply(camera_matrix).multiply(projection_matrix);
-                var wv1 = v1.transform(wvp_matrix);
-                var wv2 = v2.transform(wvp_matrix);
-                var wv3 = v3.transform(wvp_matrix);
-                var draw = true;
-
-                // Draw surface normals
-                // var face_trans = Matrix.translation(wv1.x, wv1.y, v1.z);
-                // this.drawEdge(wv1, norm.scale(20).transform(face_trans), {'r':255,"g":255,"b":255})
-
-                // TODO: Fix frustum culling
-                // This is really stupid frustum culling... this can result in some faces not being
-                // drawn when they should, e.g. when a triangles vertices straddle the frustrum.
-                if (this.offscreen(wv1) && this.offscreen(wv2) && this.offscreen(wv3)){
-                    draw = false;
+                // Calculate the normal
+                // TODO: Can this be calculated just once, and then transformed into
+                // camera space?
+                var cam_to_vert = this.camera.position.subtract(v1.transform(world_matrix));
+                var side1 = v2.transform(world_matrix).subtract(v1.transform(world_matrix));
+                var side2 = v3.transform(world_matrix).subtract(v1.transform(world_matrix));
+                var norm = side1.cross(side2);
+                if (norm.magnitude() <= 0.00000001){
+                    norm = norm;
+                } else {
+                    norm = norm.normalize();
                 }
-                if (draw){
-                    var light_direction = light.subtract(v1.transform(world_matrix)).normalize();
-                    var illumination_angle = norm.dot(light_direction);
-                    color = color.lighten(illumination_angle/6);
-                    //this.fillTriangle(wv1, wv2, wv3, color.rgb);
-                    this.drawTriangle(wv1, wv2, wv3, color.rgb);
+                // Backface culling.
+                if (cam_to_vert.dot(norm) >= 0) {
+                    var wvp_matrix = world_matrix.multiply(camera_matrix).multiply(projection_matrix);
+                    var wv1 = v1.transform(wvp_matrix);
+                    var wv2 = v2.transform(wvp_matrix);
+                    var wv3 = v3.transform(wvp_matrix);
+                    var draw = true;
+
+                    // Draw surface normals
+                    // var face_trans = Matrix.translation(wv1.x, wv1.y, v1.z);
+                    // this.drawEdge(wv1, norm.scale(20).transform(face_trans), {'r':255,"g":255,"b":255})
+
+                    // TODO: Fix frustum culling
+                    // This is really stupid frustum culling... this can result in some faces not being
+                    // drawn when they should, e.g. when a triangles vertices straddle the frustrum.
+                    if (this.offscreen(wv1) && this.offscreen(wv2) && this.offscreen(wv3)){
+                        draw = false;
+                    }
+                    if (draw){
+                        var light_direction = light.subtract(v1.transform(world_matrix)).normalize();
+                        var illumination_angle = norm.dot(light_direction);
+                        color = color.lighten(illumination_angle/6);
+                        this.fillTriangle(wv1, wv2, wv3, color.rgb);
+                        //this.drawTriangle(wv1, wv2, wv3, color.rgb);
+                    }
                 }
             }
         }
@@ -333,18 +334,18 @@ Scene.prototype.renderScene = function(){
 };
 /** @method */
 Scene.prototype.addMesh = function(mesh){
-    this.meshes.push(mesh);
+    this.meshes[mesh.name] = mesh;
 };
 /** @method */
 Scene.prototype.removeMesh = function(mesh){
-    // TODO: Write this
-    return mesh;
+    delete this.meshes[mesh.name];
 };
 /** @method */
 Scene.prototype.update = function(){
     if (this._key_count > 0){
         this.fire('keydown');
     }
+    // TODO: Add keyup, mousedown, mousedrag, mouseup, etc.
     if (this._needs_update) {
         this.renderScene();
         this._needs_update = false;

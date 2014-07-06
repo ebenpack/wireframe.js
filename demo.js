@@ -169,22 +169,22 @@
 
     function rotateMesh(){
         if (scene.isKeyDown('h')) {
-            scene.meshes[0].rotation.yaw -= 0.03;
+            icos.rotation.yaw -= 0.03;
         }
         if (scene.isKeyDown('j')) {
-            scene.meshes[0].rotation.pitch -= 0.03;
+            icos.rotation.pitch -= 0.03;
         }
         if (scene.isKeyDown('l')) {
-            scene.meshes[0].rotation.yaw += 0.03;
+            icos.rotation.yaw += 0.03;
         }
         if (scene.isKeyDown('k')) {
-            scene.meshes[0].rotation.pitch += 0.03;
+            icos.rotation.pitch += 0.03;
         }
         if (scene.isKeyDown('u')) {
-            scene.meshes[0].rotation.roll += 0.03;
+            icos.rotation.roll += 0.03;
         }
         if (scene.isKeyDown('i')) {
-            scene.meshes[0].rotation.roll -= 0.03;
+            icos.rotation.roll -= 0.03;
         }
     }
     function moveCamera(E, H){
