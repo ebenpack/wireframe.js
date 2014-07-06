@@ -27,112 +27,58 @@ describe('Vector', function(){
         })
     });
     describe('angle', function(){
-        // it('should be equal to another vector with the same coordinates', function(){
-        //     assert.equal(vector1.equal(vector2), true);
-        //     assert.equal(vector1.equal(vector3), false);
-        // })
+        
     });
     describe('cosAngle', function(){
-        // it('should be equal to another vector with the same coordinates', function(){
-        //     assert.equal(vector1.equal(vector2), true);
-        //     assert.equal(vector1.equal(vector3), false);
-        // })
+
     });
     describe('magnitude', function(){
-        // it('should be equal to another vector with the same coordinates', function(){
-        //     assert.equal(vector1.equal(vector2), true);
-        //     assert.equal(vector1.equal(vector3), false);
-        // })
+
     });
     describe('magnitudeSquared', function(){
-        // it('should be equal to another vector with the same coordinates', function(){
-        //     assert.equal(vector1.equal(vector2), true);
-        //     assert.equal(vector1.equal(vector3), false);
-        // })
+
     });
     describe('dot', function(){
-        // it('should be equal to another vector with the same coordinates', function(){
-        //     assert.equal(vector1.equal(vector2), true);
-        //     assert.equal(vector1.equal(vector3), false);
-        // })
+
     });
     describe('cross', function(){
-        // it('should be equal to another vector with the same coordinates', function(){
-        //     assert.equal(vector1.equal(vector2), true);
-        //     assert.equal(vector1.equal(vector3), false);
-        // })
+
     });
     describe('normalize', function(){
-        // it('should be equal to another vector with the same coordinates', function(){
-        //     assert.equal(vector1.equal(vector2), true);
-        //     assert.equal(vector1.equal(vector3), false);
-        // })
+
     });
     describe('scale', function(){
-        // it('should be equal to another vector with the same coordinates', function(){
-        //     assert.equal(vector1.equal(vector2), true);
-        //     assert.equal(vector1.equal(vector3), false);
-        // })
+
     });
     describe('negate', function(){
-        // it('should be equal to another vector with the same coordinates', function(){
-        //     assert.equal(vector1.equal(vector2), true);
-        //     assert.equal(vector1.equal(vector3), false);
-        // })
+
     });
     describe('vectorProjection', function(){
-        // it('should be equal to another vector with the same coordinates', function(){
-        //     assert.equal(vector1.equal(vector2), true);
-        //     assert.equal(vector1.equal(vector3), false);
-        // })
+
     });
     describe('scalarProjection', function(){
-        // it('should be equal to another vector with the same coordinates', function(){
-        //     assert.equal(vector1.equal(vector2), true);
-        //     assert.equal(vector1.equal(vector3), false);
-        // })
+
     });
     describe('component', function(){
-        // it('should be equal to another vector with the same coordinates', function(){
-        //     assert.equal(vector1.equal(vector2), true);
-        //     assert.equal(vector1.equal(vector3), false);
-        // })
+
     });
     describe('rotate', function(){
-        // it('should be equal to another vector with the same coordinates', function(){
-        //     assert.equal(vector1.equal(vector2), true);
-        //     assert.equal(vector1.equal(vector3), false);
-        // })
+
     });
     describe('transform', function(){
-        // it('should be equal to another vector with the same coordinates', function(){
-        //     assert.equal(vector1.equal(vector2), true);
-        //     assert.equal(vector1.equal(vector3), false);
-        // })
+
     });
     describe('rotateX', function(){
-        // it('should be equal to another vector with the same coordinates', function(){
-        //     assert.equal(vector1.equal(vector2), true);
-        //     assert.equal(vector1.equal(vector3), false);
-        // })
+
     });
     describe('rotateY', function(){
-        // it('should be equal to another vector with the same coordinates', function(){
-        //     assert.equal(vector1.equal(vector2), true);
-        //     assert.equal(vector1.equal(vector3), false);
-        // })
+
     });
     describe('rotateZ', function(){
-        // it('should be equal to another vector with the same coordinates', function(){
-        //     assert.equal(vector1.equal(vector2), true);
-        //     assert.equal(vector1.equal(vector3), false);
-        // })
+
     });
     describe('rotatePitchYawRoll', function(){
-        // it('should be equal to another vector with the same coordinates', function(){
-        //     assert.equal(vector1.equal(vector2), true);
-        //     assert.equal(vector1.equal(vector3), false);
-        // })
+
     });
     
 });
