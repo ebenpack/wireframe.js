@@ -11,4 +11,7 @@ suite('Face', function(){
             assert.equal(face.color.rgb.r, 255);
         });
     });
+    suite('methods', function(){
+
+    });
 });

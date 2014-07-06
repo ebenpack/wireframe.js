@@ -6,11 +6,14 @@ suite('Color', function(){
     setup(function(){
         red = new Color("red");
     });
-    suite('rgb', function(){
+    suite('properties', function(){
         test('should have rgb representation', function(){
             assert.equal(red.rgb.r, 255);
             assert.equal(red.rgb.g, 0);
             assert.equal(red.rgb.b, 0);
         });
+    });
+    suite('methods', function(){
+
     });
 });

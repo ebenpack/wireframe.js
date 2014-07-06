@@ -7,8 +7,8 @@ suite('Matrix', function(){
         zero = new Matrix();
         identity = Matrix.identity();
     });
-    suite('length', function(){
-        test('should have a length of 16', function(){
+    suite('properties', function(){
+        test('length', function(){
             assert.equal(16, zero.length);
             assert.equal(16, identity.length);
         });
