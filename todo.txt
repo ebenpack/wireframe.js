@@ -10,3 +10,4 @@
 * Improve documentation
 * Fix `scene._needs_update` kludge.
 * Add mouse event handling
+* Add mesh deformation methods
