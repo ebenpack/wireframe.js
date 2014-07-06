@@ -20,5 +20,23 @@ describe('Mesh', function(){
             assert.ok(mesh.name);
             assert.equal(mesh.name, 'triangle');
         })
-    })
+    });
+    describe('vertices', function(){
+        
+    });
+    describe('faces', function(){
+        
+    });
+    describe('position', function(){
+        
+    });
+    describe('rotation', function(){
+        
+    });
+    describe('scale', function(){
+        
+    });
+    describe('fromJSON', function(){
+
+    });
 });
