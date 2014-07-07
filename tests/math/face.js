@@ -1,6 +1,8 @@
 var Face = require('../../src/math/face.js');
 var assert = require("assert");
 
+var face;
+
 suite('Face', function(){
     var face;
     setup(function(){
