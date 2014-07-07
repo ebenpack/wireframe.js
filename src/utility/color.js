@@ -13,10 +13,9 @@ function Color(color){
         cache[color] = parsed_color;
     }
     var hsl = Color.rgbToHsl(parsed_color.r, parsed_color.g, parsed_color.b);
-    var alpha = parsed_color.a || 1;
     this.rgb = {'r': parsed_color.r, 'g': parsed_color.g, 'b': parsed_color.b};
     this.hsl = {'h': hsl.h, 's': hsl.s, 'l': hsl.l};
-    this.alpha = Math.floor(alpha * 255);
+    this.alpha = parsed_color.a || 1;
 }
 /**
  * Lighten a color by percent amount.
