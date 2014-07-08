@@ -5,6 +5,11 @@ suite('Vector', function(){
     var origin, vector1, vector2, vector3, vector4, vector5, vectorx, vectory, vectorz;
     var vector100x, vector200y, vector300z, vector123, vector112;
     var epsilon = 0.01;
+    function nearlyEqual(a, b, eps){
+        if (typeof eps === "undefined") {eps = epsilon;}
+        var diff = Math.abs(a - b);
+        return (diff < eps);
+    }
     setup(function(){
         origin = new Vector(0, 0, 0);
         vector1 = new Vector(1, 1, 1);
@@ -59,26 +64,26 @@ suite('Vector', function(){
             assert.equal(vector1.equal(vector3), false);
         });
         test('angle', function(){
-            assert.ok((vectorx.angle(vectory) - (Math.PI / 2)) < epsilon);
-            assert.ok((vectory.angle(vectorz) - (Math.PI / 2)) < epsilon);
-            assert.ok((vectorx.angle(vectorz) - (Math.PI / 2)) < epsilon);
-            assert.equal(vector1.angle(vector2), 0);
-            assert.ok((vector1.angle(vector5) - Math.PI) < epsilon);
+            assert.ok(nearlyEqual(vectorx.angle(vectory), Math.PI / 2));
+            assert.ok(nearlyEqual(vectory.angle(vectorz), Math.PI / 2));
+            assert.ok(nearlyEqual(vectorx.angle(vectorz), Math.PI / 2));
+            assert.ok(nearlyEqual(vector1.angle(vector2), 0));
+            assert.ok(nearlyEqual(vector1.angle(vector5), Math.PI));
         });
         test('cosAngle', function(){
-            assert.ok((Math.acos(vectorx.cosAngle(vectory)) - (Math.PI / 2)) < epsilon);
-            assert.ok((Math.acos(vectory.cosAngle(vectorz)) - (Math.PI / 2)) < epsilon);
-            assert.ok((Math.acos(vectorx.cosAngle(vectorz)) - (Math.PI / 2)) < epsilon);
-            assert.equal(Math.acos(vector1.cosAngle(vector2)), 0);
-            assert.ok((Math.acos(vector1.cosAngle(vector5)) - Math.PI) < epsilon);
+            assert.ok(nearlyEqual(Math.acos(vectorx.cosAngle(vectory)), (Math.PI / 2)));
+            assert.ok(nearlyEqual(Math.acos(vectory.cosAngle(vectorz)), (Math.PI / 2)));
+            assert.ok(nearlyEqual(Math.acos(vectorx.cosAngle(vectorz)), (Math.PI / 2)));
+            assert.ok(nearlyEqual(Math.acos(vector1.cosAngle(vector2)), 0));
+            assert.ok(nearlyEqual(Math.acos(vector1.cosAngle(vector5)), Math.PI));
         });
         test('magnitude', function(){
             assert.equal(vectorx.magnitude(), 1);
             assert.equal(vectory.magnitude(), 1);
             assert.equal(vectorz.magnitude(), 1);
-            assert.ok((vector1.magnitude() - Math.sqrt(3)) < epsilon);
-            assert.ok((vector5.magnitude() - Math.sqrt(3)) < epsilon);
-            assert.ok((vector3.magnitude() - Math.sqrt(300)) < epsilon);
+            assert.ok(nearlyEqual(vector1.magnitude(), Math.sqrt(3)));
+            assert.ok(nearlyEqual(vector5.magnitude(), Math.sqrt(3)));
+            assert.ok(nearlyEqual(vector3.magnitude(), Math.sqrt(300)));
         });
         test('magnitudeSquared', function(){
             assert.equal(vectorx.magnitudeSquared(), 1);
@@ -132,40 +137,103 @@ suite('Vector', function(){
             var t1 = vectorx.vectorProjection(vectory);
             var t2 = vector1.vectorProjection(vector3);
             var t3 = vector123.vectorProjection(vector112);
-            assert.ok(t1.x - 0 < epsilon);
-            assert.ok(t1.y - 0 < epsilon);
-            assert.ok(t1.z - 0 < epsilon);
-            assert.ok(t2.x - 1 < epsilon);
-            assert.ok(t2.y - 1 < epsilon);
-            assert.ok(t2.z - 1 < epsilon);
-            assert.ok(t3.x - -1.167 < epsilon);
-            assert.ok(t3.y - 1.16 < epsilon);
-            assert.ok(t3.z - 2.33 < epsilon);
+            assert.ok(nearlyEqual(t1.x, 0));
+            assert.ok(nearlyEqual(t1.y, 0));
+            assert.ok(nearlyEqual(t1.z, 0));
+            assert.ok(nearlyEqual(t2.x, 1));
+            assert.ok(nearlyEqual(t2.y, 1));
+            assert.ok(nearlyEqual(t2.z, 1));
+            assert.ok(nearlyEqual(t3.x, -1.167));
+            assert.ok(nearlyEqual(t3.y, 1.16));
+            assert.ok(nearlyEqual(t3.z, 2.33));
         });
         test('scalarProjection', function(){
-            assert.ok(vectorx.scalarProjection(vectory) - 0 < epsilon);
-            assert.ok(vectory.scalarProjection(vectorz) - 0 < epsilon);
-            assert.ok(vectory.scalarProjection(vectorz) - 0 < epsilon);
-            assert.ok(vector1.scalarProjection(vector3) - 1.73 < epsilon);
-            assert.ok(vector123.scalarProjection(vector112) - 2.85 < epsilon);
-        });
-        test('rotate', function(){
-
+            assert.ok(nearlyEqual(vectorx.scalarProjection(vectory), 0));
+            assert.ok(nearlyEqual(vectory.scalarProjection(vectorz), 0));
+            assert.ok(nearlyEqual(vectory.scalarProjection(vectorz), 0));
+            assert.ok(nearlyEqual(vector1.scalarProjection(vector3), 1.73));
+            assert.ok(nearlyEqual(vector123.scalarProjection(vector112), 2.85));
         });
         test('transform', function(){
 
         });
+        test('rotate', function(){
+            var rot1 = vectorx.rotate(vectory, Math.PI / 2);
+            var rot2 = vectorx.rotate(vectory, Math.PI);
+            var rot3 = vectorx.rotate(vectory, ((3*Math.PI) / 2));
+            var rot4 = vectorx.rotate(vectory, 2*Math.PI);
+            assert.ok(nearlyEqual(rot1.x, 0));
+            assert.ok(nearlyEqual(rot1.y, 0));
+            assert.ok(nearlyEqual(rot1.z, -1));
+            assert.ok(nearlyEqual(rot2.x, -1));
+            assert.ok(nearlyEqual(rot2.y, 0));
+            assert.ok(nearlyEqual(rot2.z, 0));
+            assert.ok(nearlyEqual(rot3.x, 0));
+            assert.ok(nearlyEqual(rot3.y, 0));
+            assert.ok(nearlyEqual(rot3.z, 1));
+            assert.ok(nearlyEqual(rot4.x, 1));
+            assert.ok(nearlyEqual(rot4.y, 0));
+            assert.ok(nearlyEqual(rot4.z, 0));
+        });
         test('rotateX', function(){
-
+            var rot1 = vectorz.rotateX(Math.PI / 2);
+            var rot2 = vectorz.rotateX(Math.PI);
+            var rot3 = vectorz.rotateX(((3*Math.PI) / 2));
+            var rot4 = vectorz.rotateX(2*Math.PI);
+            assert.ok(nearlyEqual(rot1.x, 0));
+            assert.ok(nearlyEqual(rot1.y, -1));
+            assert.ok(nearlyEqual(rot1.z, 0));
+            assert.ok(nearlyEqual(rot2.x, 0));
+            assert.ok(nearlyEqual(rot2.y, 0));
+            assert.ok(nearlyEqual(rot2.z, -1));
+            assert.ok(nearlyEqual(rot3.x, 0));
+            assert.ok(nearlyEqual(rot3.y, 1));
+            assert.ok(nearlyEqual(rot3.z, 0));
+            assert.ok(nearlyEqual(rot4.x, 0));
+            assert.ok(nearlyEqual(rot4.y, 0));
+            assert.ok(nearlyEqual(rot4.z, 1));
         });
         test('rotateY', function(){
-
+            var rot1 = vectorx.rotateY(Math.PI / 2);
+            var rot2 = vectorx.rotateY(Math.PI);
+            var rot3 = vectorx.rotateY(((3*Math.PI) / 2));
+            var rot4 = vectorx.rotateY(2*Math.PI);
+            assert.ok(nearlyEqual(rot1.x, 0));
+            assert.ok(nearlyEqual(rot1.y, 0));
+            assert.ok(nearlyEqual(rot1.z, -1));
+            assert.ok(nearlyEqual(rot2.x, -1));
+            assert.ok(nearlyEqual(rot2.y, 0));
+            assert.ok(nearlyEqual(rot2.z, 0));
+            assert.ok(nearlyEqual(rot3.x, 0));
+            assert.ok(nearlyEqual(rot3.y, 0));
+            assert.ok(nearlyEqual(rot3.z, 1));
+            assert.ok(nearlyEqual(rot4.x, 1));
+            assert.ok(nearlyEqual(rot4.y, 0));
+            assert.ok(nearlyEqual(rot4.z, 0));
         });
         test('rotateZ', function(){
-
+            var rot1 = vectory.rotateZ(Math.PI / 2);
+            var rot2 = vectory.rotateZ(Math.PI);
+            var rot3 = vectory.rotateZ(((3*Math.PI) / 2));
+            var rot4 = vectory.rotateZ(2*Math.PI);
+            assert.ok(nearlyEqual(rot1.x, -1));
+            assert.ok(nearlyEqual(rot1.y, 0));
+            assert.ok(nearlyEqual(rot1.z, 0));
+            assert.ok(nearlyEqual(rot2.x, 0));
+            assert.ok(nearlyEqual(rot2.y, -1));
+            assert.ok(nearlyEqual(rot2.z, 0));
+            assert.ok(nearlyEqual(rot3.x, 1));
+            assert.ok(nearlyEqual(rot3.y, 0));
+            assert.ok(nearlyEqual(rot3.z, 0));
+            assert.ok(nearlyEqual(rot4.x, 0));
+            assert.ok(nearlyEqual(rot4.y, 1));
+            assert.ok(nearlyEqual(rot4.z, 0));
         });
         test('rotatePitchYawRoll', function(){
-
+            var rot1 = vectorx.rotatePitchYawRoll(Math.PI / 2, Math.PI / 2, Math.PI / 2);
+            assert.ok(nearlyEqual(rot1.x, 0));
+            assert.ok(nearlyEqual(rot1.y, 0));
+            assert.ok(nearlyEqual(rot1.z, -1));
         });
     });
 });
