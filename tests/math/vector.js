@@ -23,7 +23,7 @@ suite('Vector', function(){
     });
     suite('properties', function(){
         test('axes', function(){
-            assert.throws(function(){new Vector()}, Error);
+            assert.throws(function(){new Vector();}, Error);
             assert.ok(vector1.x);
             assert.ok(vector1.y);
             assert.ok(vector1.z);
@@ -31,24 +31,28 @@ suite('Vector', function(){
     });
     suite('methods', function(){
         test('add', function(){
+            var t1 = vector1.add(vector3);
+            var t2 = vector1.add(vector5);
             assert.ok(vector1.add(vector3).equal(vector4));
             assert.ok(vector1.add(vector5).equal(origin));
-            assert.equal(vector1.add(vector3).x, 11);
-            assert.equal(vector1.add(vector3).y, 11);
-            assert.equal(vector1.add(vector3).z, 11);
-            assert.equal(vector1.add(vector5).x, 0);
-            assert.equal(vector1.add(vector5).y, 0);
-            assert.equal(vector1.add(vector5).z, 0);
+            assert.equal(t1.x, 11);
+            assert.equal(t1.y, 11);
+            assert.equal(t1.z, 11);
+            assert.equal(t2.x, 0);
+            assert.equal(t2.y, 0);
+            assert.equal(t2.z, 0);
         });
         test('subtract', function(){
+            var t1 = vector4.subtract(vector1);
+            var t2 = vector1.subtract(vector2);
             assert.ok(vector4.subtract(vector1).equal(vector3));
             assert.ok(vector1.subtract(vector2).equal(origin));
-            assert.equal(vector4.subtract(vector1).x, 10);
-            assert.equal(vector4.subtract(vector1).y, 10);
-            assert.equal(vector4.subtract(vector1).z, 10);
-            assert.equal(vector1.subtract(vector2).x, 0);
-            assert.equal(vector1.subtract(vector2).y, 0);
-            assert.equal(vector1.subtract(vector2).z, 0);
+            assert.equal(t1.x, 10);
+            assert.equal(t1.y, 10);
+            assert.equal(t1.z, 10);
+            assert.equal(t2.x, 0);
+            assert.equal(t2.y, 0);
+            assert.equal(t2.z, 0);
         });
         test('equal', function(){
             assert.equal(vector1.equal(vector2), true);
@@ -89,8 +93,11 @@ suite('Vector', function(){
             assert.equal(vector2.dot(vector3), 30);
             assert.equal(vector3.dot(vector5), -30);
             assert.equal(vectorx.dot(vectory), 0);
+            assert.equal(vectorx.dot(vectorz), 0);
+            assert.equal(vectory.dot(vectorz), 0);
         });
         test('cross', function(){
+            var t1 = vector123.cross(vector112);
             assert.ok(vectorx.cross(vectory).equal(vectorz));
             assert.ok(vectory.cross(vectorz).equal(vectorx));
             assert.ok(vectorz.cross(vectorx).equal(vectory));
@@ -100,9 +107,9 @@ suite('Vector', function(){
             assert.equal(vectorx.cross(vectory).z, 1);
             assert.equal(vectory.cross(vectorz).x, 1);
             assert.equal(vectorz.cross(vectorx).y, 1);
-            assert.equal(vector123.cross(vector112).x, 1);
-            assert.equal(vector123.cross(vector112).y, -5);
-            assert.equal(vector123.cross(vector112).z, 3);
+            assert.equal(t1.x, 1);
+            assert.equal(t1.y, -5);
+            assert.equal(t1.z, 3);
 
         });
         test('normalize', function(){
@@ -122,13 +129,25 @@ suite('Vector', function(){
             assert.ok(vector1.negate().negate().equal(vector1));
         });
         test('vectorProjection', function(){
-
+            var t1 = vectorx.vectorProjection(vectory);
+            var t2 = vector1.vectorProjection(vector3);
+            var t3 = vector123.vectorProjection(vector112);
+            assert.ok(t1.x - 0 < epsilon);
+            assert.ok(t1.y - 0 < epsilon);
+            assert.ok(t1.z - 0 < epsilon);
+            assert.ok(t2.x - 1 < epsilon);
+            assert.ok(t2.y - 1 < epsilon);
+            assert.ok(t2.z - 1 < epsilon);
+            assert.ok(t3.x - -1.167 < epsilon);
+            assert.ok(t3.y - 1.16 < epsilon);
+            assert.ok(t3.z - 2.33 < epsilon);
         });
         test('scalarProjection', function(){
-
-        });
-        test('component', function(){
-
+            assert.ok(vectorx.scalarProjection(vectory) - 0 < epsilon);
+            assert.ok(vectory.scalarProjection(vectorz) - 0 < epsilon);
+            assert.ok(vectory.scalarProjection(vectorz) - 0 < epsilon);
+            assert.ok(vector1.scalarProjection(vector3) - 1.73 < epsilon);
+            assert.ok(vector123.scalarProjection(vector112) - 2.85 < epsilon);
         });
         test('rotate', function(){
 
