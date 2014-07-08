@@ -628,7 +628,7 @@ function Matrix(){
  * @param {Matrix} matrix
  * @return {boolean}
  */
-Matrix.prototype.equals = function(matrix){
+Matrix.prototype.equal = function(matrix){
     for (var i = 0, len = this.length; i < len; i++){
         if (this[i] !== matrix[i]){
             return false;
@@ -658,7 +658,7 @@ Matrix.prototype.add = function(matrix){
 Matrix.prototype.subtract = function(matrix){
     var new_matrix = new Matrix();
     for (var i = 0, len = this.length; i < len; i++){
-        this[i] = this[i] - matrix[i];
+        new_matrix[i] = this[i] - matrix[i];
     }
     return new_matrix;
 };
