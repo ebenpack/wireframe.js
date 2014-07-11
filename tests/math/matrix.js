@@ -2,11 +2,12 @@ var Matrix = require('../../src/math/matrix.js');
 var assert = require("assert");
 
 suite('Matrix', function(){
-    var zero, zero2, identity, identity2, ones, m0, m1, m2, m3, m4, m5;
+    var zero, zero2, zero3, identity, identity2, ones, m0, m1, m2, m3, m4, m5;
     setup(function(){
         zero = Matrix.zero();
-        identity = Matrix.identity();
         zero2 = new Matrix();
+        zero3 = Matrix.fromArray([0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]);
+        identity = Matrix.identity();
         identity2 = new Matrix();
         identity2[0] = 1;
         identity2[5] = 1;
@@ -18,7 +19,6 @@ suite('Matrix', function(){
         m2 = new Matrix();
         m3 = new Matrix();
         m4 = new Matrix();
-        m5 = Matrix.fromArray([0, 1, 1, 2, 3, 5, 8, 13, 21, 34, 55, 89, 144, 233, 377, 610]);
         m4[0] = 0;
         m4[1] = 1;
         m4[2] = 1;
@@ -35,6 +35,7 @@ suite('Matrix', function(){
         m4[13] = 233;
         m4[14] = 377;
         m4[15] = 610;
+        m5 = Matrix.fromArray([0, 1, 1, 2, 3, 5, 8, 13, 21, 34, 55, 89, 144, 233, 377, 610]);
         for (var i = 0; i < 16; i++){
             ones[i] = 1;
             m0[i] = i;
@@ -46,35 +47,52 @@ suite('Matrix', function(){
     suite('properties', function(){
         test('length', function(){
             assert.equal(zero.length, 16);
-            assert.equal(identity.length, 16);
             assert.equal(zero2.length, 16);
+            assert.equal(zero3.length, 16);
+            assert.equal(identity.length, 16);
             assert.equal(identity2.length, 16);
             assert.equal(m1.length, 16);
             assert.equal(m2.length, 16);
             assert.equal(m3.length, 16);
+            assert.equal(m4.length, 16);
+            assert.equal(m5.length, 16);
         });
     });
     suite('methods', function(){
         test('equal', function(){
             assert.ok(identity.equal(identity2));
             assert.ok(zero.equal(zero2));
+            assert.ok(zero.equal(zero3));
+            assert.ok(zero2.equal(zero3));
             assert.ok(!identity.equal(zero));
             assert.ok(m4.equal(m5));
             assert.ok(!m0.equal(m1));
+            assert.ok(!m0.equal(m2));
+            assert.ok(!m0.equal(m3));
         });
         test('add', function(){
             var t1 = zero.add(m1);
             var t2 = m0.add(ones);
+            var t3 = m0.add(ones).add(ones);
             assert.ok(t1.equal(m1));
             assert.ok(t2.equal(m1));
+            assert.ok(t3.equal(m2));
         });
         test('subtract', function(){
-            //var t1 = 0;
+            var t1 = m4.subtract(m5);
             var t2 = m1.subtract(ones);
+            var t3 = m2.subtract(m1);
+            assert.ok(t1.equal(zero));
             assert.ok(t2.equal(m0));
+            assert.ok(t3.equal(ones));
         });
         test('multiplyScalar', function(){
-            
+            var t1 = m0.multiplyScalar(2);
+            var t2 = zero.multiplyScalar(20);
+            var t3 = m0.multiplyScalar(1);
+            assert.ok(t1.equal(m3));
+            assert.ok(t2.equal(zero));
+            assert.ok(t3.equal(m0));
         });
         test('multiply', function(){
             
