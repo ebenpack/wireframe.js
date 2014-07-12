@@ -1,7 +1,7 @@
-var parseColor, cache;
+var hslToRgb, rgbToHsl, parseColor, cache;
 /**
  * A color with both rgb and hsl representations.
- * @constructor
+ * @class Color
  * @param {string} color Any legal CSS color value (hex, color keyword, rgb[a], hsl[a]).
  */
 function Color(color){
@@ -12,13 +12,14 @@ function Color(color){
         parsed_color = parseColor(color);
         cache[color] = parsed_color;
     }
-    var hsl = Color.rgbToHsl(parsed_color.r, parsed_color.g, parsed_color.b);
+    var hsl = rgbToHsl(parsed_color.r, parsed_color.g, parsed_color.b);
     this.rgb = {'r': parsed_color.r, 'g': parsed_color.g, 'b': parsed_color.b};
     this.hsl = {'h': hsl.h, 's': hsl.s, 'l': hsl.l};
     this.alpha = parsed_color.a || 1;
 }
 /**
- * Lighten a color by percent amount.
+ * Lighten a color by the given percentage.
+
  * @method
  * @param  {number} percent
  * @return {Color}
@@ -29,11 +30,11 @@ Color.prototype.lighten = function(percent){
     if (lum > 1){
         lum = 1;
     }
-    var lighter = Color.hslToRgb(hsl.h, hsl.s, lum);
+    var lighter = hslToRgb(hsl.h, hsl.s, lum);
     return new Color("rgb(" + Math.floor(lighter.r) + "," + Math.floor(lighter.g) + "," + Math.floor(lighter.b) + ")");
 };
 /**
- * Darken a color by percent amount.
+ * Darken a color by the given percentage.
  * @method
  * @param  {number} percent
  * @return {Color}
@@ -44,10 +45,16 @@ Color.prototype.darken = function(percent){
     if (lum < 0){
         lum = 0;
     }
-    var darker = Color.hslToRgb(hsl.h, hsl.s, lum);
+    var darker = hslToRgb(hsl.h, hsl.s, lum);
     return new Color("rgb(" + Math.floor(darker.r) + "," + Math.floor(darker.g) + "," + Math.floor(darker.b) + ")");
 };
-Color.hslToRgb = function(h, s, l){
+/**
+ * @param  {number} h Hue
+ * @param  {number} s Saturation
+ * @param  {number} l Luminance
+ * @return {{r: number, g: number, b: number}}
+ */
+hslToRgb = function(h, s, l){
     function _v(m1, m2, hue){
         hue = hue % 1;
         if (hue < 0){hue+=1;}
@@ -75,7 +82,13 @@ Color.hslToRgb = function(h, s, l){
     var m1 = 2*l - m2;
     return {'r': _v(m1, m2, h+(1/3))*255, 'g': _v(m1, m2, h)*255, 'b': _v(m1, m2, h-(1/3))*255};
 };
-Color.rgbToHsl = function(r, g, b){
+/**
+ * @param  {number} r Red
+ * @param  {number} g Green
+ * @param  {number} b Blue
+ * @return {{h: number, s: number, l: number}}
+ */
+rgbToHsl = function(r, g, b){
     r = r / 255;
     g = g / 255;
     b = b / 255;

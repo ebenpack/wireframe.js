@@ -26,16 +26,22 @@
     <section>
         <article>
             <pre class="prettyprint source linenums"><code>/**
+ * 3D vector.
  * @constructor
- * @this {Vector}
- * @param {number} x
- * @param {number} y
- * @param {number} z
+ * @param {number} x x coordinate
+ * @param {number} y y coordinate
+ * @param {number} z z coordinate
  */
 function Vector(x, y, z){
-    this.x = x;
-    this.y = y;
-    this.z = z;
+    if (typeof x === 'undefined' ||
+        typeof y === 'undefined' ||
+        typeof z === 'undefined'){
+        throw new Error('Insufficient arguments.');
+    } else {
+        this.x = x;
+        this.y = y;
+        this.z = z;
+    }
 }
 /**
  * Add vector to self.
@@ -78,7 +84,29 @@ Vector.prototype.angle = function(vector){
     if (amag === 0 || bmag === 0){
         return 0;
     }
-    return Math.acos( a.dot(b) / (amag * bmag ));
+    var theta = a.dot(b) / (amag * bmag );
+    if (theta &lt; -1) {theta = -1;}
+    if (theta > 1) {theta = 1;}
+    return Math.acos(theta);
+};
+/**
+ * Find the cos of the angle between two vectors.
+ * @method
+ * @param {Vector} vector
+ * @return {number}
+ */
+Vector.prototype.cosAngle = function(vector){
+    var a = this.normalize();
+    var b = vector.normalize();
+    var amag = a.magnitude();
+    var bmag = b.magnitude();
+    if (amag === 0 || bmag === 0){
+        return 0;
+    }
+    var theta = a.dot(b) / (amag * bmag );
+    if (theta &lt; -1) {theta = -1;}
+    if (theta > 1) {theta = 1;}
+    return theta;
 };
 /**
  * Find magnitude of a vector.
@@ -141,13 +169,21 @@ Vector.prototype.scale = function(scale){
     return new Vector(this.x * scale, this.y * scale, this.z * scale);
 };
 /**
+ * Negates self
+ * @return {Vector} [description]
+ */
+Vector.prototype.negate = function(){
+    return new Vector(-this.x, -this.y, -this.z);
+};
+/**
  * Project self onto vector
  * @method
  * @param {Vector} vector
  * @return {number}
  */
 Vector.prototype.vectorProjection = function(vector){
-    return this.magnitude() * Math.cos(this.angle(vector));
+    var mag = vector.magnitude();
+    return vector.scale(this.dot(vector) / (mag * mag));
 };
 /**
  * Project self onto vector
@@ -156,17 +192,20 @@ Vector.prototype.vectorProjection = function(vector){
  * @return {number}
  */
 Vector.prototype.scalarProjection = function(vector){
-    return this.dot(vector.normalize()) * vector.normalize;
+    return this.dot(vector) / vector.magnitude();
 };
 /**
- * Comp self and vector
+ * Perform linear tranformation on self.
  * @method
- * @param {Vector} vector
- * @return {number}
+ * @param {Matrix} transform_matrix
+ * @return {Vector}
  */
-Vector.prototype.comp = function(vector){
-    //A.comp(B) = dot(A,norm(B))
-    return this.dot(vector) / this.magnitude();
+Vector.prototype.transform = function(transform_matrix){
+    var x = (this.x * transform_matrix[0]) + (this.y * transform_matrix[4]) + (this.z * transform_matrix[8]) + transform_matrix[12];
+    var y = (this.x * transform_matrix[1]) + (this.y * transform_matrix[5]) + (this.z * transform_matrix[9]) + transform_matrix[13];
+    var z = (this.x * transform_matrix[2]) + (this.y * transform_matrix[6]) + (this.z * transform_matrix[10]) + transform_matrix[14];
+    var w = (this.x * transform_matrix[3]) + (this.y * transform_matrix[7]) + (this.z * transform_matrix[11]) + transform_matrix[15];
+    return new Vector(x / w, y / w, z / w);
 };
 /**
  * Rotate self by theta around axis
@@ -189,20 +228,7 @@ Vector.prototype.rotate = function(axis, theta){
     var x = ((cos + ((ux*ux)*cos1)) * this.x) + (((xy*cos1) - (uz*sin)) * this.y) + (((xz*cos1)+(uy*sin)) * this.z);
     var y = (((xy*cos1)+(uz*sin)) * this.x) + ((cos+((uy*uy)*cos1)) * this.y) + (((yz*cos1)-(ux*sin)) * this.z);
     var z = (((xz*cos1)-(uy*sin)) * this.x) + (((yz*cos1)+(ux*sin)) * this.y) + ((cos + ((ux*ux)*cos1)) * this.z);
-    return new Vector(x, y, x);
-};
-/**
- * Perform linear tranformation on self.
- * @method
- * @param {Matrix} transform_matrix
- * @return {Vector}
- */
-Vector.prototype.transform = function(transform_matrix){
-     var x = (this.x * transform_matrix.m[0]) + (this.y * transform_matrix.m[4]) + (this.z * transform_matrix.m[8]) + transform_matrix.m[12];
-    var y = (this.x * transform_matrix.m[1]) + (this.y * transform_matrix.m[5]) + (this.z * transform_matrix.m[9]) + transform_matrix.m[13];
-    var z = (this.x * transform_matrix.m[2]) + (this.y * transform_matrix.m[6]) + (this.z * transform_matrix.m[10]) + transform_matrix.m[14];
-    var w = (this.x * transform_matrix.m[3]) + (this.y * transform_matrix.m[7]) + (this.z * transform_matrix.m[11]) + transform_matrix.m[15];
-    return new Vector(x / w, y / w, z / w);
+    return new Vector(x, y, z);
 };
 /**
  * Rotate self by theta around x-axis
@@ -268,13 +294,13 @@ module.exports = Vector;</code></pre>
 </div>
 
 <nav>
-    <h2><a href="index.html">Index</a></h2><h3>Classes</h3><ul><li><a href="Camera.html">Camera</a></li><li><a href="Color.html">Color</a></li><li><a href="Matrix.html">Matrix</a></li><li><a href="Mesh.html">Mesh</a></li><li><a href="Scene.html">Scene</a></li><li><a href="Vector.html">Vector</a></li><li><a href="Vertex.html">Vertex</a></li></ul>
+    <h2><a href="index.html">Index</a></h2><h3>Classes</h3><ul><li><a href="Camera.html">Camera</a></li><li><a href="Color.html">Color</a></li><li><a href="EventTarget.html">EventTarget</a></li><li><a href="Face.html">Face</a></li><li><a href="Matrix.html">Matrix</a></li><li><a href="Mesh.html">Mesh</a></li><li><a href="Scene.html">Scene</a></li><li><a href="Vector.html">Vector</a></li></ul>
 </nav>
 
 <br clear="both">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.3.0-alpha5</a> on Sat Jun 21 2014 09:53:36 GMT-0400 (EDT)
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.3.0-alpha5</a> on Fri Jul 11 2014 20:47:23 GMT-0400 (EDT)
 </footer>
 
 <script> prettyPrint(); </script>

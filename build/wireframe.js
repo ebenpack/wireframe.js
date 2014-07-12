@@ -170,7 +170,11 @@ function EventTarget(){
     this._listeners = {};
 }
 
-/** @method */
+/**
+ * @method
+ * @param {string} type     [description]
+ * @param {function} listener [description]
+ */
 EventTarget.prototype.addListener = function(type, listener){
     if (typeof this._listeners[type] === "undefined"){
         this._listeners[type] = [];
@@ -178,7 +182,11 @@ EventTarget.prototype.addListener = function(type, listener){
 
     this._listeners[type].push(listener);
 };
-/** @method */
+/**
+ * @method
+ * @param  {string} event
+ * @throws {Error} If event type does not exist in EventTarget
+ */
 EventTarget.prototype.fire = function(event){
     if (typeof event === "string"){
         event = { type: event };
@@ -198,7 +206,11 @@ EventTarget.prototype.fire = function(event){
         }
     }
 };
-/** @method */
+/**
+ * @method
+ * @param  {string} type
+ * @param  {function} listener
+ */
 EventTarget.prototype.removeListener = function(type, listener){
     if (this._listeners[type] instanceof Array){
         var listeners = this._listeners[type];
@@ -216,7 +228,7 @@ module.exports = EventTarget;
 var math = _dereq_('../math/math.js');
 var Camera = _dereq_('./camera.js');
 var EventTarget = _dereq_('./events.js');
-var KEYCODES = _dereq_('../utility/keycodes.js');
+var KEYCODES = _dereq_('../utilities/keycodes.js');
 
 var Vector = math.Vector;
 var Matrix = math.Matrix;
@@ -570,7 +582,7 @@ Scene.prototype.update = function(){
 
 module.exports = Scene;
 
-},{"../math/math.js":7,"../utility/keycodes.js":12,"./camera.js":1,"./events.js":3}],5:[function(_dereq_,module,exports){
+},{"../math/math.js":7,"../utilities/keycodes.js":12,"./camera.js":1,"./events.js":3}],5:[function(_dereq_,module,exports){
 var math = _dereq_('./math/math.js');
 var engine = _dereq_('./engine/engine.js');
 
@@ -581,10 +593,11 @@ wireframe.engine = engine;
 
 module.exports = wireframe;
 },{"./engine/engine.js":2,"./math/math.js":7}],6:[function(_dereq_,module,exports){
-var Color = _dereq_('../utility/color.js');
+var Color = _dereq_('../utilities/color.js');
 
 /**
  * A 3D triangle
+ * @constructor
  * @param {number} a     [description]
  * @param {number} b     [description]
  * @param {number} c     [description]
@@ -596,7 +609,7 @@ function Face(a, b, c, color){
 }
 
 module.exports = Face;
-},{"../utility/color.js":11}],7:[function(_dereq_,module,exports){
+},{"../utilities/color.js":11}],7:[function(_dereq_,module,exports){
 var Vector = _dereq_('./vector.js');
 var Mesh = _dereq_('./mesh.js');
 var Matrix = _dereq_('./matrix.js');
@@ -616,7 +629,6 @@ module.exports = math;
  * @constructor
  */
 function Matrix(){
-    /** @type {Array.<number>} */
     for (var i=0; i<16; i++){
         this[i] = 0;
     }
@@ -717,7 +729,6 @@ Matrix.prototype.negate = function(){
 /**
  * Transpose self.
  * @method
- * @param {number} scalar
  * @return {Matrix}
  */
 Matrix.prototype.transpose = function(){
@@ -920,8 +931,8 @@ var Face = _dereq_('./face.js');
 /**
  * @constructor
  * @param {string} name
- * @param {Array.<Vertex>} vertices
- * @param {Array.<{edge: Array.<number>, color: string}>} edges
+ * @param {Array.<Vector>} vertices
+ * @param {Array.<Face>} edges
  */
 function Mesh(name, vertices, faces){
     this.name = name;
@@ -931,6 +942,14 @@ function Mesh(name, vertices, faces){
     this.rotation = {'yaw': 0, 'pitch': 0, 'roll': 0};
     this.scale = {'x': 1, 'y': 1, 'z': 1};
 }
+
+/**
+ * Construct a Mesh from a JSON object.
+ * @method
+ * @static
+ * @param  {{name: string, verticies: Array.<Array.<number>>, faces: {{face: Array.<number>, color: string}}}} json
+ * @return {Mesh}
+ */
 Mesh.fromJSON = function(json){
     var vertices = [];
     var faces = [];
@@ -949,10 +968,11 @@ module.exports = Mesh;
 
 },{"./face.js":6,"./vector.js":10}],10:[function(_dereq_,module,exports){
 /**
+ * 3D vector.
  * @constructor
- * @param {number} x
- * @param {number} y
- * @param {number} z
+ * @param {number} x x coordinate
+ * @param {number} y y coordinate
+ * @param {number} z z coordinate
  */
 function Vector(x, y, z){
     if (typeof x === 'undefined' ||
@@ -1090,7 +1110,10 @@ Vector.prototype.normalize = function(){
 Vector.prototype.scale = function(scale){
     return new Vector(this.x * scale, this.y * scale, this.z * scale);
 };
-/** @method */
+/**
+ * Negates self
+ * @return {Vector} [description]
+ */
 Vector.prototype.negate = function(){
     return new Vector(-this.x, -this.y, -this.z);
 };
@@ -1205,10 +1228,10 @@ Vector.prototype.rotatePitchYawRoll = function(pitch_amnt, yaw_amnt, roll_amnt) 
 
 module.exports = Vector;
 },{}],11:[function(_dereq_,module,exports){
-var parseColor, cache;
+var hslToRgb, rgbToHsl, parseColor, cache;
 /**
  * A color with both rgb and hsl representations.
- * @constructor
+ * @class Color
  * @param {string} color Any legal CSS color value (hex, color keyword, rgb[a], hsl[a]).
  */
 function Color(color){
@@ -1219,13 +1242,14 @@ function Color(color){
         parsed_color = parseColor(color);
         cache[color] = parsed_color;
     }
-    var hsl = Color.rgbToHsl(parsed_color.r, parsed_color.g, parsed_color.b);
+    var hsl = rgbToHsl(parsed_color.r, parsed_color.g, parsed_color.b);
     this.rgb = {'r': parsed_color.r, 'g': parsed_color.g, 'b': parsed_color.b};
     this.hsl = {'h': hsl.h, 's': hsl.s, 'l': hsl.l};
     this.alpha = parsed_color.a || 1;
 }
 /**
- * Lighten a color by percent amount.
+ * Lighten a color by the given percentage.
+
  * @method
  * @param  {number} percent
  * @return {Color}
@@ -1236,11 +1260,11 @@ Color.prototype.lighten = function(percent){
     if (lum > 1){
         lum = 1;
     }
-    var lighter = Color.hslToRgb(hsl.h, hsl.s, lum);
+    var lighter = hslToRgb(hsl.h, hsl.s, lum);
     return new Color("rgb(" + Math.floor(lighter.r) + "," + Math.floor(lighter.g) + "," + Math.floor(lighter.b) + ")");
 };
 /**
- * Darken a color by percent amount.
+ * Darken a color by the given percentage.
  * @method
  * @param  {number} percent
  * @return {Color}
@@ -1251,10 +1275,16 @@ Color.prototype.darken = function(percent){
     if (lum < 0){
         lum = 0;
     }
-    var darker = Color.hslToRgb(hsl.h, hsl.s, lum);
+    var darker = hslToRgb(hsl.h, hsl.s, lum);
     return new Color("rgb(" + Math.floor(darker.r) + "," + Math.floor(darker.g) + "," + Math.floor(darker.b) + ")");
 };
-Color.hslToRgb = function(h, s, l){
+/**
+ * @param  {number} h Hue
+ * @param  {number} s Saturation
+ * @param  {number} l Luminance
+ * @return {{r: number, g: number, b: number}}
+ */
+hslToRgb = function(h, s, l){
     function _v(m1, m2, hue){
         hue = hue % 1;
         if (hue < 0){hue+=1;}
@@ -1282,7 +1312,13 @@ Color.hslToRgb = function(h, s, l){
     var m1 = 2*l - m2;
     return {'r': _v(m1, m2, h+(1/3))*255, 'g': _v(m1, m2, h)*255, 'b': _v(m1, m2, h-(1/3))*255};
 };
-Color.rgbToHsl = function(r, g, b){
+/**
+ * @param  {number} r Red
+ * @param  {number} g Green
+ * @param  {number} b Blue
+ * @return {{h: number, s: number, l: number}}
+ */
+rgbToHsl = function(r, g, b){
     r = r / 255;
     g = g / 255;
     b = b / 255;

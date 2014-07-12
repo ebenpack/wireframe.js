@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="utf-8">
-    <title>JSDoc: Class: Color</title>
+    <title>JSDoc: Class: EventTarget</title>
 
     <script src="scripts/prettify/prettify.js"> </script>
     <script src="scripts/prettify/lang-css.js"> </script>
@@ -17,7 +17,7 @@
 
 <div id="main">
 
-    <h1 class="page-title">Class: Color</h1>
+    <h1 class="page-title">Class: EventTarget</h1>
 
     
 
@@ -27,7 +27,7 @@
 
 <header>
     <h2>
-    Color
+    EventTarget
     </h2>
     
 </header>
@@ -39,7 +39,7 @@
     
         
 <dt>
-    <h4 class="name" id="Color"><span class="type-signature"></span>new Color<span class="signature">(color)</span><span class="type-signature"></span></h4>
+    <h4 class="name" id="EventTarget"><span class="type-signature"></span>new EventTarget<span class="signature">()</span><span class="type-signature"></span></h4>
 
     
 </dt>
@@ -47,7 +47,7 @@
 
     
     <div class="description">
-        A color with both rgb and hsl representations.
+        Event handler.
     </div>
     
 
@@ -55,54 +55,6 @@
 
     
 
-    
-        <h5>Parameters:</h5>
-        
-
-<table class="params">
-    <thead>
-    <tr>
-        
-        <th>Name</th>
-        
-
-        <th>Type</th>
-
-        
-
-        
-
-        <th class="last">Description</th>
-    </tr>
-    </thead>
-
-    <tbody>
-    
-
-        <tr>
-            
-                <td class="name"><code>color</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type">string</span>
-
-
-            
-            </td>
-
-            
-
-            
-
-            <td class="description last">Any legal CSS color value (hex, color keyword, rgb[a], hsl[a]).</td>
-        </tr>
-
-    
-    </tbody>
-</table>
     
 
     
@@ -122,13 +74,17 @@
     
 
     
+    <dt class="tag-license">License:</dt>
+    <dd class="tag-license"><ul class="dummy"><li>Copyright (c) 2010 Nicholas C. Zakas. All rights reserved.
+MIT License</li></ul></dd>
+    
 
     
 
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="color.js.html">utilities/color.js</a>, <a href="color.js.html#line2">line 2</a>
+        <a href="events.js.html">engine/events.js</a>, <a href="events.js.html#line9">line 9</a>
     </li></ul></dd>
     
 
@@ -176,16 +132,12 @@
         <dl>
             
 <dt>
-    <h4 class="name" id="darken"><span class="type-signature"></span>darken<span class="signature">(percent)</span><span class="type-signature"> &rarr; {<a href="Color.html">Color</a>}</span></h4>
+    <h4 class="name" id="addListener"><span class="type-signature"></span>addListener<span class="signature">(type, listener)</span><span class="type-signature"></span></h4>
 
     
 </dt>
 <dd>
 
-    
-    <div class="description">
-        Darken a color by the given percentage.
-    </div>
     
 
     
@@ -218,13 +170,13 @@
 
         <tr>
             
-                <td class="name"><code>percent</code></td>
+                <td class="name"><code>type</code></td>
             
 
             <td class="type">
             
                 
-<span class="param-type">number</span>
+<span class="param-type">string</span>
 
 
             
@@ -234,7 +186,30 @@
 
             
 
-            <td class="description last"></td>
+            <td class="description last">[description]</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>listener</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">function</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">[description]</td>
         </tr>
 
     
@@ -265,7 +240,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="color.js.html">utilities/color.js</a>, <a href="color.js.html#line42">line 42</a>
+        <a href="events.js.html">engine/events.js</a>, <a href="events.js.html#line18">line 18</a>
     </li></ul></dd>
     
 
@@ -288,24 +263,6 @@
     
 
     
-    <h5>Returns:</h5>
-    
-            
-
-
-<dl>
-    <dt>
-        Type
-    </dt>
-    <dd>
-        
-<span class="param-type"><a href="Color.html">Color</a></span>
-
-
-    </dd>
-</dl>
-
-        
 
     
 </dd>
@@ -313,16 +270,12 @@
         
             
 <dt>
-    <h4 class="name" id="lighten"><span class="type-signature"></span>lighten<span class="signature">(percent)</span><span class="type-signature"> &rarr; {<a href="Color.html">Color</a>}</span></h4>
+    <h4 class="name" id="fire"><span class="type-signature"></span>fire<span class="signature">(event)</span><span class="type-signature"></span></h4>
 
     
 </dt>
 <dd>
 
-    
-    <div class="description">
-        Lighten a color by the given percentage.
-    </div>
     
 
     
@@ -355,13 +308,13 @@
 
         <tr>
             
-                <td class="name"><code>percent</code></td>
+                <td class="name"><code>event</code></td>
             
 
             <td class="type">
             
                 
-<span class="param-type">number</span>
+<span class="param-type">string</span>
 
 
             
@@ -402,7 +355,172 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="color.js.html">utilities/color.js</a>, <a href="color.js.html#line27">line 27</a>
+        <a href="events.js.html">engine/events.js</a>, <a href="events.js.html#line30">line 30</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+    
+
+    
+
+    
+
+    
+
+    
+    <h5>Throws:</h5>
+    
+            
+
+<dl>
+    <dt>
+        <div class="param-desc">
+        If event type does not exist in EventTarget
+        </div>
+    </dt>
+    <dt>
+        <dl>
+            <dt>
+                Type
+            </dt>
+            <dd>
+                
+<span class="param-type">Error</span>
+
+
+            </dd>
+        </dl>
+    </dt>
+</dl>
+
+
+        
+
+    
+
+    
+</dd>
+
+        
+            
+<dt>
+    <h4 class="name" id="removeListener"><span class="type-signature"></span>removeListener<span class="signature">(type, listener)</span><span class="type-signature"></span></h4>
+
+    
+</dt>
+<dd>
+
+    
+
+    
+
+    
+
+    
+        <h5>Parameters:</h5>
+        
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>type</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">string</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"></td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>listener</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">function</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"></td>
+        </tr>
+
+    
+    </tbody>
+</table>
+    
+
+    
+<dl class="details">
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="events.js.html">engine/events.js</a>, <a href="events.js.html#line54">line 54</a>
     </li></ul></dd>
     
 
@@ -425,24 +543,6 @@
     
 
     
-    <h5>Returns:</h5>
-    
-            
-
-
-<dl>
-    <dt>
-        Type
-    </dt>
-    <dd>
-        
-<span class="param-type"><a href="Color.html">Color</a></span>
-
-
-    </dd>
-</dl>
-
-        
 
     
 </dd>

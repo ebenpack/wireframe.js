@@ -10,7 +10,11 @@ function EventTarget(){
     this._listeners = {};
 }
 
-/** @method */
+/**
+ * @method
+ * @param {string} type     [description]
+ * @param {function} listener [description]
+ */
 EventTarget.prototype.addListener = function(type, listener){
     if (typeof this._listeners[type] === "undefined"){
         this._listeners[type] = [];
@@ -18,7 +22,11 @@ EventTarget.prototype.addListener = function(type, listener){
 
     this._listeners[type].push(listener);
 };
-/** @method */
+/**
+ * @method
+ * @param  {string} event
+ * @throws {Error} If event type does not exist in EventTarget
+ */
 EventTarget.prototype.fire = function(event){
     if (typeof event === "string"){
         event = { type: event };
@@ -38,7 +46,11 @@ EventTarget.prototype.fire = function(event){
         }
     }
 };
-/** @method */
+/**
+ * @method
+ * @param  {string} type
+ * @param  {function} listener
+ */
 EventTarget.prototype.removeListener = function(type, listener){
     if (this._listeners[type] instanceof Array){
         var listeners = this._listeners[type];

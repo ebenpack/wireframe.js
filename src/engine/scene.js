@@ -1,7 +1,7 @@
 var math = require('../math/math.js');
 var Camera = require('./camera.js');
 var EventTarget = require('./events.js');
-var KEYCODES = require('../utility/keycodes.js');
+var KEYCODES = require('../utilities/keycodes.js');
 
 var Vector = math.Vector;
 var Matrix = math.Matrix;
