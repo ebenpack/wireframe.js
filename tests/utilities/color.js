@@ -1,4 +1,4 @@
-var Color = require('../../src/utility/color.js');
+var Color = require('../../src/utilities/color.js');
 var colorlist = require('../data/colors.js');
 var assert = require("assert");
 
