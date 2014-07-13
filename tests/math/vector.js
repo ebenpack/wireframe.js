@@ -1,15 +1,10 @@
 var Vector = require('../../src/math/vector.js');
-var assert = require("assert");
+var assert = require('assert');
+var nearlyEqual = require('../helpers.js')['nearlyEqual'];
 
 suite('Vector', function(){
     var origin, vector1, vector2, vector3, vector4, vector5, vectorx, vectory, vectorz;
     var vector100x, vector200y, vector300z, vector123, vector112;
-    var epsilon = 0.01;
-    function nearlyEqual(a, b, eps){
-        if (typeof eps === "undefined") {eps = epsilon;}
-        var diff = Math.abs(a - b);
-        return (diff < eps);
-    }
     setup(function(){
         origin = new Vector(0, 0, 0);
         vector1 = new Vector(1, 1, 1);
