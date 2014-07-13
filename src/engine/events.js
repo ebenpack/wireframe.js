@@ -12,8 +12,8 @@ function EventTarget(){
 
 /**
  * @method
- * @param {string} type     [description]
- * @param {function} listener [description]
+ * @param {string} type
+ * @param {function} listener
  */
 EventTarget.prototype.addListener = function(type, listener){
     if (typeof this._listeners[type] === "undefined"){
