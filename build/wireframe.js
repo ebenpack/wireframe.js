@@ -172,8 +172,8 @@ function EventTarget(){
 
 /**
  * @method
- * @param {string} type     [description]
- * @param {function} listener [description]
+ * @param {string} type
+ * @param {function} listener
  */
 EventTarget.prototype.addListener = function(type, listener){
     if (typeof this._listeners[type] === "undefined"){
@@ -1236,6 +1236,7 @@ var hslToRgb, rgbToHsl, parseColor, cache;
  */
 function Color(color){
     var parsed_color = {};
+    color = color.toLowerCase();
     if (color in cache){
         parsed_color = cache[color];
     } else {
