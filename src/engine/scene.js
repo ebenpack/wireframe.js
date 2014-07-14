@@ -320,7 +320,7 @@ Scene.prototype.renderScene = function(){
                     if (draw){
                         var light_direction = light.subtract(v1.transform(world_matrix)).normalize();
                         var illumination_angle = norm.dot(light_direction);
-                        color = color.lighten(illumination_angle/6);
+                        color = color.lighten(illumination_angle*15);
                         this.fillTriangle(wv1, wv2, wv3, color.rgb);
                         //this.drawTriangle(wv1, wv2, wv3, color.rgb);
                     }
