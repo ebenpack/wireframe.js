@@ -234,18 +234,6 @@ Scene.prototype.fillTriangle = function(v1, v2, v3, color){
         return;
     }
 
-    var short_slope, long_slope;
-    if ((v2.y - v1.y) === 0) {
-        short_slope = 0;
-    } else {
-        short_slope = (v2.x - v1.x) / (v2.y - v1.y);
-    }
-    if ((v3.y - v1.y) === 0) {
-        long_slope = 0;
-    } else {
-        long_slope = (v3.x - v1.x) / (v3.y - v1.y);
-    }
-
     if (v2.y === v3.y){
         // Flat top
         this.drawFlatBottomTriangle(v1, v2, v3, color);
@@ -255,6 +243,12 @@ Scene.prototype.fillTriangle = function(v1, v2, v3, color){
         this.drawFlatTopTriangle(v1, v2, v3, color);
     } else {
         // Decompose into flat top and flat bottom triangles
+        var long_slope;
+        if ((v3.y - v1.y) === 0) {
+            long_slope = 0;
+        } else {
+            long_slope = (v3.x - v1.x) / (v3.y - v1.y);
+        }
         var z_slope = (v3.z - v1.z) / (v3.y - v1.y);
         var x = ((v2.y - v1.y)*long_slope) + v1.x;
         var z = ((v2.y - v1.y)*z_slope) + v1.z;
