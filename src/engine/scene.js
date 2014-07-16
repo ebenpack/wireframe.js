@@ -115,7 +115,7 @@ Scene.prototype.drawPixel = function(x, y, z, color){
 /** @method  */
 Scene.prototype.drawEdge = function(vector1, vector2, color){
     var abs = Math.abs;
-    if (vector1.x > vector2.x){
+    if (vector1.x >= vector2.x){
         var temp = vector1;
         vector1 = vector2;
         vector2 = temp;
@@ -143,12 +143,6 @@ Scene.prototype.drawTriangle = function(vector1, vector2, vector3, color){
 };
 /** @method */
 Scene.prototype.drawFlatBottomTriangle = function(v1, v2, v3, color){
-    // Draw left to right
-    if (v2.x >= v3.x){
-        var temp = v3;
-        v3 = v2;
-        v2 = temp;
-    }
     // compute deltas
     var dxy_left  = (v3.x-v1.x)/(v3.y-v1.y);
     var dxy_right = (v2.x-v1.x)/(v2.y-v1.y);
@@ -175,12 +169,6 @@ Scene.prototype.drawFlatBottomTriangle = function(v1, v2, v3, color){
     }
 };
 Scene.prototype.drawFlatTopTriangle = function(v1, v2, v3, color){
-    // Draw left to right
-    if (v1.x >= v2.x){
-        var temp = v1;
-        v1 = v2;
-        v2 = temp;
-    }
     // compute deltas
     var dxy_left  = (v3.x-v1.x)/(v3.y-v1.y);
     var dxy_right = (v3.x-v2.x)/(v3.y-v2.y);
