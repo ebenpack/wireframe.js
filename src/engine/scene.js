@@ -145,7 +145,6 @@ Scene.prototype.fillTriangle = function(v1, v2, v3, color){
     // TODO: This method chugs when close to a face. See if this can be fixed.
     // Is this just because it's looping over so many extraneous points?
     // TODO: FIX Z COORD. THIS CAN BE INTERPOLATED
-    var z = v1.z;
     var x0 = v1.x;
     var x1 = v2.x;
     var x2 = v3.x;
@@ -159,7 +158,7 @@ Scene.prototype.fillTriangle = function(v1, v2, v3, color){
     var yleft = 0 - this._y_offset;
     var yright = this.height - this._y_offset;
 
-     // Compute bounding box
+    // Compute bounding box
     var xmin = Math.floor(Math.min(x0, x1, x2));
     if (xmin < xleft){xmin=xleft;}
     var xmax = Math.floor(Math.max(x0, x1, x2));
@@ -170,22 +169,14 @@ Scene.prototype.fillTriangle = function(v1, v2, v3, color){
     if (ymax > yright){ymax=yright;}
 
     // Precompute as much as possible
-    var y1y2 = y1-y2;
-    var x2x1 = x2-x1;
     var y2y0 = y2-y0;
     var x0x2 = x0-x2;
     var y0y1 = y0-y1;
     var x1x0 = x1-x0;
-    var x1y2x2y1 = x1*y2 - x2*y1;
     var x2y0x0y2 = x2*y0 - x0*y2;
     var x0y1x1y0 = x0*y1 - x1*y0;
-    var f12x0y0 = ((y1y2*x0) + (x2x1*y0) + x1y2x2y1);
     var f20x1y1 = ((y2y0*x1) + (x0x2*y1) + x2y0x0y2);
     var f01x2y2 = ((y0y1*x2) + (x1x0*y2) + x0y1x1y0);
-
-    var y1y2overf12x0y0 = y1y2/f12x0y0;
-    var x2x1overf12x0y0 = x2x1/f12x0y0;
-    var x1y2x2y1overf12x0y0 = x1y2x2y1/f12x0y0;
 
     var y2y0overf20x1y1 = y2y0/f20x1y1;
     var x0x2overf20x1y1 = x0x2/f20x1y1;
@@ -203,14 +194,15 @@ Scene.prototype.fillTriangle = function(v1, v2, v3, color){
             // point is not inside the triangle. Rather than compute all the
             // coordinates straight away, we'll short-circuit as soon as a coordinate outside
             // of that range is encountered.
-            var alpha = y1y2overf12x0y0*x + x2x1overf12x0y0*y + x1y2x2y1overf12x0y0;
-            if (alpha >= 0 && alpha <= 1){
-                var beta = y2y0overf20x1y1*x + x0x2overf20x1y1*y + x2y0x0y21overf20x1y1;
-                if (beta >= 0 && beta <= 1){
-                    var gamma = y0y1overf01x2y2*x + x0x2overf01x2y2*y +x2y0x0y2overf01x2y2;
-                    if (gamma >= 0 && gamma <= 1){
+            var beta = y2y0overf20x1y1*x + x0x2overf20x1y1*y + x2y0x0y21overf20x1y1;
+            if (beta >= 0 && beta <= 1){
+                var gamma = y0y1overf01x2y2*x + x0x2overf01x2y2*y +x2y0x0y2overf01x2y2;
+                if (gamma >= 0 && gamma <= 1){
+                    var alpha = 1 - beta - gamma;
+                    if (alpha >= 0 && alpha <= 1){
                         // If all barycentric coords within range [0,1], inside triangle
                         // TODO: Interpolate color and depth
+                        var z = alpha*v1.z + beta*v2.z + gamma*v3.z;
                         this.drawPixel(x, y, z, color);
                     }
                 }
