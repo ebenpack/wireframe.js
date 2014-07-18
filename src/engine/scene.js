@@ -141,108 +141,53 @@ Scene.prototype.drawTriangle = function(vector1, vector2, vector3, color){
     this.drawEdge(vector2, vector3, color);
     this.drawEdge(vector3, vector1, color);
 };
-/** @method */
-Scene.prototype.drawFlatBottomTriangle = function(v1, v2, v3, color){
-    // compute deltas
-    var dxy_left  = (v3.x-v1.x)/(v3.y-v1.y);
-    var dxy_right = (v2.x-v1.x)/(v2.y-v1.y);
-    var z_slope_left = (v3.z-v1.z)/(v3.y-v1.y);
-    var z_slope_right = (v2.z-v1.z)/(v2.y-v1.y);
-
-    // set starting and ending points for edge trace
-    var xs = new Vector(v1.x, v1.y, v1.z);
-    var xe = new Vector(v1.x, v1.y, v1.z);
-    xs.z = v3.z + ((v1.y - v3.y) * z_slope_left);
-    xe.z = v2.z + ((v1.y - v2.y) * z_slope_right);
-
-    // draw each scanline
-    for (var y=v1.y; y <= v2.y; y++){
-        xs.y = y;
-        xe.y = y;
-        this.drawEdge(xs, xe, color);
-
-        // move down one scanline
-        xs.x+=dxy_left;
-        xe.x+=dxy_right;
-        xs.z+=z_slope_left;
-        xe.z+=z_slope_right;
-    }
-};
-Scene.prototype.drawFlatTopTriangle = function(v1, v2, v3, color){
-    // compute deltas
-    var dxy_left  = (v3.x-v1.x)/(v3.y-v1.y);
-    var dxy_right = (v3.x-v2.x)/(v3.y-v2.y);
-    var z_slope_left = (v3.z-v1.z)/(v3.y-v1.y);
-    var z_slope_right = (v3.z-v2.z)/(v3.y-v2.y);
-
-    // set starting and ending points for edge trace
-    var xs = new Vector(v1.x, v1.y, v1.z);
-    var xe = new Vector(v2.x, v1.y, v1.z);
-
-    xs.z = v1.z + ((v1.y - v1.y) * z_slope_left);
-    xe.z = v2.z + ((v1.y - v2.y) * z_slope_right);
-
-    // draw each scanline
-    for (var y=v1.y; y <= v3.y; y++){
-        xs.y = y;
-        xe.y = y;
-        // draw a line from xs to xe at y in color c
-        this.drawEdge(xs, xe, color);
-        // move down one scanline
-        xs.x+=dxy_left;
-        xe.x+=dxy_right;
-        xs.z+=z_slope_left;
-        xe.z+=z_slope_right;
-    }
-};
-/** @method */
 Scene.prototype.fillTriangle = function(v1, v2, v3, color){
-    // Draw edges first
-    // TODO: Fix. This is a hack. 
-    //this.drawTriangle(v1, v2, v3, color);
-    // Sort vertices by y value
-    var temp;
-    if(v1.y > v2.y) {
-        temp = v2;
-        v2 = v1;
-        v1 = temp;
-    }
-    if(v2.y > v3.y) {
-        temp = v2;
-        v2 = v3;
-        v3 = temp;
-    }
-    if(v1.y > v2.y) {
-        temp = v2;
-        v2 = v1;
-        v1 = temp;
-    }
-    // Triangle with no height
-    if ((v1.y - v3.y) === 0){
-        return;
-    }
+    // Compute bounding box
+    var xmin = Math.floor(Math.min(v1.x, v2.x, v3.x));
+    var xmax = Math.floor(Math.max(v1.x, v2.x, v3.x));
+    var ymin = Math.ceil(Math.min(v1.y, v2.y, v3.y));
+    var ymax = Math.ceil(Math.max(v1.y, v2.y, v3.y));
+    var x0 = v1.x;
+    var x1 = v2.x;
+    var x2 = v3.x;
+    var y0 = v1.y;
+    var y1 = v2.y;
+    var y2 = v3.y;
+    // Precompute as much as possible
+    var y1y2 = y1-y2;
+    var x2x1 = x2-x1;
+    var y2y0 = y2-y0;
+    var x0x2 = x0-x2;
+    var y0y1 = y0-y1;
+    var x1x0 = x1-x0;
+    var x1y2x2y1 = x1*y2 - x2*y1;
+    var x2y0x0y2 = x2*y0 - x0*y2;
+    var x0y1x1y0 = x0*y1 - x1*y0;
+    var f12x0y0 = ((y1y2*x0) + (x2x1*y0) + x1y2x2y1);
+    var f20x1y1 = ((y2y0*x1) + (x0x2*y1) + x2y0x0y2);
+    var f01x2y2 = ((y0y1*x2) + (x1x0*y2) + x0y1x1y0);
 
-    if (v2.y === v3.y){
-        // Flat top
-        this.drawFlatBottomTriangle(v1, v2, v3, color);
-    }
-    else if (v1.y === v2.y ){
-        // Flat bottom
-        this.drawFlatTopTriangle(v1, v2, v3, color);
-    } else {
-        // Decompose into flat top and flat bottom triangles
-        var long_slope;
-        if ((v3.y - v1.y) === 0) {
-            long_slope = 0;
-        } else {
-            long_slope = (v3.x - v1.x) / (v3.y - v1.y);
+    // Loop over bounding box
+    for (var x = xmin; x <= xmax; x++){
+        for (var y = ymin; y <= ymax; y++){
+            // Compute barycentric coordinates
+            // If any of the coordinates are not in the range [0,1], then the
+            // point is not inside the triangle. Rather than compute all the
+            // coordinates straight away, we'll short-circuit as soon as a coordinate outside
+            // of that range is encountered.
+            var alpha = ((y1y2*x) + (x2x1*y) + x1y2x2y1) / f12x0y0;
+            if (alpha >= 0 && alpha <= 1){
+                var beta = ((y2y0*x) + (x0x2*y) + x2y0x0y2) / f20x1y1;
+                if (beta >= 0 && beta <= 1){
+                    var gamma = ((y0y1*x) + (x1x0*y) + x0y1x1y0) / f01x2y2;
+                    if (gamma >= 0 && gamma <= 1){
+                        // If all barycentric coords within range [0,1], inside triangle
+                        // TODO: Interpolate color and depth
+                        this.drawPixel(x, y, v1.z, color);
+                    }
+                }
+            }
         }
-        var z_slope = (v3.z - v1.z) / (v3.y - v1.y);
-        var x = ((v2.y - v1.y)*long_slope) + v1.x;
-        var z = ((v2.y - v1.y)*z_slope) + v1.z;
-        var v4 = new Vector(x, v2.y, z);
-        this.drawFlatBottomTriangle(v1, v2, v4, color);
-        this.drawFlatTopTriangle(v2, v4, v3, color);
     }
 };
 /** @method */
