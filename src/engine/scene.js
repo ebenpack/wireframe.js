@@ -62,7 +62,8 @@ Scene.prototype.emptyKeys = function(){
 };
 /** @method */
 Scene.prototype.isKeyDown = function(key){
-    return (KEYCODES[key] in this._keys);
+    var pressed = KEYCODES[key];
+    return (pressed in this._keys && this._keys[pressed]);
 };
 /** @method */
 Scene.prototype.onKeyDown = function(e){
@@ -77,7 +78,7 @@ Scene.prototype.onKeyUp = function(e){
     var pressed = e.keyCode || e.which;
     if (pressed in this._keys){
         this._key_count -= 1;
-        delete this._keys[pressed];
+        this._keys[pressed] = false;
     }
 };
 /** @method */
@@ -161,6 +162,9 @@ Scene.prototype.fillTriangle = function(v1, v2, v3, color){
     var y0 = v1.y;
     var y1 = v2.y;
     var y2 = v3.y;
+    var z0 = v1.z;
+    var z1 = v2.z;
+    var z2 = v3.z;
 
     // Compute offsets. Used to avoid computing barycentric coords for offscreen pixels
     var xleft = 0 - this._x_offset;
@@ -211,7 +215,7 @@ Scene.prototype.fillTriangle = function(v1, v2, v3, color){
                     var alpha = 1 - beta - gamma;
                     if (alpha >= 0 && alpha <= 1){
                         // If all barycentric coords within range [0,1], inside triangle
-                        var z = alpha*v1.z + beta*v2.z + gamma*v3.z;
+                        var z = alpha*z0 + beta*z1 + gamma*z2;
                         this.drawPixel(x, y, z, color);
                     }
                 }
