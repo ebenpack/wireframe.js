@@ -23,7 +23,6 @@ function Scene(options){
     this._back_buffer_ctx = this._back_buffer.getContext('2d');
     this._back_buffer_image = null;
     this._depth_buffer = [];
-    this.drawing_mode = 1;
     this._backface_culling = true;
     this.camera = new Camera(this.width, this.height);
     this.illumination = new Vector(90,0,0);
@@ -36,7 +35,7 @@ function Scene(options){
     this._anim_id = null;
     /** @type {boolean} */
     this._needs_update = true;
-    this._draw_mode = 'wireframe';
+    this._draw_mode = 1;
     this.init();
 }
 Scene.prototype = new EventTarget();
@@ -141,10 +140,11 @@ Scene.prototype.drawTriangle = function(vector1, vector2, vector3, color){
     this.drawEdge(vector2, vector3, color);
     this.drawEdge(vector3, vector1, color);
 };
+/** @method */
 Scene.prototype.fillTriangle = function(v1, v2, v3, color){
     // TODO: This method chugs when close to a face. See if this can be fixed.
     // Is this just because it's looping over so many extraneous points?
-    // TODO: FIX Z COORD. THIS CAN BE INTERPOLATED
+    // Decomposing into smaller triangles may alleviate this somewhat.
     var x0 = v1.x;
     var x1 = v2.x;
     var x2 = v3.x;
@@ -155,18 +155,18 @@ Scene.prototype.fillTriangle = function(v1, v2, v3, color){
     // Compute offsets. Used to avoid computing barycentric coords for offscreen pixels
     var xleft = 0 - this._x_offset;
     var xright = this.width - this._x_offset;
-    var yleft = 0 - this._y_offset;
-    var yright = this.height - this._y_offset;
+    var ytop = 0 - this._y_offset;
+    var ybot = this.height - this._y_offset;
 
     // Compute bounding box
     var xmin = Math.floor(Math.min(x0, x1, x2));
     if (xmin < xleft){xmin=xleft;}
-    var xmax = Math.floor(Math.max(x0, x1, x2));
+    var xmax = Math.ceil(Math.max(x0, x1, x2));
     if (xmax > xright){xmax=xright;}
-    var ymin = Math.ceil(Math.min(y0, y1, y2));
-    if (ymin < yleft){ymin=yleft;}
+    var ymin = Math.floor(Math.min(y0, y1, y2));
+    if (ymin < ytop){ymin=ytop;}
     var ymax = Math.ceil(Math.max(y0, y1, y2));
-    if (ymax > yright){ymax=yright;}
+    if (ymax > ybot){ymax=ybot;}
 
     // Precompute as much as possible
     var y2y0 = y2-y0;
@@ -201,7 +201,6 @@ Scene.prototype.fillTriangle = function(v1, v2, v3, color){
                     var alpha = 1 - beta - gamma;
                     if (alpha >= 0 && alpha <= 1){
                         // If all barycentric coords within range [0,1], inside triangle
-                        // TODO: Interpolate color and depth
                         var z = alpha*v1.z + beta*v2.z + gamma*v3.z;
                         this.drawPixel(x, y, z, color);
                     }
@@ -247,7 +246,7 @@ Scene.prototype.renderScene = function(){
                     norm = norm.normalize();
                 }
                 // Backface culling.
-                if (cam_to_vert.dot(norm) >= 0) {
+                if (!this._backface_culling || cam_to_vert.dot(norm) >= 0) {
                     var wvp_matrix = world_matrix.multiply(camera_matrix).multiply(projection_matrix);
                     var wv1 = v1.transform(wvp_matrix);
                     var wv2 = v2.transform(wvp_matrix);
@@ -265,11 +264,14 @@ Scene.prototype.renderScene = function(){
                         draw = false;
                     }
                     if (draw){
-                        var light_direction = light.subtract(v1.transform(world_matrix)).normalize();
-                        var illumination_angle = norm.dot(light_direction);
-                        color = color.lighten(illumination_angle*15);
-                        this.fillTriangle(wv1, wv2, wv3, color.rgb);
-                        //this.drawTriangle(wv1, wv2, wv3, color.rgb);
+                        if (this._draw_mode === 1){
+                            var light_direction = light.subtract(v1.transform(world_matrix)).normalize();
+                            var illumination_angle = norm.dot(light_direction);
+                            color = color.lighten(illumination_angle*15);
+                            this.fillTriangle(wv1, wv2, wv3, color.rgb);
+                        } else if (this._draw_mode === 2){
+                            this.drawTriangle(wv1, wv2, wv3, color.rgb);
+                        }
                     }
                 }
             }
