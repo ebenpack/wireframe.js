@@ -122,13 +122,13 @@ Camera.prototype.lookDown = function(amount){
 /** @method */
 Camera.prototype.moveUp = function(amount){
     var up = this.up.normalize().scale(amount);
-    this.position = this.position.add(up);
+    this.position = this.position.subtract(up);
     this.view_matrix = this.createViewMatrix();
 };
 /** @method */
 Camera.prototype.moveDown = function(amount){
-    var down = this.up.normalize().scale(amount);
-    this.position = this.position.subtract(down);
+    var up = this.up.normalize().scale(amount);
+    this.position = this.position.add(up);
     this.view_matrix = this.createViewMatrix();
 };
 /** @method */
