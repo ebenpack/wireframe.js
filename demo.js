@@ -230,4 +230,11 @@
     scene.addMesh(icos);
     scene.addMesh(cube);
     scene.renderScene();
+
+    document.getElementById("toggledraw").addEventListener('click', function(){
+        scene.toggleDrawMode();
+    });
+    document.getElementById("togglebfcull").addEventListener('click', function(){
+        scene.toggleBackfaceCulling();
+    });
 })();

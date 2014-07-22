@@ -35,7 +35,7 @@ function Scene(options){
     this._anim_id = null;
     /** @type {boolean} */
     this._needs_update = true;
-    this._draw_mode = 1;
+    this._draw_mode = 0;
     this.init();
 }
 Scene.prototype = new EventTarget();
@@ -93,6 +93,16 @@ Scene.prototype.offscreen = function(vector){
     var y = vector.y + this._y_offset;
     var z = vector.z;
     return (z > 1 || x < 0 || x > this.width || y < 0 || y > this.height);
+};
+/** @method */
+Scene.prototype.toggleDrawMode = function(){
+    this._draw_mode = (this._draw_mode + 1) % 2;
+    this.renderScene();
+};
+/** @method */
+Scene.prototype.toggleBackfaceCulling = function(){
+    this._backface_culling = !this._backface_culling;
+    this.renderScene();
 };
 /** @method */
 Scene.prototype.drawPixel = function(x, y, z, color){
@@ -264,13 +274,13 @@ Scene.prototype.renderScene = function(){
                         draw = false;
                     }
                     if (draw){
-                        if (this._draw_mode === 1){
+                        if (this._draw_mode === 0){
+                            this.drawTriangle(wv1, wv2, wv3, color.rgb);
+                        } else if (this._draw_mode === 1){
                             var light_direction = light.subtract(v1.transform(world_matrix)).normalize();
                             var illumination_angle = norm.dot(light_direction);
                             color = color.lighten(illumination_angle*15);
                             this.fillTriangle(wv1, wv2, wv3, color.rgb);
-                        } else if (this._draw_mode === 2){
-                            this.drawTriangle(wv1, wv2, wv3, color.rgb);
                         }
                     }
                 }
