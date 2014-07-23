@@ -2,7 +2,7 @@
   "name": "wireframe",
   "version": "0.0.1",
   "description": "3D wireframe framework",
-  "main": "wireframe.js",
+  "main": "build/wireframe.js",
   "scripts": {
     "minify": "gulp compile",
     "test": "gulp test"
