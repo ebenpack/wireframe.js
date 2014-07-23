@@ -1,6 +1,6 @@
-var Mesh = require('../../src/math/mesh.js');
-var Face = require('../../src/math/face.js');
-var Vector = require('../../src/math/vector.js');
+var Mesh = require('../../src/geometry/mesh.js');
+var Face = require('../../src/geometry/face.js');
+var Vector = require('linearalgea').Vector;
 var assert = require("assert");
 
 suite('Mesh', function(){

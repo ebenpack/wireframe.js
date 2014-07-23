@@ -1,4 +1,4 @@
-var math = require('../math/math.js');
+var math = require('linearalgea');
 var Vector = math.Vector;
 var Matrix = math.Matrix;
 

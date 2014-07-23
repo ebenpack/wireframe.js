@@ -1,4 +1,4 @@
-var math = require('../math/math.js');
+var math = require('linearalgea');
 var Camera = require('./camera.js');
 var EventTarget = require('./events.js');
 var KEYCODES = require('../utilities/keycodes.js');

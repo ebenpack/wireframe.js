@@ -25,7 +25,7 @@
     
     <section>
         <article>
-            <pre class="prettyprint source linenums"><code>var math = require('../math/math.js');
+            <pre class="prettyprint source linenums"><code>var math = require('linearalgea');
 var Camera = require('./camera.js');
 var EventTarget = require('./events.js');
 var KEYCODES = require('../utilities/keycodes.js');
@@ -50,7 +50,6 @@ function Scene(options){
     this._back_buffer_ctx = this._back_buffer.getContext('2d');
     this._back_buffer_image = null;
     this._depth_buffer = [];
-    this.drawing_mode = 1;
     this._backface_culling = true;
     this.camera = new Camera(this.width, this.height);
     this.illumination = new Vector(90,0,0);
@@ -63,7 +62,7 @@ function Scene(options){
     this._anim_id = null;
     /** @type {boolean} */
     this._needs_update = true;
-    this._draw_mode = 'wireframe';
+    this._draw_mode = 0;
     this.init();
 }
 Scene.prototype = new EventTarget();
@@ -90,7 +89,8 @@ Scene.prototype.emptyKeys = function(){
 };
 /** @method */
 Scene.prototype.isKeyDown = function(key){
-    return (KEYCODES[key] in this._keys);
+    var pressed = KEYCODES[key];
+    return (pressed in this._keys &amp;&amp; this._keys[pressed]);
 };
 /** @method */
 Scene.prototype.onKeyDown = function(e){
@@ -105,7 +105,7 @@ Scene.prototype.onKeyUp = function(e){
     var pressed = e.keyCode || e.which;
     if (pressed in this._keys){
         this._key_count -= 1;
-        delete this._keys[pressed];
+        this._keys[pressed] = false;
     }
 };
 /** @method */
@@ -123,9 +123,19 @@ Scene.prototype.offscreen = function(vector){
     return (z > 1 || x &lt; 0 || x > this.width || y &lt; 0 || y > this.height);
 };
 /** @method */
+Scene.prototype.toggleDrawMode = function(){
+    this._draw_mode = (this._draw_mode + 1) % 2;
+    this.renderScene();
+};
+/** @method */
+Scene.prototype.toggleBackfaceCulling = function(){
+    this._backface_culling = !this._backface_culling;
+    this.renderScene();
+};
+/** @method */
 Scene.prototype.drawPixel = function(x, y, z, color){
-    x = Math.floor(x + this._x_offset);
-    y = Math.floor(y + this._y_offset);
+    x = x + this._x_offset;
+    y = y + this._y_offset;
     if (x >= 0 &amp;&amp; x &lt; this.width &amp;&amp; y >= 0 &amp;&amp; y &lt; this.height) {
         var index = x + (y * this.width);
         if (z &lt; this._depth_buffer[index]) {
@@ -142,7 +152,7 @@ Scene.prototype.drawPixel = function(x, y, z, color){
 /** @method  */
 Scene.prototype.drawEdge = function(vector1, vector2, color){
     var abs = Math.abs;
-    if (vector1.x > vector2.x){
+    if (vector1.x >= vector2.x){
         var temp = vector1;
         vector1 = vector2;
         vector2 = temp;
@@ -156,7 +166,7 @@ Scene.prototype.drawEdge = function(vector1, vector2, color){
     var step_z = (vector2.z - vector1.z) / longest_dist;
 
     for (var i = 0; i &lt; longest_dist; i++){
-        this.drawPixel(current_x, current_y, current_z, color);
+        this.drawPixel(Math.floor(current_x), Math.floor(current_y), current_z, color);
         current_x += step_x;
         current_y += step_y;
         current_z += step_z;
@@ -169,125 +179,75 @@ Scene.prototype.drawTriangle = function(vector1, vector2, vector3, color){
     this.drawEdge(vector3, vector1, color);
 };
 /** @method */
-Scene.prototype.drawFlatBottomTriangle = function(v1, v2, v3, color){
-    // Draw left to right
-    if (v2.x >= v3.x){
-        var temp = v3;
-        v3 = v2;
-        v2 = temp;
-    }
-    // compute deltas
-    var dxy_left  = (v3.x-v1.x)/(v3.y-v1.y);
-    var dxy_right = (v2.x-v1.x)/(v2.y-v1.y);
-    var z_slope_left = (v3.z-v1.z)/(v3.y-v1.y);
-    var z_slope_right = (v2.z-v1.z)/(v2.y-v1.y);
-
-    // set starting and ending points for edge trace
-    var xs = new Vector(v1.x, v1.y, v1.z);
-    var xe = new Vector(v1.x, v1.y, v1.z);
-    xs.z = v3.z + ((v1.y - v3.y) * z_slope_left);
-    xe.z = v2.z + ((v1.y - v2.y) * z_slope_right);
-
-    // draw each scanline
-    for (var y=v1.y; y &lt;= v2.y; y++){
-        xs.y = y;
-        xe.y = y;
-        this.drawEdge(xs, xe, color);
-
-        // move down one scanline
-        xs.x+=dxy_left;
-        xe.x+=dxy_right;
-        xs.z+=z_slope_left;
-        xe.z+=z_slope_right;
-    }
-};
-Scene.prototype.drawFlatTopTriangle = function(v1, v2, v3, color){
-    // Draw left to right
-    if (v1.x >= v2.x){
-        var temp = v1;
-        v1 = v2;
-        v2 = temp;
-    }
-    // compute deltas
-    var dxy_left  = (v3.x-v1.x)/(v3.y-v1.y);
-    var dxy_right = (v3.x-v2.x)/(v3.y-v2.y);
-    var z_slope_left = (v3.z-v1.z)/(v3.y-v1.y);
-    var z_slope_right = (v3.z-v2.z)/(v3.y-v2.y);
-
-    // set starting and ending points for edge trace
-    var xs = new Vector(v1.x, v1.y, v1.z);
-    var xe = new Vector(v2.x, v1.y, v1.z);
-
-    xs.z = v1.z + ((v1.y - v1.y) * z_slope_left);
-    xe.z = v2.z + ((v1.y - v2.y) * z_slope_right);
-
-    // draw each scanline
-    for (var y=v1.y; y &lt;= v3.y; y++){
-        xs.y = y;
-        xe.y = y;
-        // draw a line from xs to xe at y in color c
-        this.drawEdge(xs, xe, color);
-        // move down one scanline
-        xs.x+=dxy_left;
-        xe.x+=dxy_right;
-        xs.z+=z_slope_left;
-        xe.z+=z_slope_right;
-    }
-};
-/** @method */
 Scene.prototype.fillTriangle = function(v1, v2, v3, color){
-    // Draw edges first
-    // TODO: Fix. This is a hack. 
-    //this.drawTriangle(v1, v2, v3, color);
-    // Sort vertices by y value
-    var temp;
-    if(v1.y > v2.y) {
-        temp = v2;
-        v2 = v1;
-        v1 = temp;
-    }
-    if(v2.y > v3.y) {
-        temp = v2;
-        v2 = v3;
-        v3 = temp;
-    }
-    if(v1.y > v2.y) {
-        temp = v2;
-        v2 = v1;
-        v1 = temp;
-    }
-    // Triangle with no height
-    if ((v1.y - v3.y) === 0){
-        return;
-    }
+    // TODO: This method chugs when close to a face. See if this can be fixed.
+    // Is this just because it's looping over so many extraneous points?
+    // Decomposing into smaller triangles may alleviate this somewhat.
+    var x0 = v1.x;
+    var x1 = v2.x;
+    var x2 = v3.x;
+    var y0 = v1.y;
+    var y1 = v2.y;
+    var y2 = v3.y;
+    var z0 = v1.z;
+    var z1 = v2.z;
+    var z2 = v3.z;
 
-    var short_slope, long_slope;
-    if ((v2.y - v1.y) === 0) {
-        short_slope = 0;
-    } else {
-        short_slope = (v2.x - v1.x) / (v2.y - v1.y);
-    }
-    if ((v3.y - v1.y) === 0) {
-        long_slope = 0;
-    } else {
-        long_slope = (v3.x - v1.x) / (v3.y - v1.y);
-    }
+    // Compute offsets. Used to avoid computing barycentric coords for offscreen pixels
+    var xleft = 0 - this._x_offset;
+    var xright = this.width - this._x_offset;
+    var ytop = 0 - this._y_offset;
+    var ybot = this.height - this._y_offset;
 
-    if (v2.y === v3.y){
-        // Flat top
-        this.drawFlatBottomTriangle(v1, v2, v3, color);
-    }
-    else if (v1.y === v2.y ){
-        // Flat bottom
-        this.drawFlatTopTriangle(v1, v2, v3, color);
-    } else {
-        // Decompose into flat top and flat bottom triangles
-        var z_slope = (v3.z - v1.z) / (v3.y - v1.y);
-        var x = ((v2.y - v1.y)*long_slope) + v1.x;
-        var z = ((v2.y - v1.y)*z_slope) + v1.z;
-        var v4 = new Vector(x, v2.y, z);
-        this.drawFlatBottomTriangle(v1, v2, v4, color);
-        this.drawFlatTopTriangle(v2, v4, v3, color);
+    // Compute bounding box
+    var xmin = Math.floor(Math.min(x0, x1, x2));
+    if (xmin &lt; xleft){xmin=xleft;}
+    var xmax = Math.ceil(Math.max(x0, x1, x2));
+    if (xmax > xright){xmax=xright;}
+    var ymin = Math.floor(Math.min(y0, y1, y2));
+    if (ymin &lt; ytop){ymin=ytop;}
+    var ymax = Math.ceil(Math.max(y0, y1, y2));
+    if (ymax > ybot){ymax=ybot;}
+
+    // Precompute as much as possible
+    var y2y0 = y2-y0;
+    var x0x2 = x0-x2;
+    var y0y1 = y0-y1;
+    var x1x0 = x1-x0;
+    var x2y0x0y2 = x2*y0 - x0*y2;
+    var x0y1x1y0 = x0*y1 - x1*y0;
+    var f20x1y1 = ((y2y0*x1) + (x0x2*y1) + x2y0x0y2);
+    var f01x2y2 = ((y0y1*x2) + (x1x0*y2) + x0y1x1y0);
+
+    var y2y0overf20x1y1 = y2y0/f20x1y1;
+    var x0x2overf20x1y1 = x0x2/f20x1y1;
+    var x2y0x0y21overf20x1y1 = x2y0x0y2/f20x1y1;
+
+    var y0y1overf01x2y2 = y0y1/f01x2y2;
+    var x0x2overf01x2y2 = x1x0/f01x2y2;
+    var x2y0x0y2overf01x2y2 = x0y1x1y0/f01x2y2;
+
+    // Loop over bounding box
+    for (var x = xmin; x &lt;= xmax; x++){
+        for (var y = ymin; y &lt;= ymax; y++){
+            // Compute barycentric coordinates
+            // If any of the coordinates are not in the range [0,1], then the
+            // point is not inside the triangle. Rather than compute all the
+            // coordinates straight away, we'll short-circuit as soon as a coordinate outside
+            // of that range is encountered.
+            var beta = y2y0overf20x1y1*x + x0x2overf20x1y1*y + x2y0x0y21overf20x1y1;
+            if (beta >= 0 &amp;&amp; beta &lt;= 1){
+                var gamma = y0y1overf01x2y2*x + x0x2overf01x2y2*y +x2y0x0y2overf01x2y2;
+                if (gamma >= 0 &amp;&amp; gamma &lt;= 1){
+                    var alpha = 1 - beta - gamma;
+                    if (alpha >= 0 &amp;&amp; alpha &lt;= 1){
+                        // If all barycentric coords within range [0,1], inside triangle
+                        var z = alpha*z0 + beta*z1 + gamma*z2;
+                        this.drawPixel(x, y, z, color);
+                    }
+                }
+            }
+        }
     }
 };
 /** @method */
@@ -327,7 +287,7 @@ Scene.prototype.renderScene = function(){
                     norm = norm.normalize();
                 }
                 // Backface culling.
-                if (cam_to_vert.dot(norm) >= 0) {
+                if (!this._backface_culling || cam_to_vert.dot(norm) >= 0) {
                     var wvp_matrix = world_matrix.multiply(camera_matrix).multiply(projection_matrix);
                     var wv1 = v1.transform(wvp_matrix);
                     var wv2 = v2.transform(wvp_matrix);
@@ -345,11 +305,14 @@ Scene.prototype.renderScene = function(){
                         draw = false;
                     }
                     if (draw){
-                        var light_direction = light.subtract(v1.transform(world_matrix)).normalize();
-                        var illumination_angle = norm.dot(light_direction);
-                        color = color.lighten(illumination_angle/6);
-                        this.fillTriangle(wv1, wv2, wv3, color.rgb);
-                        //this.drawTriangle(wv1, wv2, wv3, color.rgb);
+                        if (this._draw_mode === 0){
+                            this.drawTriangle(wv1, wv2, wv3, color.rgb);
+                        } else if (this._draw_mode === 1){
+                            var light_direction = light.subtract(v1.transform(world_matrix)).normalize();
+                            var illumination_angle = norm.dot(light_direction);
+                            color = color.lighten(illumination_angle*15);
+                            this.fillTriangle(wv1, wv2, wv3, color.rgb);
+                        }
                     }
                 }
             }
@@ -391,13 +354,13 @@ module.exports = Scene;
 </div>
 
 <nav>
-    <h2><a href="index.html">Index</a></h2><h3>Classes</h3><ul><li><a href="Camera.html">Camera</a></li><li><a href="Color.html">Color</a></li><li><a href="EventTarget.html">EventTarget</a></li><li><a href="Face.html">Face</a></li><li><a href="Matrix.html">Matrix</a></li><li><a href="Mesh.html">Mesh</a></li><li><a href="Scene.html">Scene</a></li><li><a href="Vector.html">Vector</a></li></ul>
+    <h2><a href="index.html">Index</a></h2><h3>Classes</h3><ul><li><a href="Camera.html">Camera</a></li><li><a href="Color.html">Color</a></li><li><a href="EventTarget.html">EventTarget</a></li><li><a href="Face.html">Face</a></li><li><a href="Mesh.html">Mesh</a></li><li><a href="Scene.html">Scene</a></li></ul>
 </nav>
 
 <br clear="both">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.3.0-alpha5</a> on Fri Jul 11 2014 21:05:29 GMT-0400 (EDT)
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.3.0-alpha5</a> on Wed Jul 23 2014 12:28:25 GMT-0400 (EDT)
 </footer>
 
 <script> prettyPrint(); </script>

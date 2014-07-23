@@ -1,4 +1,4 @@
-var Face = require('../../src/math/face.js');
+var Face = require('../../src/geometry/face.js');
 var assert = require("assert");
 
 var face;

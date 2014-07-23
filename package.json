@@ -9,6 +9,9 @@
   },
   "author": "Eben Packwood",
   "license": "MIT",
+  "dependencies": {
+    "linearalgea": "git://github.com/ebenpack/linearalgea.git"
+  },
   "devDependencies": {
     "gulp": "^3.6.2",
     "gulp-browserify": "^0.5.0",

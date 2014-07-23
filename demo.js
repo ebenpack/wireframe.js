@@ -1,7 +1,6 @@
 (function () {
-    var Vector = wireframe.math.Vector;
-    var Mesh = wireframe.math.Mesh;
-    var Face = wireframe.math.Face;
+    var Mesh = wireframe.geometry.Mesh;
+    var Face = wireframe.geometry.Face;
 
     var Scene = wireframe.engine.Scene;
     var Camera = wireframe.engine.Camera;

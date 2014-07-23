@@ -1,4 +1,4 @@
-var Vector = require('./vector.js');
+var Vector = require('linearalgea').Vector;
 var Face = require('./face.js');
 
 /**
