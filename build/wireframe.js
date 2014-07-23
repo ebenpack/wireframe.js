@@ -1105,6 +1105,13 @@ Scene.prototype.update = function(){
 module.exports = Scene;
 
 },{"../utilities/keycodes.js":11,"./camera.js":2,"./events.js":4,"linearalgea":1}],6:[function(_dereq_,module,exports){
+/**
+ * @license
+ * Copyright (c) 2014 Eben Packwood. All rights reserved.
+ * MIT License
+ *
+ */
+
 var geometry = _dereq_('./geometry/geometry.js');
 var engine = _dereq_('./engine/engine.js');
 
