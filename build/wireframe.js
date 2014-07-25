@@ -1,6 +1,13 @@
 !function(e){if("object"==typeof exports)module.exports=e();else if("function"==typeof define&&define.amd)define(e);else{var f;"undefined"!=typeof window?f=window:"undefined"!=typeof global?f=global:"undefined"!=typeof self&&(f=self),f.wireframe=e()}}(function(){var define,module,exports;return (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);throw new Error("Cannot find module '"+o+"'")}var f=n[o]={exports:{}};t[o][0].call(f.exports,function(e){var n=t[o][1][e];return s(n?n:e)},f,f.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(_dereq_,module,exports){
 (function (global){
 !function(e){if("object"==typeof exports)module.exports=e();else if("function"==typeof define&&define.amd)define(e);else{var f;"undefined"!=typeof window?f=window:"undefined"!=typeof global?f=global:"undefined"!=typeof self&&(f=self),f.linearalgea=e()}}(function(){var define,module,exports;return (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof _dereq_=="function"&&_dereq_;if(!u&&a)return a(o,!0);if(i)return i(o,!0);throw new Error("Cannot find module '"+o+"'")}var f=n[o]={exports:{}};t[o][0].call(f.exports,function(e){var n=t[o][1][e];return s(n?n:e)},f,f.exports,e,t,n,r)}return n[o].exports}var i=typeof _dereq_=="function"&&_dereq_;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(_dereq_,module,exports){
+/**
+ * @license
+ * Copyright (c) 2014 Eben Packwood. All rights reserved.
+ * MIT License
+ *
+ */
+
 var Vector = _dereq_('./vector.js');
 var Matrix = _dereq_('./matrix.js');
 
@@ -1193,25 +1200,38 @@ Mesh.fromJSON = function(json){
 module.exports = Mesh;
 
 },{"./face.js":7,"linearalgea":1}],10:[function(_dereq_,module,exports){
-var rgbToHsl, parseColor, cache;
+var hslToRgb, rgbToHsl, parseColor, cache, div;
 /**
  * A color with both rgb and hsl representations.
  * @class Color
  * @param {string} color Any legal CSS color value (hex, color keyword, rgb[a], hsl[a]).
  */
-function Color(color){
+function Color(color, alpha){
+    var hsl, rgb;
     var parsed_color = {};
-    color = color.toLowerCase();
-    if (color in cache){
-        parsed_color = cache[color];
-    } else {
-        parsed_color = parseColor(color);
-        cache[color] = parsed_color;
+    if (typeof color === 'string'){
+        color = color.toLowerCase();
+        if (color in cache){
+            parsed_color = cache[color];
+        } else {
+            parsed_color = parseColor(color);
+            cache[color] = parsed_color;
+        }
+        rgb = parsed_color;
+        hsl = rgbToHsl(parsed_color.r, parsed_color.g, parsed_color.b);
+        alpha = parsed_color.a || alpha || 1;
+    } else if ('r' in color){
+        rgb = color;
+        hsl = rgbToHsl(color.r, color.g, color.b);
+        alpha = hsl.a || alpha || 1;
+    } else if ('h' in color){
+        hsl = color;
+        rgb = hslToRgb(color.h, color.s, color.l);
+        alpha = rgb.a || alpha || 1;
     }
-    var hsl = rgbToHsl(parsed_color.r, parsed_color.g, parsed_color.b);
-    this.rgb = {'r': parsed_color.r, 'g': parsed_color.g, 'b': parsed_color.b};
+    this.rgb = {'r': rgb.r, 'g': rgb.g, 'b': rgb.b};
     this.hsl = {'h': hsl.h, 's': hsl.s, 'l': hsl.l};
-    this.alpha = parsed_color.a || 1;
+    this.alpha = alpha;
 }
 /**
  * Lighten a color by the given percentage.
@@ -1226,7 +1246,7 @@ Color.prototype.lighten = function(percent){
     if (lum > 100){
         lum = 100;
     }
-    return new Color("hsla(" + hsl.h + "," + hsl.s + "%," + lum + "%," + this.alpha + ")");
+    return new Color({'h':hsl.h, 's':hsl.s, 'l':lum}, this.alpha);
 };
 /**
  * Darken a color by the given percentage.
@@ -1240,7 +1260,46 @@ Color.prototype.darken = function(percent){
     if (lum < 0){
         lum = 0;
     }
-    return new Color("hsla(" + hsl.h + "," + hsl.s + "%," + lum + "%," + this.alpha + ")");
+    return new Color({'h':hsl.h, 's':hsl.s, 'l':lum}, this.alpha);
+};
+/**
+* @param {number} h Hue
+* @param {number} s Saturation
+* @param {number} l Luminance
+* @return {{r: number, g: number, b: number}}
+*/
+hslToRgb = function(h, s, l){
+    function _v(m1, m2, hue){
+        hue = hue;
+        if (hue < 0){hue+=1;}
+        if (hue > 1){hue-=1;}
+        if (hue < (1/6)){
+            return m1 + (m2-m1)*hue*6;
+        }
+        if (hue < 0.5){
+            return m2;
+        }
+        if (hue < (2/3)){
+            return m1 + (m2-m1)*((2/3)-hue)*6;
+        }
+        return m1;
+    }
+    var m2;
+    var fraction_l = (l/100);
+    var fraction_s = (s/100);
+    if (s === 0){
+        var gray = fraction_l*255;
+        return {'r': gray, 'g': gray, 'b': gray};
+    }
+    if (l <= 50){
+        m2 = fraction_l * (1+fraction_s);
+    }
+    else{
+        m2 = fraction_l+fraction_s-(fraction_l*fraction_s);
+    }
+    var m1 = 2*fraction_l - m2;
+    h = h / 360;
+    return {'r': Math.floor(_v(m1, m2, h+(1/3))*255), 'g': Math.floor(_v(m1, m2, h)*255), 'b': Math.floor(_v(m1, m2, h-(1/3))*255)};
 };
 /**
  * @param  {number} r Red
@@ -1289,6 +1348,7 @@ rgbToHsl = function(r, g, b){
     if (s < 0) {s = 0;}
     return {'h': h, 's': s, 'l': l};
 };
+div = document.createElement('div');
 /**
  * Parse a CSS color value and return an rgba color object.
  * @param  {string} color A legal CSS color value (hex, color keyword, rgb[a], hsl[a]).
@@ -1301,7 +1361,6 @@ parseColor = function(color){
     // then extract and parse the computed rgb(a) value.
     // N.B. This can create a loooot of DOM nodes. It's not a great method.
     // TODO: Fix
-    var div = document.createElement('div');
     div.style.backgroundColor = color;
     var rgba = div.style.backgroundColor;
     // Convert string in form 'rgb[a](num, num, num[, num])' to array ['num', 'num', 'num'[, 'num']]
@@ -1470,6 +1529,7 @@ cache = {
 };
 
 module.exports = Color;
+
 },{}],11:[function(_dereq_,module,exports){
 /** 
  * @constant
