@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="utf-8">
-    <title>JSDoc: Source: engine/events.js</title>
+    <title>JSDoc: Source: wireframe.js</title>
 
     <script src="scripts/prettify/prettify.js"> </script>
     <script src="scripts/prettify/lang-css.js"> </script>
@@ -17,7 +17,7 @@
 
 <div id="main">
 
-    <h1 class="page-title">Source: engine/events.js</h1>
+    <h1 class="page-title">Source: wireframe.js</h1>
 
     
 
@@ -26,50 +26,21 @@
     <section>
         <article>
             <pre class="prettyprint source linenums"><code>/**
- * Event handler.
- * @constructor
+ * @license
+ * Copyright (c) 2014 Eben Packwood. All rights reserved.
+ * MIT License
+ *
  */
 
-function EventTarget(){
-    this._listeners = {};
-}
-/**
- * @method
- * @param {string} type
- * @param {function} listener
- */
-EventTarget.prototype.addListener = function(type, listener){
-    if (!(type in this._listeners)) {
-        this._listeners[type] = [];
-    }
-    this._listeners[type].push(listener);
-};
-/**
- * @method
- * @param  {string} event
- */
-EventTarget.prototype.fire = function(event){
-    var e = {"event": event, "target": this};
-    var listeners = this._listeners[event];
-    for (var i = 0, len = listeners.length; i &lt; len; i++) {
-        listeners[i].call(this, e);
-    }
-};
-/**
- * @method
- * @param  {string} type
- * @param  {function} listener
- */
-EventTarget.prototype.removeListener = function(type, listener){
-    var listeners = this._listeners[type];
-    for (var i = 0, len = listeners.length; i &lt; len; i++) {
-        if (listeners[i] === listener) {
-            listeners.splice(i, 1);
-        }
-    }
-};
+var geometry = require('./geometry/geometry.js');
+var engine = require('./engine/engine.js');
 
-module.exports = EventTarget;
+var wireframe = Object.create(null);
+
+wireframe.geometry = geometry;
+wireframe.engine = engine;
+
+module.exports = wireframe;
 </code></pre>
         </article>
     </section>

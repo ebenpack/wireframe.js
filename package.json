@@ -10,7 +10,8 @@
   "author": "Eben Packwood",
   "license": "MIT",
   "dependencies": {
-    "linearalgea": "git://github.com/ebenpack/linearalgea.git"
+    "linearalgea": "git://github.com/ebenpack/linearalgea.git",
+    "colour": "git://github.com/ebenpack/colour.js.git"
   },
   "devDependencies": {
     "gulp": "^3.6.2",
