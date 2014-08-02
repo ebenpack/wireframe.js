@@ -78,6 +78,14 @@ Camera.prototype.moveTo = function(x, y, z){
     this.view_matrix = this.createViewMatrix();
 };
 /** @method */
+Camera.prototype.move = function(x, y, z) {
+    this.position.x += x;
+    this.position.y += y;
+    this.position.z += z;
+    this.view_matrix = this.createViewMatrix();
+};
+
+/** @method */
 Camera.prototype.moveRight = function(amount){
     var right = this.up.cross(this.direction()).normalize().scale(amount);
     this.position = this.position.subtract(right);
