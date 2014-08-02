@@ -49,6 +49,9 @@ Scene.prototype.init = function(){
     this.canvas.addEventListener('keydown', this.onKeyDown.bind(this), false);
     this.canvas.addEventListener('keyup', this.onKeyUp.bind(this), false);
     this.canvas.addEventListener('blur', this.emptyKeys.bind(this), false);
+    this.canvas.addEventListener('mousedown', this.onMouseDown.bind(this), false);
+    this.canvas.addEventListener('mouseup', this.onMouseUp.bind(this), false);
+    this.canvas.addEventListener('mousemove', this.onMouseMove.bind(this), false);
     EventTarget.call(this);
     this.update();
 };
@@ -80,6 +83,77 @@ Scene.prototype.onKeyUp = function(e){
         this._key_count -= 1;
         this._keys[pressed] = false;
     }
+};
+Scene.prototype._getMousePos = function(e){
+    var rect = this.canvas.getBoundingClientRect();
+    return {
+        x: e.clientX - rect.left,
+        y: e.clientY - rect.top
+    };
+};
+// Last mouse position. Used for calculating delta x and y for mousedrag.
+// Initially set to undefined. Also keep track of time of time of last
+// update, so that mouse speed calculation is not dependent on steady
+// frame rate.
+var _last_mouse_coords = void(0);
+var _last_mouse_update = void(0);
+/** @method */
+Scene.prototype.onMouseDown = function(e){
+    var mouseCoord = {'mouse': this._getMousePos(e)};
+    this.fire('mousedown', mouseCoord);
+    // Setup mousedrag
+    var mousedrag = this.onMouseDrag.bind(this);
+    var mouseup = function(){
+        // Unregister events on mouseup.
+        this.removeEventListener('mousemove', mousedrag, false);
+        this.removeEventListener('mouseup', mouseup, false);
+        _last_mouse_coords = void(0);
+        _last_mouse_update = void(0);
+    };
+    this.canvas.addEventListener('mousemove', mousedrag, false);
+    this.canvas.addEventListener('mouseup', mouseup, false);
+    this.canvas.addEventListener('mouseleave', mouseup, false);
+};
+/** @method */
+Scene.prototype.onMouseUp = function(e){
+    var mouseCoord = {'mouse': this._getMousePos(e)};
+    this.fire('mouseup', mouseCoord);
+};
+/** @method */
+Scene.prototype.onMouseMove = function(e){
+    var mouseCoord = {'mouse': this._getMousePos(e)};
+    this.fire('mousemove', mouseCoord);
+};
+/** @method */
+Scene.prototype.onMouseDrag = function(e){
+    var mouse_coords = this._getMousePos(e);
+    // Calculate deltax and delta y, and mouse speed.
+    if (typeof _last_mouse_coords === 'undefined'){
+        _last_mouse_coords = mouse_coords;
+    }
+    if (typeof _last_mouse_update === 'undefined'){
+        _last_mouse_update = new Date();
+    }
+    var time = new Date() - _last_mouse_update;
+    var deltax = mouse_coords.x - _last_mouse_coords.x;
+    var deltay = mouse_coords.y - _last_mouse_coords.y;
+    var xvel = 0;
+    var yvel = 0;
+    if (time > 0){
+        xvel = deltax / time;
+        yvel = deltay / time;
+    }
+    var mouseEvent = {'mouse': {
+        'x': mouse_coords.x,
+        'y': mouse_coords.y,
+        'xvel': xvel,
+        'yvel': yvel,
+        'deltax': deltax,
+        'deltay': deltay
+    }};
+    _last_mouse_coords = mouse_coords;
+    _last_mouse_update = time;
+    this.fire('mousedrag', mouseEvent);
 };
 /** @method */
 Scene.prototype.initializeDepthBuffer = function(){
