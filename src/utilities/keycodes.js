@@ -3,6 +3,7 @@
  * @type {Object.<string, number>} 
  */
 var KEYCODES = {
+    'space': 32,
     'backspace' : 8,
     'tab' : 9,
     'enter' : 13,
