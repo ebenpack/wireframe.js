@@ -1269,14 +1269,14 @@ Scene.prototype._getMousePos = function(e){
         y: e.clientY - rect.top
     };
 };
-// Last mouse position. Used for calculating delta x and y for mousedrag.
-// Initially set to undefined. Also keep track of time of time of last
-// update, so that mouse speed calculation is not dependent on steady
-// frame rate.
-var _last_mouse_coords = void(0);
-var _last_mouse_update = void(0);
 /** @method */
 Scene.prototype.onMouseDown = function(e){
+    // Last mouse position. Used for calculating delta x and y for mousedrag.
+    // Initially set to undefined. Also keep track of time of time of last
+    // update, so that mouse speed calculation is not dependent on steady
+    // frame rate.
+    this._last_mouse_coords = void(0);
+    this._last_mouse_update = void(0);
     var mouseCoord = {'mouse': this._getMousePos(e)};
     this.fire('mousedown', mouseCoord);
     // Setup mousedrag
@@ -1285,8 +1285,8 @@ Scene.prototype.onMouseDown = function(e){
         // Unregister events on mouseup.
         this.removeEventListener('mousemove', mousedrag, false);
         this.removeEventListener('mouseup', mouseup, false);
-        _last_mouse_coords = void(0);
-        _last_mouse_update = void(0);
+        this._last_mouse_coords = void(0);
+        this._last_mouse_update = void(0);
     };
     this.canvas.addEventListener('mousemove', mousedrag, false);
     this.canvas.addEventListener('mouseup', mouseup, false);
@@ -1306,15 +1306,15 @@ Scene.prototype.onMouseMove = function(e){
 Scene.prototype.onMouseDrag = function(e){
     var mouse_coords = this._getMousePos(e);
     // Calculate deltax and delta y, and mouse speed.
-    if (typeof _last_mouse_coords === 'undefined'){
-        _last_mouse_coords = mouse_coords;
+    if (typeof this._last_mouse_coords === 'undefined'){
+        this._last_mouse_coords = mouse_coords;
     }
-    if (typeof _last_mouse_update === 'undefined'){
-        _last_mouse_update = new Date();
+    if (typeof this._last_mouse_update === 'undefined'){
+        this._last_mouse_update = new Date();
     }
-    var time = new Date() - _last_mouse_update;
-    var deltax = mouse_coords.x - _last_mouse_coords.x;
-    var deltay = mouse_coords.y - _last_mouse_coords.y;
+    var time = new Date() - this._last_mouse_update;
+    var deltax = mouse_coords.x - this._last_mouse_coords.x;
+    var deltay = mouse_coords.y - this._last_mouse_coords.y;
     var xvel = 0;
     var yvel = 0;
     if (time > 0){
@@ -1329,8 +1329,8 @@ Scene.prototype.onMouseDrag = function(e){
         'deltax': deltax,
         'deltay': deltay
     }};
-    _last_mouse_coords = mouse_coords;
-    _last_mouse_update = time;
+    this._last_mouse_coords = mouse_coords;
+    this._last_mouse_update = time;
     this.fire('mousedrag', mouseEvent);
 };
 /** @method */
