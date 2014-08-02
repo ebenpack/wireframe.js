@@ -2,6 +2,8 @@ var math = require('linearalgea');
 var Vector = math.Vector;
 var Matrix = math.Matrix;
 
+var TWOPI = Math.PI*2;
+
 /** 
  * @constructor
  * @param {Vector} position Camera position.
@@ -84,7 +86,7 @@ Camera.prototype.moveTo = function(x, y, z){
  * @param {number} y
  * @param {number} z
  */
-Camera.prototype.move = function(x, y, z) {
+Camera.prototype.move = function(x, y, z){
     this.position.x += x;
     this.position.y += y;
     this.position.z += z;
@@ -103,25 +105,49 @@ Camera.prototype.moveLeft = function(amount){
     this.position = this.position.add(left);
     this.view_matrix = this.createViewMatrix();
 };
+/**
+ * Move camera rotation by the x and y amounts passed.
+ * @method
+ * @param {number} x
+ * @param {number} y
+ */
+Camera.prototype.look = function(x, y){
+    this.rotation.yaw -= x;
+    if (this.rotation.yaw < 0){
+        this.rotation.yaw = this.rotation.yaw + (TWOPI);
+    }
+    else if (this.rotation.yaw > (TWOPI)){
+        this.rotation.yaw = this.rotation.yaw - (TWOPI);
+    }
+    this.rotation.pitch -= y;
+    if (this.rotation.pitch < 0){
+        this.rotation.pitch = this.rotation.pitch + (TWOPI);
+    }
+    else if (this.rotation.pitch > (TWOPI)){
+        this.rotation.pitch = this.rotation.pitch - (TWOPI);
+    }
+    this.view_matrix = this.createViewMatrix();
+};
+
 Camera.prototype.turnRight = function(amount){
     this.rotation.yaw -= amount;
     if (this.rotation.yaw < 0){
-        this.rotation.yaw = this.rotation.yaw + (Math.PI*2);
+        this.rotation.yaw = this.rotation.yaw + (TWOPI);
     }
     this.view_matrix = this.createViewMatrix();
 };
 /** @method */
 Camera.prototype.turnLeft = function(amount){
     this.rotation.yaw += amount;
-    if (this.rotation.yaw > (Math.PI*2)){
-        this.rotation.yaw = this.rotation.yaw - (Math.PI*2);
+    if (this.rotation.yaw > (TWOPI)){
+        this.rotation.yaw = this.rotation.yaw - (TWOPI);
     }
     this.view_matrix = this.createViewMatrix();
 };
 Camera.prototype.lookUp = function(amount){
     this.rotation.pitch -= amount;
-    if (this.rotation.pitch > (Math.PI*2)){
-        this.rotation.pitch = this.rotation.pitch - (Math.PI*2);
+    if (this.rotation.pitch > (TWOPI)){
+        this.rotation.pitch = this.rotation.pitch - (TWOPI);
     }
     this.view_matrix = this.createViewMatrix();
 };
@@ -129,7 +155,7 @@ Camera.prototype.lookUp = function(amount){
 Camera.prototype.lookDown = function(amount){
     this.rotation.pitch += amount;
     if (this.rotation.pitch < 0){
-        this.rotation.pitch = this.rotation.pitch + (Math.PI*2);
+        this.rotation.pitch = this.rotation.pitch + (TWOPI);
     }
     this.view_matrix = this.createViewMatrix();
 };
