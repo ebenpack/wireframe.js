@@ -19,11 +19,17 @@ EventTarget.prototype.addListener = function(type, listener){
 };
 /**
  * @method
- * @param  {string} event
+ * @param  {string} type Type of event to be fired.
+ * @param  {Object} [event] Optional event object.
  */
-EventTarget.prototype.fire = function(event){
-    var e = {"event": event, "target": this};
-    var listeners = this._listeners[event];
+EventTarget.prototype.fire = function(type, event){
+    var e = {};
+    if (typeof event !== 'undefined'){
+        e = event;
+    }
+    e.event = type;
+    e.target = this;
+    var listeners = this._listeners[type];
     for (var i = 0, len = listeners.length; i < len; i++) {
         listeners[i].call(this, e);
     }
