@@ -30,8 +30,10 @@ EventTarget.prototype.fire = function(type, event){
     e.event = type;
     e.target = this;
     var listeners = this._listeners[type];
-    for (var i = 0, len = listeners.length; i < len; i++) {
-        listeners[i].call(this, e);
+    if (typeof listeners !== 'undefined'){
+        for (var i = 0, len = listeners.length; i < len; i++) {
+            listeners[i].call(this, e);
+        }
     }
 };
 /**
