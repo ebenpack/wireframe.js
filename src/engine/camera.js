@@ -77,7 +77,13 @@ Camera.prototype.moveTo = function(x, y, z){
     this.position = new Vector(x,y,z);
     this.view_matrix = this.createViewMatrix();
 };
-/** @method */
+/**
+ * Move camera position by the x, y, and z amounts passed.
+ * @method
+ * @param {number} x
+ * @param {number} y
+ * @param {number} z
+ */
 Camera.prototype.move = function(x, y, z) {
     this.position.x += x;
     this.position.y += y;
