@@ -1264,8 +1264,18 @@ function Scene(options){
     this.width = options.width;
     /** @type {number} */
     this.height = options.height;
+    /** @type {HTMLElement} */
     this.canvas = document.getElementById(options.canvas_id);
+    /** @type {CanvasContext} */
     this.ctx = this.canvas.getContext('2d');
+    /** @type {Camera} */
+    this.camera = new Camera(this.width, this.height);
+    /** @type {Vector} */
+    this.illumination = new Vector(90,0,0);
+    /** @type {Object.<string, Mesh>} */
+    this.meshes = {};
+    this._x_offset = Math.round(this.width / 2);
+    this._y_offset = Math.round(this.height / 2);
     this._back_buffer = document.createElement('canvas');
     this._back_buffer.width = this.width;
     this._back_buffer.height = this.height;
@@ -1273,27 +1283,12 @@ function Scene(options){
     this._back_buffer_image = null;
     this._depth_buffer = [];
     this._backface_culling = true;
-    this.camera = new Camera(this.width, this.height);
-    this.illumination = new Vector(90,0,0);
-    /** @type {Array.<Mesh>} */
-    this.meshes = {};
-    /** @type {Object.<number, boolean>} */
     this._keys = {}; // Keys currently pressed
     this._key_count = 0; // Number of keys being pressed... this feels kludgy
-    /** @type {?number} */
     this._anim_id = null;
-    /** @type {boolean} */
     this._needs_update = true;
     this._draw_mode = 0;
-    this.init();
-}
-mixin(Scene.prototype, EventTarget);
-/** @method */
-Scene.prototype.init = function(){
     this.canvas.tabIndex = 1; // Set tab index to allow canvas to have focus to receive key events
-    this._x_offset = Math.round(this.width / 2);
-    this._y_offset = Math.round(this.height / 2);
-    this.initializeDepthBuffer();
     this._back_buffer_image = this._back_buffer_ctx.createImageData(this.width, this.height);
     this.canvas.addEventListener('keydown', this.onKeyDown.bind(this), false);
     this.canvas.addEventListener('keyup', this.onKeyUp.bind(this), false);
@@ -1301,8 +1296,10 @@ Scene.prototype.init = function(){
     this.canvas.addEventListener('mousedown', this.onMouseDown.bind(this), false);
     this.canvas.addEventListener('mouseup', this.onMouseUp.bind(this), false);
     this.canvas.addEventListener('mousemove', this.onMouseMove.bind(this), false);
+    this.initializeDepthBuffer();
     this.update();
-};
+}
+mixin(Scene.prototype, EventTarget);
 /**
  * Dump all pressed keys on blur.
  * @method
@@ -1311,20 +1308,34 @@ Scene.prototype.emptyKeys = function(){
     this._key_count = 0;
     this._keys = {};
 };
-/** @method */
+/** 
+ * Check if key is pressed.
+ * @method
+ * @param {string} key Key to check. E.g. 'a', 'space', 'tab'.
+ */
 Scene.prototype.isKeyDown = function(key){
     var pressed = KEYCODES[key];
     return (pressed in this._keys && this._keys[pressed]);
 };
-/** @method */
+/** 
+ * Register key presses.
+ * @method
+ * @param {KeyEvent} e
+ */
 Scene.prototype.onKeyDown = function(e){
+    // If there are one or more keys depressed, the keydown event will fire in the update
+    // loop. This prevents a keydown delay that noramlly occurs.
     var pressed = e.keyCode || e.which;
     if (!this.isKeyDown(pressed)){
         this._key_count += 1;
         this._keys[pressed] = true;
     }
 };
-/** @method */
+/** 
+ * Unregister key presses on keyup.
+ * @method
+ * @param {KeyEvent} e
+ */
 Scene.prototype.onKeyUp = function(e){
     var pressed = e.keyCode || e.which;
     if (pressed in this._keys){
@@ -1339,7 +1350,11 @@ Scene.prototype._getMousePos = function(e){
         y: e.clientY - rect.top
     };
 };
-/** @method */
+/** 
+ * Register mousedown event.
+ * @method
+ * @param {MouseEvent} e
+ */
 Scene.prototype.onMouseDown = function(e){
     // Last mouse position. Used for calculating delta x and y for mousedrag.
     // Initially set to undefined. Also keep track of time of time of last
@@ -1362,17 +1377,29 @@ Scene.prototype.onMouseDown = function(e){
     this.canvas.addEventListener('mouseup', mouseup, false);
     this.canvas.addEventListener('mouseleave', mouseup, false);
 };
-/** @method */
+/** 
+ * Register mouseup event.
+ * @method
+ * @param {MouseEvent} e
+ */
 Scene.prototype.onMouseUp = function(e){
     var mouseCoord = {'mouse': this._getMousePos(e)};
     this.fire('mouseup', mouseCoord);
 };
-/** @method */
+/** 
+ * Register mousemove event.
+ * @method
+ * @param {MouseEvent} e
+ */
 Scene.prototype.onMouseMove = function(e){
     var mouseCoord = {'mouse': this._getMousePos(e)};
     this.fire('mousemove', mouseCoord);
 };
-/** @method */
+/** 
+ * Register mousedrag event.
+ * @method
+ * @param {MouseEvent} e
+ */
 Scene.prototype.onMouseDrag = function(e){
     var mouse_coords = this._getMousePos(e);
     // Calculate deltax and delta y, and mouse speed.
@@ -1403,13 +1430,21 @@ Scene.prototype.onMouseDrag = function(e){
     this._last_mouse_update = time;
     this.fire('mousedrag', mouseEvent);
 };
-/** @method */
+/**
+ * Initialize depth buffer with high z values.
+ * @method
+ */
 Scene.prototype.initializeDepthBuffer = function(){
     for (var x = 0, len = this.width * this.height; x < len; x++){
         this._depth_buffer[x] = 9999999;
     }
 };
-/** @method */
+/**
+ * Determine id vector is offscreen.
+ * @method
+ * @param {Vector} vector
+ * @return {boolean}
+ */
 Scene.prototype.offscreen = function(vector){
     // TODO: Not totally certain that z>1 indicates vector is behind camera.
     var x = vector.x + this._x_offset;
@@ -1417,17 +1452,32 @@ Scene.prototype.offscreen = function(vector){
     var z = vector.z;
     return (z > 1 || x < 0 || x > this.width || y < 0 || y > this.height);
 };
-/** @method */
+/**
+ * Toggle drawing mode. Currently, available draw modes are wireframe mode, and
+ * the experimental (and slow) fill mode.
+ * @method
+ */
 Scene.prototype.toggleDrawMode = function(){
     this._draw_mode = (this._draw_mode + 1) % 2;
     this.renderScene();
 };
-/** @method */
+/**
+ * Toggle backface culling. 
+ * @method
+ */
 Scene.prototype.toggleBackfaceCulling = function(){
     this._backface_culling = !this._backface_culling;
     this.renderScene();
 };
-/** @method */
+/**
+ * Draw a single pixel to the sceen and update the depth buffer. If there is already 
+ * a closer pixel (i.e. one with a lower z value), then the pixel is not drawn.
+ * @method
+ * @param {number} x X coordinate
+ * @param {number} y Y coordinate
+ * @param {number} z Z coordinate
+ * @param {Color} color Color to be drawn.
+ */
 Scene.prototype.drawPixel = function(x, y, z, color){
     x = x + this._x_offset;
     y = y + this._y_offset;
@@ -1444,21 +1494,27 @@ Scene.prototype.drawPixel = function(x, y, z, color){
         }
     }
 };
-/** @method  */
-Scene.prototype.drawEdge = function(vector1, vector2, color){
+/**
+ * Draw a line segment between two points.
+ * @method
+ * @param {Vector} v1 First end point of line segment.
+ * @param {Vector} v2 Second end point of line segment.
+ * @param {Color} color Color to be drawn.
+ */
+Scene.prototype.drawEdge = function(v1, v2, color){
     var abs = Math.abs;
-    if (vector1.x >= vector2.x){
-        var temp = vector1;
-        vector1 = vector2;
-        vector2 = temp;
+    if (v1.x >= v2.x){
+        var temp = v1;
+        v1 = v2;
+        v2 = temp;
     }
-    var current_x = vector1.x;
-    var current_y = vector1.y;
-    var current_z = vector1.z;
-    var longest_dist = Math.max(abs(vector2.x - vector1.x), abs(vector2.y - vector1.y), abs(vector2.z - vector1.z));
-    var step_x = (vector2.x - vector1.x) / longest_dist;
-    var step_y = (vector2.y - vector1.y) / longest_dist;
-    var step_z = (vector2.z - vector1.z) / longest_dist;
+    var current_x = v1.x;
+    var current_y = v1.y;
+    var current_z = v1.z;
+    var longest_dist = Math.max(abs(v2.x - v1.x), abs(v2.y - v1.y), abs(v2.z - v1.z));
+    var step_x = (v2.x - v1.x) / longest_dist;
+    var step_y = (v2.y - v1.y) / longest_dist;
+    var step_z = (v2.z - v1.z) / longest_dist;
 
     for (var i = 0; i < longest_dist; i++){
         this.drawPixel(Math.floor(current_x), Math.floor(current_y), current_z, color);
@@ -1467,13 +1523,27 @@ Scene.prototype.drawEdge = function(vector1, vector2, color){
         current_z += step_z;
     }
 };
-/** @method */
-Scene.prototype.drawTriangle = function(vector1, vector2, vector3, color){
-    this.drawEdge(vector1, vector2, color);
-    this.drawEdge(vector2, vector3, color);
-    this.drawEdge(vector3, vector1, color);
+/**
+ * Draw the edges of a triangle.
+ * @method
+ * @param {Vector} v1 First vertex of triangle.
+ * @param {Vector} v2 Second vertex of triangle.
+ * @param {Vector} v3 Third vertex of triangle.
+ * @param {Color} color Color to be drawn.
+ */
+Scene.prototype.drawTriangle = function(v1, v2, v3, color){
+    this.drawEdge(v1, v2, color);
+    this.drawEdge(v2, v3, color);
+    this.drawEdge(v3, v1, color);
 };
-/** @method */
+/**
+ * Draw a filled triangle in a uniform color.
+ * @method
+ * @param {Vector} v1 First vertex of triangle.
+ * @param {Vector} v2 Second vertex of triangle.
+ * @param {Vector} v3 Third vertex of triangle.
+ * @param {Color} color Color to be drawn.
+ */
 Scene.prototype.fillTriangle = function(v1, v2, v3, color){
     // TODO: This method chugs when close to a face. See if this can be fixed.
     // Is this just because it's looping over so many extraneous points?
@@ -1545,7 +1615,10 @@ Scene.prototype.fillTriangle = function(v1, v2, v3, color){
         }
     }
 };
-/** @method */
+/**
+ * Render a single frame of the scene.
+ * @method
+ */
 Scene.prototype.renderScene = function(){
     // TODO: Simplify this function.
     this._back_buffer_image = this._back_buffer_ctx.createImageData(this.width, this.height);
@@ -1617,15 +1690,26 @@ Scene.prototype.renderScene = function(){
     this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
     this.ctx.drawImage(this._back_buffer, 0, 0, this.canvas.width, this.canvas.height);
 };
-/** @method */
+/**
+ * Add a mesh to the scene.
+ * @method
+ * @param {Mesh} mesh
+ */
 Scene.prototype.addMesh = function(mesh){
     this.meshes[mesh.name] = mesh;
 };
-/** @method */
+/**
+ * Remove a mesh to the scene.
+ * @method
+ * @param {Mesh} mesh
+ */
 Scene.prototype.removeMesh = function(mesh){
     delete this.meshes[mesh.name];
 };
-/** @method */
+/**
+ * Update the scene
+ * @method
+ */
 Scene.prototype.update = function(){
     if (this._key_count > 0){
         this.fire('keydown');

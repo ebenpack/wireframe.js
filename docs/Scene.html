@@ -170,7 +170,7 @@
         <dl>
             
 <dt>
-    <h4 class="name" id="_anim_id"><span class="type-signature"></span>_anim_id<span class="type-signature"> :number</span></h4>
+    <h4 class="name" id="camera"><span class="type-signature"></span>camera<span class="type-signature"> :<a href="Camera.html">Camera</a></span></h4>
 
     
 </dt>
@@ -182,7 +182,7 @@
         <ul>
             <li>
                 
-<span class="param-type">number</span>
+<span class="param-type"><a href="Camera.html">Camera</a></span>
 
 
             </li>
@@ -212,7 +212,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="scene.js.html">engine/scene.js</a>, <a href="scene.js.html#line36">line 36</a>
+        <a href="scene.js.html">engine/scene.js</a>, <a href="scene.js.html#line24">line 24</a>
     </li></ul></dd>
     
 
@@ -232,7 +232,7 @@
         
             
 <dt>
-    <h4 class="name" id="_keys"><span class="type-signature"></span>_keys<span class="type-signature"> :Object.&lt;number, boolean></span></h4>
+    <h4 class="name" id="canvas"><span class="type-signature"></span>canvas<span class="type-signature"> :HTMLElement</span></h4>
 
     
 </dt>
@@ -244,7 +244,7 @@
         <ul>
             <li>
                 
-<span class="param-type">Object.&lt;number, boolean></span>
+<span class="param-type">HTMLElement</span>
 
 
             </li>
@@ -274,7 +274,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="scene.js.html">engine/scene.js</a>, <a href="scene.js.html#line33">line 33</a>
+        <a href="scene.js.html">engine/scene.js</a>, <a href="scene.js.html#line20">line 20</a>
     </li></ul></dd>
     
 
@@ -294,7 +294,7 @@
         
             
 <dt>
-    <h4 class="name" id="_needs_update"><span class="type-signature"></span>_needs_update<span class="type-signature"> :boolean</span></h4>
+    <h4 class="name" id="ctx"><span class="type-signature"></span>ctx<span class="type-signature"> :CanvasContext</span></h4>
 
     
 </dt>
@@ -306,7 +306,7 @@
         <ul>
             <li>
                 
-<span class="param-type">boolean</span>
+<span class="param-type">CanvasContext</span>
 
 
             </li>
@@ -336,7 +336,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="scene.js.html">engine/scene.js</a>, <a href="scene.js.html#line38">line 38</a>
+        <a href="scene.js.html">engine/scene.js</a>, <a href="scene.js.html#line22">line 22</a>
     </li></ul></dd>
     
 
@@ -418,7 +418,7 @@
         
             
 <dt>
-    <h4 class="name" id="meshes"><span class="type-signature"></span>meshes<span class="type-signature"> :Array.&lt;<a href="Mesh.html">Mesh</a>></span></h4>
+    <h4 class="name" id="illumination"><span class="type-signature"></span>illumination<span class="type-signature"> :Vector</span></h4>
 
     
 </dt>
@@ -430,7 +430,7 @@
         <ul>
             <li>
                 
-<span class="param-type">Array.&lt;<a href="Mesh.html">Mesh</a>></span>
+<span class="param-type">Vector</span>
 
 
             </li>
@@ -460,7 +460,69 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="scene.js.html">engine/scene.js</a>, <a href="scene.js.html#line31">line 31</a>
+        <a href="scene.js.html">engine/scene.js</a>, <a href="scene.js.html#line26">line 26</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+    
+
+    
+</dd>
+
+        
+            
+<dt>
+    <h4 class="name" id="meshes"><span class="type-signature"></span>meshes<span class="type-signature"> :Object.&lt;string, <a href="Mesh.html">Mesh</a>></span></h4>
+
+    
+</dt>
+<dd>
+    
+
+    
+        <h5>Type:</h5>
+        <ul>
+            <li>
+                
+<span class="param-type">Object.&lt;string, <a href="Mesh.html">Mesh</a>></span>
+
+
+            </li>
+        </ul>
+    
+
+    
+<dl class="details">
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="scene.js.html">engine/scene.js</a>, <a href="scene.js.html#line28">line 28</a>
     </li></ul></dd>
     
 
@@ -548,18 +610,70 @@
         <dl>
             
 <dt>
-    <h4 class="name" id="addMesh"><span class="type-signature"></span>addMesh<span class="signature">()</span><span class="type-signature"></span></h4>
+    <h4 class="name" id="addMesh"><span class="type-signature"></span>addMesh<span class="signature">(mesh)</span><span class="type-signature"></span></h4>
 
     
 </dt>
 <dd>
 
     
-
+    <div class="description">
+        Add a mesh to the scene.
+    </div>
     
 
     
 
+    
+
+    
+        <h5>Parameters:</h5>
+        
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>mesh</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type"><a href="Mesh.html">Mesh</a></span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"></td>
+        </tr>
+
+    
+    </tbody>
+</table>
     
 
     
@@ -585,7 +699,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="scene.js.html">engine/scene.js</a>, <a href="scene.js.html#line373">line 373</a>
+        <a href="scene.js.html">engine/scene.js</a>, <a href="scene.js.html#line448">line 448</a>
     </li></ul></dd>
     
 
@@ -615,18 +729,116 @@
         
             
 <dt>
-    <h4 class="name" id="drawEdge"><span class="type-signature"></span>drawEdge<span class="signature">()</span><span class="type-signature"></span></h4>
+    <h4 class="name" id="drawEdge"><span class="type-signature"></span>drawEdge<span class="signature">(v1, v2, color)</span><span class="type-signature"></span></h4>
 
     
 </dt>
 <dd>
 
     
-
+    <div class="description">
+        Draw a line segment between two points.
+    </div>
     
 
     
 
+    
+
+    
+        <h5>Parameters:</h5>
+        
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>v1</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">Vector</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">First end point of line segment.</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>v2</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">Vector</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">Second end point of line segment.</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>color</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">Color</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">Color to be drawn.</td>
+        </tr>
+
+    
+    </tbody>
+</table>
     
 
     
@@ -652,7 +864,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="scene.js.html">engine/scene.js</a>, <a href="scene.js.html#line200">line 200</a>
+        <a href="scene.js.html">engine/scene.js</a>, <a href="scene.js.html#line254">line 254</a>
     </li></ul></dd>
     
 
@@ -682,18 +894,140 @@
         
             
 <dt>
-    <h4 class="name" id="drawPixel"><span class="type-signature"></span>drawPixel<span class="signature">()</span><span class="type-signature"></span></h4>
+    <h4 class="name" id="drawPixel"><span class="type-signature"></span>drawPixel<span class="signature">(x, y, z, color)</span><span class="type-signature"></span></h4>
 
     
 </dt>
 <dd>
 
     
-
+    <div class="description">
+        Draw a single pixel to the sceen and update the depth buffer. If there is already 
+a closer pixel (i.e. one with a lower z value), then the pixel is not drawn.
+    </div>
     
 
     
 
+    
+
+    
+        <h5>Parameters:</h5>
+        
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>x</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">number</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">X coordinate</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>y</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">number</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">Y coordinate</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>z</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">number</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">Z coordinate</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>color</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">Color</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">Color to be drawn.</td>
+        </tr>
+
+    
+    </tbody>
+</table>
     
 
     
@@ -719,7 +1053,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="scene.js.html">engine/scene.js</a>, <a href="scene.js.html#line183">line 183</a>
+        <a href="scene.js.html">engine/scene.js</a>, <a href="scene.js.html#line231">line 231</a>
     </li></ul></dd>
     
 
@@ -749,18 +1083,139 @@
         
             
 <dt>
-    <h4 class="name" id="drawTriangle"><span class="type-signature"></span>drawTriangle<span class="signature">()</span><span class="type-signature"></span></h4>
+    <h4 class="name" id="drawTriangle"><span class="type-signature"></span>drawTriangle<span class="signature">(v1, v2, v3, color)</span><span class="type-signature"></span></h4>
 
     
 </dt>
 <dd>
 
     
-
+    <div class="description">
+        Draw the edges of a triangle.
+    </div>
     
 
     
 
+    
+
+    
+        <h5>Parameters:</h5>
+        
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>v1</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">Vector</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">First vertex of triangle.</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>v2</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">Vector</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">Second vertex of triangle.</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>v3</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">Vector</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">Third vertex of triangle.</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>color</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">Color</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">Color to be drawn.</td>
+        </tr>
+
+    
+    </tbody>
+</table>
     
 
     
@@ -786,7 +1241,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="scene.js.html">engine/scene.js</a>, <a href="scene.js.html#line223">line 223</a>
+        <a href="scene.js.html">engine/scene.js</a>, <a href="scene.js.html#line284">line 284</a>
     </li></ul></dd>
     
 
@@ -857,7 +1312,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="scene.js.html">engine/scene.js</a>, <a href="scene.js.html#line62">line 62</a>
+        <a href="scene.js.html">engine/scene.js</a>, <a href="scene.js.html#line57">line 57</a>
     </li></ul></dd>
     
 
@@ -887,14 +1342,16 @@
         
             
 <dt>
-    <h4 class="name" id="fillTriangle"><span class="type-signature"></span>fillTriangle<span class="signature">()</span><span class="type-signature"></span></h4>
+    <h4 class="name" id="fillTriangle"><span class="type-signature"></span>fillTriangle<span class="signature">(v1, v2, v3, color)</span><span class="type-signature"></span></h4>
 
     
 </dt>
 <dd>
 
     
-
+    <div class="description">
+        Draw a filled triangle in a uniform color.
+    </div>
     
 
     
@@ -902,70 +1359,122 @@
     
 
     
-<dl class="details">
-    
+        <h5>Parameters:</h5>
+        
 
-    
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
 
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-    <dt class="tag-source">Source:</dt>
-    <dd class="tag-source"><ul class="dummy"><li>
-        <a href="scene.js.html">engine/scene.js</a>, <a href="scene.js.html#line229">line 229</a>
-    </li></ul></dd>
-    
-
-    
-
-    
-
-    
-</dl>
-
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-</dd>
+        <th>Type</th>
 
         
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
             
-<dt>
-    <h4 class="name" id="init"><span class="type-signature"></span>init<span class="signature">()</span><span class="type-signature"></span></h4>
+                <td class="name"><code>v1</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">Vector</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">First vertex of triangle.</td>
+        </tr>
 
     
-</dt>
-<dd>
+
+        <tr>
+            
+                <td class="name"><code>v2</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">Vector</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">Second vertex of triangle.</td>
+        </tr>
 
     
 
-    
+        <tr>
+            
+                <td class="name"><code>v3</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">Vector</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">Third vertex of triangle.</td>
+        </tr>
 
     
 
+        <tr>
+            
+                <td class="name"><code>color</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">Color</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">Color to be drawn.</td>
+        </tr>
+
+    
+    </tbody>
+</table>
     
 
     
@@ -991,7 +1500,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="scene.js.html">engine/scene.js</a>, <a href="scene.js.html#line44">line 44</a>
+        <a href="scene.js.html">engine/scene.js</a>, <a href="scene.js.html#line297">line 297</a>
     </li></ul></dd>
     
 
@@ -1028,6 +1537,10 @@
 <dd>
 
     
+    <div class="description">
+        Initialize depth buffer with high z values.
+    </div>
+    
 
     
 
@@ -1058,7 +1571,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="scene.js.html">engine/scene.js</a>, <a href="scene.js.html#line159">line 159</a>
+        <a href="scene.js.html">engine/scene.js</a>, <a href="scene.js.html#line187">line 187</a>
     </li></ul></dd>
     
 
@@ -1088,18 +1601,70 @@
         
             
 <dt>
-    <h4 class="name" id="isKeyDown"><span class="type-signature"></span>isKeyDown<span class="signature">()</span><span class="type-signature"></span></h4>
+    <h4 class="name" id="isKeyDown"><span class="type-signature"></span>isKeyDown<span class="signature">(key)</span><span class="type-signature"></span></h4>
 
     
 </dt>
 <dd>
 
     
-
+    <div class="description">
+        Check if key is pressed.
+    </div>
     
 
     
 
+    
+
+    
+        <h5>Parameters:</h5>
+        
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>key</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">string</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">Key to check. E.g. 'a', 'space', 'tab'.</td>
+        </tr>
+
+    
+    </tbody>
+</table>
     
 
     
@@ -1125,7 +1690,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="scene.js.html">engine/scene.js</a>, <a href="scene.js.html#line67">line 67</a>
+        <a href="scene.js.html">engine/scene.js</a>, <a href="scene.js.html#line66">line 66</a>
     </li></ul></dd>
     
 
@@ -1155,18 +1720,70 @@
         
             
 <dt>
-    <h4 class="name" id="offscreen"><span class="type-signature"></span>offscreen<span class="signature">()</span><span class="type-signature"></span></h4>
+    <h4 class="name" id="offscreen"><span class="type-signature"></span>offscreen<span class="signature">(vector)</span><span class="type-signature"> &rarr; {boolean}</span></h4>
 
     
 </dt>
 <dd>
 
     
-
+    <div class="description">
+        Determine id vector is offscreen.
+    </div>
     
 
     
 
+    
+
+    
+        <h5>Parameters:</h5>
+        
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>vector</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">Vector</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"></td>
+        </tr>
+
+    
+    </tbody>
+</table>
     
 
     
@@ -1192,7 +1809,144 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="scene.js.html">engine/scene.js</a>, <a href="scene.js.html#line165">line 165</a>
+        <a href="scene.js.html">engine/scene.js</a>, <a href="scene.js.html#line198">line 198</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <h5>Returns:</h5>
+    
+            
+
+
+<dl>
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type">boolean</span>
+
+
+    </dd>
+</dl>
+
+        
+
+    
+</dd>
+
+        
+            
+<dt>
+    <h4 class="name" id="onKeyDown"><span class="type-signature"></span>onKeyDown<span class="signature">(e)</span><span class="type-signature"></span></h4>
+
+    
+</dt>
+<dd>
+
+    
+    <div class="description">
+        Register key presses.
+    </div>
+    
+
+    
+
+    
+
+    
+        <h5>Parameters:</h5>
+        
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>e</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">KeyEvent</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"></td>
+        </tr>
+
+    
+    </tbody>
+</table>
+    
+
+    
+<dl class="details">
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="scene.js.html">engine/scene.js</a>, <a href="scene.js.html#line75">line 75</a>
     </li></ul></dd>
     
 
@@ -1222,18 +1976,70 @@
         
             
 <dt>
-    <h4 class="name" id="onKeyDown"><span class="type-signature"></span>onKeyDown<span class="signature">()</span><span class="type-signature"></span></h4>
+    <h4 class="name" id="onKeyUp"><span class="type-signature"></span>onKeyUp<span class="signature">(e)</span><span class="type-signature"></span></h4>
 
     
 </dt>
 <dd>
 
     
-
+    <div class="description">
+        Unregister key presses on keyup.
+    </div>
     
 
     
 
+    
+
+    
+        <h5>Parameters:</h5>
+        
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>e</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">KeyEvent</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"></td>
+        </tr>
+
+    
+    </tbody>
+</table>
     
 
     
@@ -1259,7 +2065,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="scene.js.html">engine/scene.js</a>, <a href="scene.js.html#line72">line 72</a>
+        <a href="scene.js.html">engine/scene.js</a>, <a href="scene.js.html#line89">line 89</a>
     </li></ul></dd>
     
 
@@ -1289,18 +2095,70 @@
         
             
 <dt>
-    <h4 class="name" id="onKeyUp"><span class="type-signature"></span>onKeyUp<span class="signature">()</span><span class="type-signature"></span></h4>
+    <h4 class="name" id="onMouseDown"><span class="type-signature"></span>onMouseDown<span class="signature">(e)</span><span class="type-signature"></span></h4>
 
     
 </dt>
 <dd>
 
     
-
+    <div class="description">
+        Register mousedown event.
+    </div>
     
 
     
 
+    
+
+    
+        <h5>Parameters:</h5>
+        
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>e</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">MouseEvent</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"></td>
+        </tr>
+
+    
+    </tbody>
+</table>
     
 
     
@@ -1326,7 +2184,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="scene.js.html">engine/scene.js</a>, <a href="scene.js.html#line80">line 80</a>
+        <a href="scene.js.html">engine/scene.js</a>, <a href="scene.js.html#line108">line 108</a>
     </li></ul></dd>
     
 
@@ -1356,18 +2214,70 @@
         
             
 <dt>
-    <h4 class="name" id="onMouseDown"><span class="type-signature"></span>onMouseDown<span class="signature">()</span><span class="type-signature"></span></h4>
+    <h4 class="name" id="onMouseDrag"><span class="type-signature"></span>onMouseDrag<span class="signature">(e)</span><span class="type-signature"></span></h4>
 
     
 </dt>
 <dd>
 
     
-
+    <div class="description">
+        Register mousedrag event.
+    </div>
     
 
     
 
+    
+
+    
+        <h5>Parameters:</h5>
+        
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>e</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">MouseEvent</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"></td>
+        </tr>
+
+    
+    </tbody>
+</table>
     
 
     
@@ -1393,7 +2303,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="scene.js.html">engine/scene.js</a>, <a href="scene.js.html#line95">line 95</a>
+        <a href="scene.js.html">engine/scene.js</a>, <a href="scene.js.html#line153">line 153</a>
     </li></ul></dd>
     
 
@@ -1423,18 +2333,70 @@
         
             
 <dt>
-    <h4 class="name" id="onMouseDrag"><span class="type-signature"></span>onMouseDrag<span class="signature">()</span><span class="type-signature"></span></h4>
+    <h4 class="name" id="onMouseMove"><span class="type-signature"></span>onMouseMove<span class="signature">(e)</span><span class="type-signature"></span></h4>
 
     
 </dt>
 <dd>
 
     
-
+    <div class="description">
+        Register mousemove event.
+    </div>
     
 
     
 
+    
+
+    
+        <h5>Parameters:</h5>
+        
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>e</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">MouseEvent</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"></td>
+        </tr>
+
+    
+    </tbody>
+</table>
     
 
     
@@ -1460,7 +2422,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="scene.js.html">engine/scene.js</a>, <a href="scene.js.html#line128">line 128</a>
+        <a href="scene.js.html">engine/scene.js</a>, <a href="scene.js.html#line144">line 144</a>
     </li></ul></dd>
     
 
@@ -1490,18 +2452,70 @@
         
             
 <dt>
-    <h4 class="name" id="onMouseMove"><span class="type-signature"></span>onMouseMove<span class="signature">()</span><span class="type-signature"></span></h4>
+    <h4 class="name" id="onMouseUp"><span class="type-signature"></span>onMouseUp<span class="signature">(e)</span><span class="type-signature"></span></h4>
 
     
 </dt>
 <dd>
 
     
-
+    <div class="description">
+        Register mouseup event.
+    </div>
     
 
     
 
+    
+
+    
+        <h5>Parameters:</h5>
+        
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>e</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">MouseEvent</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"></td>
+        </tr>
+
+    
+    </tbody>
+</table>
     
 
     
@@ -1527,7 +2541,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="scene.js.html">engine/scene.js</a>, <a href="scene.js.html#line123">line 123</a>
+        <a href="scene.js.html">engine/scene.js</a>, <a href="scene.js.html#line135">line 135</a>
     </li></ul></dd>
     
 
@@ -1557,14 +2571,16 @@
         
             
 <dt>
-    <h4 class="name" id="onMouseUp"><span class="type-signature"></span>onMouseUp<span class="signature">()</span><span class="type-signature"></span></h4>
+    <h4 class="name" id="removeMesh"><span class="type-signature"></span>removeMesh<span class="signature">(mesh)</span><span class="type-signature"></span></h4>
 
     
 </dt>
 <dd>
 
     
-
+    <div class="description">
+        Remove a mesh to the scene.
+    </div>
     
 
     
@@ -1572,70 +2588,53 @@
     
 
     
-<dl class="details">
-    
+        <h5>Parameters:</h5>
+        
 
-    
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
 
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-    <dt class="tag-source">Source:</dt>
-    <dd class="tag-source"><ul class="dummy"><li>
-        <a href="scene.js.html">engine/scene.js</a>, <a href="scene.js.html#line118">line 118</a>
-    </li></ul></dd>
-    
-
-    
-
-    
-
-    
-</dl>
-
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-</dd>
+        <th>Type</th>
 
         
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
             
-<dt>
-    <h4 class="name" id="removeMesh"><span class="type-signature"></span>removeMesh<span class="signature">()</span><span class="type-signature"></span></h4>
+                <td class="name"><code>mesh</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type"><a href="Mesh.html">Mesh</a></span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"></td>
+        </tr>
 
     
-</dt>
-<dd>
-
-    
-
-    
-
-    
-
+    </tbody>
+</table>
     
 
     
@@ -1661,7 +2660,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="scene.js.html">engine/scene.js</a>, <a href="scene.js.html#line377">line 377</a>
+        <a href="scene.js.html">engine/scene.js</a>, <a href="scene.js.html#line456">line 456</a>
     </li></ul></dd>
     
 
@@ -1698,6 +2697,10 @@
 <dd>
 
     
+    <div class="description">
+        Render a single frame of the scene.
+    </div>
+    
 
     
 
@@ -1728,7 +2731,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="scene.js.html">engine/scene.js</a>, <a href="scene.js.html#line301">line 301</a>
+        <a href="scene.js.html">engine/scene.js</a>, <a href="scene.js.html#line372">line 372</a>
     </li></ul></dd>
     
 
@@ -1765,6 +2768,10 @@
 <dd>
 
     
+    <div class="description">
+        Toggle backface culling.
+    </div>
+    
 
     
 
@@ -1795,7 +2802,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="scene.js.html">engine/scene.js</a>, <a href="scene.js.html#line178">line 178</a>
+        <a href="scene.js.html">engine/scene.js</a>, <a href="scene.js.html#line218">line 218</a>
     </li></ul></dd>
     
 
@@ -1832,6 +2839,11 @@
 <dd>
 
     
+    <div class="description">
+        Toggle drawing mode. Currently, available draw modes are wireframe mode, and
+the experimental (and slow) fill mode.
+    </div>
+    
 
     
 
@@ -1862,7 +2874,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="scene.js.html">engine/scene.js</a>, <a href="scene.js.html#line173">line 173</a>
+        <a href="scene.js.html">engine/scene.js</a>, <a href="scene.js.html#line210">line 210</a>
     </li></ul></dd>
     
 
@@ -1899,6 +2911,10 @@
 <dd>
 
     
+    <div class="description">
+        Update the scene
+    </div>
+    
 
     
 
@@ -1929,7 +2945,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="scene.js.html">engine/scene.js</a>, <a href="scene.js.html#line381">line 381</a>
+        <a href="scene.js.html">engine/scene.js</a>, <a href="scene.js.html#line463">line 463</a>
     </li></ul></dd>
     
 
@@ -1978,7 +2994,7 @@
 <br clear="both">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.3.0-alpha5</a> on Mon Aug 04 2014 11:17:50 GMT-0400 (EDT)
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.3.0-alpha5</a> on Mon Aug 04 2014 12:42:22 GMT-0400 (EDT)
 </footer>
 
 <script> prettyPrint(); </script>
