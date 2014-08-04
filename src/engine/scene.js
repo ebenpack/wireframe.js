@@ -1,6 +1,7 @@
 var math = require('linearalgea');
 var Camera = require('./camera.js');
 var EventTarget = require('./events.js');
+var mixin = require('../utilities/mixin.js');
 var KEYCODES = require('../utilities/keycodes.js');
 
 var Vector = math.Vector;
@@ -38,7 +39,7 @@ function Scene(options){
     this._draw_mode = 0;
     this.init();
 }
-Scene.prototype = new EventTarget();
+mixin(Scene.prototype, EventTarget);
 /** @method */
 Scene.prototype.init = function(){
     this.canvas.tabIndex = 1; // Set tab index to allow canvas to have focus to receive key events
@@ -52,7 +53,6 @@ Scene.prototype.init = function(){
     this.canvas.addEventListener('mousedown', this.onMouseDown.bind(this), false);
     this.canvas.addEventListener('mouseup', this.onMouseUp.bind(this), false);
     this.canvas.addEventListener('mousemove', this.onMouseMove.bind(this), false);
-    EventTarget.call(this);
     this.update();
 };
 /**

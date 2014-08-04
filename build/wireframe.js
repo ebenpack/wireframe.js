@@ -64,6 +64,27 @@ Color.prototype.darken = function(percent){
     return new Color({'h':hsl.h, 's':hsl.s, 'l':lum}, this.alpha);
 };
 /**
+ * Return a string representation of color in #hex form.
+ * @method
+ * @return {string}
+ */
+Color.prototype.toHexString = function(){
+    var r = this.rgb.r.toString(16);
+    var g = this.rgb.g.toString(16);
+    var b = this.rgb.b.toString(16);
+    // Zero fill
+    if (r.length === 1){
+        r = "0" + r;
+    }
+    if (g.length === 1){
+        g = "0" + g;
+    }
+    if (b.length === 1){
+        b = "0" + b;
+    }
+    return "#" + r + g + b;
+}
+/**
 * @param {number} h Hue
 * @param {number} s Saturation
 * @param {number} l Luminance
@@ -1173,52 +1194,51 @@ module.exports = engine;
 },{"./camera.js":3,"./scene.js":6}],5:[function(_dereq_,module,exports){
 /**
  * Event handler.
- * @constructor
+ * @mixin
  */
-
-function EventTarget(){
-    this._listeners = {};
-}
-/**
- * @method
- * @param {string} type
- * @param {function} listener
- */
-EventTarget.prototype.addListener = function(type, listener){
-    if (!(type in this._listeners)) {
-        this._listeners[type] = [];
-    }
-    this._listeners[type].push(listener);
-};
-/**
- * @method
- * @param  {string} type Type of event to be fired.
- * @param  {Object} [event] Optional event object.
- */
-EventTarget.prototype.fire = function(type, event){
-    var e = {};
-    if (typeof event !== 'undefined'){
-        e = event;
-    }
-    e.event = type;
-    e.target = this;
-    var listeners = this._listeners[type];
-    if (typeof listeners !== 'undefined'){
-        for (var i = 0, len = listeners.length; i < len; i++) {
-            listeners[i].call(this, e);
+var EventTarget = {
+    _listeners: {},
+    /**
+     * @method
+     * @param {string} type Type of event to be added.
+     * @param {function} listener Function to be called when event is fired.
+     */
+    addListener: function(type, listener){
+        if (!(type in this._listeners)) {
+            this._listeners[type] = [];
         }
-    }
-};
-/**
- * @method
- * @param  {string} type
- * @param  {function} listener
- */
-EventTarget.prototype.removeListener = function(type, listener){
-    var listeners = this._listeners[type];
-    for (var i = 0, len = listeners.length; i < len; i++) {
-        if (listeners[i] === listener) {
-            listeners.splice(i, 1);
+        this._listeners[type].push(listener);
+    },
+    /**
+     * @method
+     * @param  {string} type Type of event to be fired.
+     * @param  {Object} [event] Optional user-defined event object. This could contain, for example, mouse coordinates, or key codes.
+     */
+    fire: function(type, event){
+        var e = {};
+        if (typeof event !== 'undefined'){
+            e = event;
+        }
+        e.event = type;
+        e.target = this;
+        var listeners = this._listeners[type];
+        if (typeof listeners !== 'undefined'){
+            for (var i = 0, len = listeners.length; i < len; i++) {
+                listeners[i].call(this, e);
+            }
+        }
+    },
+    /**
+     * @method
+     * @param  {string} type
+     * @param  {function} listener
+     */
+    removeListener: function(type, listener){
+        var listeners = this._listeners[type];
+        for (var i = 0, len = listeners.length; i < len; i++) {
+            if (listeners[i] === listener) {
+                listeners.splice(i, 1);
+            }
         }
     }
 };
@@ -1229,6 +1249,7 @@ module.exports = EventTarget;
 var math = _dereq_('linearalgea');
 var Camera = _dereq_('./camera.js');
 var EventTarget = _dereq_('./events.js');
+var mixin = _dereq_('../utilities/mixin.js');
 var KEYCODES = _dereq_('../utilities/keycodes.js');
 
 var Vector = math.Vector;
@@ -1266,7 +1287,7 @@ function Scene(options){
     this._draw_mode = 0;
     this.init();
 }
-Scene.prototype = new EventTarget();
+mixin(Scene.prototype, EventTarget);
 /** @method */
 Scene.prototype.init = function(){
     this.canvas.tabIndex = 1; // Set tab index to allow canvas to have focus to receive key events
@@ -1280,7 +1301,6 @@ Scene.prototype.init = function(){
     this.canvas.addEventListener('mousedown', this.onMouseDown.bind(this), false);
     this.canvas.addEventListener('mouseup', this.onMouseUp.bind(this), false);
     this.canvas.addEventListener('mousemove', this.onMouseMove.bind(this), false);
-    EventTarget.call(this);
     this.update();
 };
 /**
@@ -1620,7 +1640,7 @@ Scene.prototype.update = function(){
 
 module.exports = Scene;
 
-},{"../utilities/keycodes.js":11,"./camera.js":3,"./events.js":5,"linearalgea":2}],7:[function(_dereq_,module,exports){
+},{"../utilities/keycodes.js":11,"../utilities/mixin.js":12,"./camera.js":3,"./events.js":5,"linearalgea":2}],7:[function(_dereq_,module,exports){
 /**
  * @license
  * Copyright (c) 2014 Eben Packwood. All rights reserved.
@@ -1816,6 +1836,17 @@ var KEYCODES = {
 };
 
 module.exports = KEYCODES;
+},{}],12:[function(_dereq_,module,exports){
+function mixin(receiver, supplier) {
+    for (var property in supplier) {
+        if (supplier.hasOwnProperty(property)) {
+            receiver[property] = supplier[property];
+        }
+    }
+    return receiver;
+}
+
+module.exports = mixin;
 },{}]},{},[7])
 (7)
 });
