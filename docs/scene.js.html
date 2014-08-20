@@ -56,6 +56,8 @@ function Scene(options){
     this._x_offset = Math.round(this.width / 2);
     this._y_offset = Math.round(this.height / 2);
     this._back_buffer = document.createElement('canvas');
+    this._back_buffer.width = this.width;
+    this._back_buffer.height = this.height;
     this._back_buffer_ctx = this._back_buffer.getContext('2d');
     this._back_buffer_image = null;
     this._depth_buffer = [];
@@ -75,6 +77,31 @@ function Scene(options){
     this.canvas.addEventListener('mousemove', this.onMouseMove.bind(this), false);
     this.initializeDepthBuffer();
     this.update();
+
+
+
+    this._light_direction = new Vector(0,0,0);
+    this._wv1 = new Matrix();
+    this._wv2 = new Matrix();
+    this._wv3 = new Matrix();
+    this._v1 = new Vector(0,0,0);
+    this._v2 = new Vector(0,0,0);
+    this._v3 = new Vector(0,0,0);
+    this._v1t = new Vector(0,0,0);
+    this._v2t = new Vector(0,0,0);
+    this._v3t = new Vector(0,0,0);
+    this._wvp_matrix = new Matrix();
+    this._world_matrix = new Matrix();
+    this._rotation_matrix = new Matrix();
+    this._translation_matrix = new Matrix();
+    this._scale_matrix = new Matrix();
+    this._cam_to_vert = new Vector(0,0,0);
+    this._temp_matrix = new Matrix();
+    this._side1 = new Vector(0,0,0);
+    this._side2 = new Vector(0,0,0);
+    this._norm = new Vector(0,0,0);
+
+
 }
 mixin(Scene.prototype, EventTarget);
 /**
@@ -409,9 +436,12 @@ Scene.prototype.renderScene = function(){
             var scale = mesh.scale;
             var rotation = mesh.rotation;
             var position = mesh.position;
-            var world_matrix = Matrix.scale(scale.x, scale.y, scale.z).multiply(
-                Matrix.rotation(rotation.pitch, rotation.yaw, rotation.roll).multiply(
-                    Matrix.translation(position.x, position.y, position.z)));
+            // Build world matrix
+            Matrix.scaleLG(scale.x, scale.y, scale.z, this._scale_matrix);
+            Matrix.rotationLG(rotation.pitch, rotation.yaw, rotation.roll, this._rotation_matrix);
+            Matrix.translationLG(position.x, position.y, position.z, this._translation_matrix);
+            this._scale_matrix.multiplyLG(this._rotation_matrix, this._world_matrix);
+            this._world_matrix.multiplyLG(this._translation_matrix, this._world_matrix);
             for (var k = 0; k &lt; mesh.faces.length; k++){
                 var face = mesh.faces[k].face;
                 var color = mesh.faces[k].color;
@@ -422,21 +452,26 @@ Scene.prototype.renderScene = function(){
                 // Calculate the normal
                 // TODO: Can this be calculated just once, and then transformed into
                 // camera space?
-                var cam_to_vert = this.camera.position.subtract(v1.transform(world_matrix));
-                var side1 = v2.transform(world_matrix).subtract(v1.transform(world_matrix));
-                var side2 = v3.transform(world_matrix).subtract(v1.transform(world_matrix));
-                var norm = side1.cross(side2);
-                if (norm.magnitude() &lt;= 0.00000001){
-                    norm = norm;
-                } else {
-                    norm = norm.normalize();
+                v1.transformLG(this._world_matrix, this._v1t);
+                v2.transformLG(this._world_matrix, this._v2t);
+                v3.transformLG(this._world_matrix, this._v3t);
+
+                this.camera.position.subtractLG(this._v1t, this._cam_to_vert);
+
+                this._v2t.subtractLG(this._v1t, this._side1);
+                this._v3t.subtractLG(this._v1t, this._side2);
+                this._side1.crossLG(this._side2, this._norm);
+                if (this._norm.magnitude() >= 0.00000001){
+                    this._norm.normalizeLG(this._norm);
                 }
                 // Backface culling.
-                if (!this._backface_culling || cam_to_vert.dot(norm) >= 0) {
-                    var wvp_matrix = world_matrix.multiply(camera_matrix).multiply(projection_matrix);
-                    var wv1 = v1.transform(wvp_matrix);
-                    var wv2 = v2.transform(wvp_matrix);
-                    var wv3 = v3.transform(wvp_matrix);
+                if (!this._backface_culling || this._cam_to_vert.dot(this._norm) >= 0) {
+                    //var wvp_matrix = world_matrix.multiply(camera_matrix).multiply(projection_matrix);
+                    this._world_matrix.multiplyLG(camera_matrix, this._temp_matrix);
+                    this._temp_matrix.multiplyLG(projection_matrix, this._wvp_matrix);
+                    v1.transformLG(this._wvp_matrix, this._wv1);
+                    v2.transformLG(this._wvp_matrix, this._wv2);
+                    v3.transformLG(this._wvp_matrix, this._wv3);
                     var draw = true;
 
                     // Draw surface normals
@@ -446,17 +481,19 @@ Scene.prototype.renderScene = function(){
                     // TODO: Fix frustum culling
                     // This is really stupid frustum culling... this can result in some faces not being
                     // drawn when they should, e.g. when a triangles vertices straddle the frustrum.
-                    if (this.offscreen(wv1) &amp;&amp; this.offscreen(wv2) &amp;&amp; this.offscreen(wv3)){
+                    if (this.offscreen(this._wv1) &amp;&amp; this.offscreen(this._wv2) &amp;&amp; this.offscreen(this._wv3)){
                         draw = false;
                     }
                     if (draw){
                         if (this._draw_mode === 0){
-                            this.drawTriangle(wv1, wv2, wv3, color.rgb);
+                            this.drawTriangle(this._wv1, this._wv2, this._wv3, color.rgb);
                         } else if (this._draw_mode === 1){
-                            var light_direction = light.subtract(v1.transform(world_matrix)).normalize();
-                            var illumination_angle = norm.dot(light_direction);
+                            
+                            light.subtractLG(this._v1t, this._light_direction);
+                            this._light_direction.normalizeLG(this._light_direction);
+                            var illumination_angle = this._norm.dot(this._light_direction);
                             color = color.lighten(illumination_angle*15);
-                            this.fillTriangle(wv1, wv2, wv3, color.rgb);
+                            this.fillTriangle(this._wv1, this._wv2, this._wv3, color.rgb);
                         }
                     }
                 }
@@ -516,7 +553,7 @@ module.exports = Scene;
 <br clear="both">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.3.0-alpha5</a> on Mon Aug 04 2014 12:42:22 GMT-0400 (EDT)
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.3.0-alpha5</a> on Wed Aug 20 2014 09:17:08 GMT-0400 (EDT)
 </footer>
 
 <script> prettyPrint(); </script>
