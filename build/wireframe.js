@@ -1729,6 +1729,13 @@ engine.Scene = Scene;
 engine.Camera = Camera;
 
 module.exports = engine;
+
+/**
+* @license
+* Copyright (c) 2014 Eben Packwood. All rights reserved.
+* MIT License
+*
+*/
 },{"./camera.js":3,"./scene.js":6}],5:[function(_dereq_,module,exports){
 /**
  * Event handler.
@@ -2305,15 +2312,13 @@ module.exports = Scene;
  *
  */
 
+/** @ignore */
 var geometry = _dereq_('./geometry/geometry.js');
 var engine = _dereq_('./engine/engine.js');
 
-var wireframe = Object.create(null);
 
-wireframe.geometry = geometry;
-wireframe.engine = engine;
-
-module.exports = wireframe;
+module.exports.geometry = geometry;
+module.exports.engine = engine;
 
 },{"./engine/engine.js":4,"./geometry/geometry.js":9}],8:[function(_dereq_,module,exports){
 var Color = _dereq_('colour');
@@ -2336,12 +2341,8 @@ module.exports = Face;
 var Mesh = _dereq_('./mesh.js');
 var Face = _dereq_('./face.js');
 
-var geometry = Object.create(null);
-
-geometry.Mesh = Mesh;
-geometry.Face = Face;
-
-module.exports = geometry;
+module.exports.Mesh = Mesh;
+module.exports.Face = Face;
 
 },{"./face.js":8,"./mesh.js":10}],10:[function(_dereq_,module,exports){
 var Vector = _dereq_('linearalgea').Vector;
