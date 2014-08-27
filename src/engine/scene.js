@@ -217,6 +217,18 @@ Scene.prototype.initializeDepthBuffer = function(){
     }
 };
 /**
+ * Clear back buffer image.
+ * @method
+ */
+Scene.prototype._clear_back_buffer_image = function(){
+    // Clear back buffer image, instead of using createImageData to reduce garbage.
+    // This method only sets alpha for every pixel to 0, which takes 1/4 the time of a full clear.
+    var back_buf_data = this._back_buffer_image.data;
+    for (var i = 3; i < back_buf_data.length; i+=4){
+        back_buf_data[i] = 0;
+    }
+};
+/**
  * Determine id vector is offscreen.
  * @method
  * @param {Vector} vector
@@ -398,7 +410,7 @@ Scene.prototype.fillTriangle = function(v1, v2, v3, color){
  */
 Scene.prototype.renderScene = function(){
     // TODO: Simplify this function.
-    this._back_buffer_image = this._back_buffer_ctx.createImageData(this.width, this.height);
+    this._clear_back_buffer_image();
     this.initializeDepthBuffer();
     var camera_matrix = this.camera.view_matrix;
     var projection_matrix = this.camera.perspectiveFov;
