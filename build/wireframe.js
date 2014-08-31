@@ -2013,6 +2013,7 @@ function Scene(options){
     this.canvas = document.getElementById(options.canvas_id);
     /** @type {CanvasContext} */
     this.ctx = this.canvas.getContext('2d');
+    this.ctx.strokeStyle = 'red';
     /** @type {Camera} */
     this.camera = new Camera(this.width, this.height);
     /** @type {Vector} */
@@ -2028,6 +2029,7 @@ function Scene(options){
     this._back_buffer_image = null;
     this._depth_buffer = [];
     this._backface_culling = true;
+    this._quickdraw = false;
     this._keys = {}; // Keys currently pressed
     this._key_count = 0; // Number of keys being pressed... this feels kludgy
     this._anim_id = null;
@@ -2044,12 +2046,10 @@ function Scene(options){
     this.initializeDepthBuffer();
     this.update();
 
-
-
     this._light_direction = new Vector(0,0,0);
-    this._wv1 = new Matrix();
-    this._wv2 = new Matrix();
-    this._wv3 = new Matrix();
+    this._wv1 = new Vector(0,0,0);
+    this._wv2 = new Vector(0,0,0);
+    this._wv3 = new Vector(0,0,0);
     this._v1 = new Vector(0,0,0);
     this._v2 = new Vector(0,0,0);
     this._v3 = new Vector(0,0,0);
@@ -2066,8 +2066,6 @@ function Scene(options){
     this._side1 = new Vector(0,0,0);
     this._side2 = new Vector(0,0,0);
     this._norm = new Vector(0,0,0);
-
-
 }
 mixin(Scene.prototype, EventTarget);
 /**
@@ -2252,6 +2250,14 @@ Scene.prototype.toggleBackfaceCulling = function(){
     this.renderScene();
 };
 /**
+ * Toggle quickdraw mode. 
+ * @method
+ */
+Scene.prototype.toggleQuickDraw = function(){
+    this._quickdraw = !this._quickdraw;
+    this.renderScene();
+};
+/**
  * Draw a single pixel to the sceen and update the depth buffer. If there is already 
  * a closer pixel (i.e. one with a lower z value), then the pixel is not drawn.
  * @method
@@ -2306,6 +2312,20 @@ Scene.prototype.drawEdge = function(v1, v2, color){
     }
 };
 /**
+ * Draw a line segment between two points. This method has a
+ * significant speed advantage to the other line method, but it
+ * does not respect z-ordering, so it is only appropriate to
+ * use if all meshes in a scene are the same color.
+ * @method
+ * @param {Vector} v1 First end point of line segment.
+ * @param {Vector} v2 Second end point of line segment.
+ * @param {Color} color Color to be drawn.
+ */
+Scene.prototype.quickLine = function(v1, v2){
+    this.ctx.moveTo(v1.x + this._x_offset, v1.y + this._y_offset);
+    this.ctx.lineTo(v2.x + this._x_offset, v2.y + this._y_offset);
+};
+/**
  * Draw the edges of a triangle.
  * @method
  * @param {Vector} v1 First vertex of triangle.
@@ -2314,9 +2334,15 @@ Scene.prototype.drawEdge = function(v1, v2, color){
  * @param {Color} color Color to be drawn.
  */
 Scene.prototype.drawTriangle = function(v1, v2, v3, color){
-    this.drawEdge(v1, v2, color);
-    this.drawEdge(v2, v3, color);
-    this.drawEdge(v3, v1, color);
+    if (this._quickdraw){
+        this.quickLine(v1, v2);
+        this.quickLine(v2, v3);
+        this.quickLine(v3, v1);
+    } else {
+        this.drawEdge(v1, v2, color);
+        this.drawEdge(v2, v3, color);
+        this.drawEdge(v3, v1, color);
+    }
 };
 /**
  * Draw a filled triangle in a uniform color.
@@ -2403,8 +2429,13 @@ Scene.prototype.fillTriangle = function(v1, v2, v3, color){
  */
 Scene.prototype.renderScene = function(){
     // TODO: Simplify this function.
-    this._clear_back_buffer_image();
-    this.initializeDepthBuffer();
+    if (this._quickdraw){
+        this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+        this.ctx.beginPath();
+    } else {
+        this._clear_back_buffer_image();
+        this.initializeDepthBuffer();
+    }
     var camera_matrix = this.camera.view_matrix;
     var projection_matrix = this.camera.perspectiveFov;
     var light = this.illumination;
@@ -2466,7 +2497,6 @@ Scene.prototype.renderScene = function(){
                         if (this._draw_mode === 0){
                             this.drawTriangle(this._wv1, this._wv2, this._wv3, color.rgb);
                         } else if (this._draw_mode === 1){
-                            
                             light.subtractLG(this._v1t, this._light_direction);
                             this._light_direction.normalizeLG(this._light_direction);
                             var illumination_angle = this._norm.dot(this._light_direction);
@@ -2478,9 +2508,14 @@ Scene.prototype.renderScene = function(){
             }
         }
     }
-    this._back_buffer_ctx.putImageData(this._back_buffer_image, 0, 0);
-    this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
-    this.ctx.drawImage(this._back_buffer, 0, 0, this.canvas.width, this.canvas.height);
+    if (this._quickdraw){
+        this.ctx.stroke();
+        this.ctx.closePath();
+    } else {
+        this._back_buffer_ctx.putImageData(this._back_buffer_image, 0, 0);
+        this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+        this.ctx.drawImage(this._back_buffer, 0, 0, this.canvas.width, this.canvas.height);
+    } 
 };
 /**
  * Add a mesh to the scene.
