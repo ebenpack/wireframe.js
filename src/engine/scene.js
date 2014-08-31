@@ -436,7 +436,7 @@ Scene.prototype.fillTriangle = function(v1, v2, v3, color){
  */
 Scene.prototype.renderScene = function(){
     // TODO: Simplify this function.
-    if (this._quickdraw){
+    if (this._quickdraw && this._draw_mode === 0){
         this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
         this.ctx.beginPath();
     } else {
@@ -515,7 +515,7 @@ Scene.prototype.renderScene = function(){
             }
         }
     }
-    if (this._quickdraw){
+    if (this._quickdraw && this._draw_mode === 0){
         this.ctx.stroke();
         this.ctx.closePath();
     } else {
