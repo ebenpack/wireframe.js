@@ -452,7 +452,6 @@ Scene.prototype.renderScene = function(){
     var light = this.illumination;
     for (var key in this.meshes){
         if (this.meshes.hasOwnProperty(key)){
-            var line_count = 0;
             var mesh = this.meshes[key];
             var scale = mesh.scale;
             var rotation = mesh.rotation;
@@ -508,12 +507,6 @@ Scene.prototype.renderScene = function(){
                     if (draw){
                         if (this._draw_mode === 0){
                             this.drawTriangle(this._wv1, this._wv2, this._wv3, color);
-                            line_count += 1;
-                            if (this._quickdraw && line_count % 200 === 0){
-                                this.ctx.stroke();
-                                this.ctx.closePath();
-                                this.ctx.beginPath();
-                            }
                         } else if (this._draw_mode === 1){
                             light.subtractLG(this._v1t, this._light_direction);
                             this._light_direction.normalizeLG(this._light_direction);
