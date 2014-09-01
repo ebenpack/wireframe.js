@@ -328,17 +328,13 @@ Scene.prototype.drawEdge = function(v1, v2, color){
  * @param {Vector} v2 Second end point of line segment.
  * @param {Color} color Color to be drawn.
  */
-Scene.prototype.quickLine = function(v1, v2, color){
+Scene.prototype.quickLine = function(v1, v2){
     var x1 = Math.round(v1.x + this._x_offset);
     var y1 = Math.round(v1.y + this._y_offset);
     var x2 = Math.round(v2.x + this._x_offset);
     var y2 = Math.round(v2.y + this._y_offset);
-    this.ctx.beginPath();
-    this.ctx.strokeStyle = color.toString();
     this.ctx.moveTo(x1, y1);
     this.ctx.lineTo(x2, y2);
-    this.ctx.stroke();
-    this.ctx.closePath();
 };
 /**
  * Draw the edges of a triangle.
@@ -350,9 +346,9 @@ Scene.prototype.quickLine = function(v1, v2, color){
  */
 Scene.prototype.drawTriangle = function(v1, v2, v3, color){
     if (this._quickdraw){
-        this.quickLine(v1, v2, color);
-        this.quickLine(v2, v3, color);
-        this.quickLine(v3, v1, color);
+        this.quickLine(v1, v2);
+        this.quickLine(v2, v3);
+        this.quickLine(v3, v1);
     } else {
         this.drawEdge(v1, v2, color);
         this.drawEdge(v2, v3, color);
@@ -456,6 +452,7 @@ Scene.prototype.renderScene = function(){
     var light = this.illumination;
     for (var key in this.meshes){
         if (this.meshes.hasOwnProperty(key)){
+            var line_count = 0;
             var mesh = this.meshes[key];
             var scale = mesh.scale;
             var rotation = mesh.rotation;
@@ -511,6 +508,12 @@ Scene.prototype.renderScene = function(){
                     if (draw){
                         if (this._draw_mode === 0){
                             this.drawTriangle(this._wv1, this._wv2, this._wv3, color);
+                            line_count += 1;
+                            if (this._quickdraw && line_count % 200 === 0){
+                                this.ctx.stroke();
+                                this.ctx.closePath();
+                                this.ctx.beginPath();
+                            }
                         } else if (this._draw_mode === 1){
                             light.subtractLG(this._v1t, this._light_direction);
                             this._light_direction.normalizeLG(this._light_direction);
