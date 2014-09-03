@@ -17,7 +17,7 @@ gulp.task('lint', function() {
         .pipe(jshint.reporter('default'));
 });
 
-gulp.task('check', function(){
+gulp.task('closureCompiler', function(){
     // Perform type checking, etc. with closure compiler
     gulp.src('build/wireframe.js')
         .pipe(closure({
@@ -89,7 +89,7 @@ gulp.task('mocha', ['browserify-tests'], function() {
 // Default Task
 gulp.task('default', ['lint', 'browserify', 'watch']);
 gulp.task('compile', ['browserify', 'compress']);
-gulp.task('check', ['lint', 'browserify', 'check']);
+gulp.task('check', ['lint', 'browserify', 'closureCompiler']);
 gulp.task('test', function(){
     gulp.watch(['src/**/*.js', 'tests/**/*.js', '!tests/build/*'], ['mocha']);
 });
